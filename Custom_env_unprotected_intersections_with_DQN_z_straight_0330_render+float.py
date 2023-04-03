@@ -102,6 +102,11 @@ class Cube:
         self.vertex3x = -self.vertex1x
         self.vertex3y = -self.vertex1y
 
+        self.max_vertex_x = max(self.vertex0x, self.vertex1x, self.vertex2x, self.vertex3x)
+        self.min_vertex_x = min(self.vertex0x, self.vertex1x, self.vertex2x, self.vertex3x)
+        self.max_vertex_y = max(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
+        self.min_vertex_y = min(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
+
         self.edge0 = self.x - VEHICLE_HALF_SIZE
         self.edge1 = self.y + VEHICLE_HALF_SIZE
         self.edge2 = self.x + VEHICLE_HALF_SIZE
@@ -139,11 +144,13 @@ class Cube:
 
     def collision(self, other):
         flag = 0
-        if abs(self.y - other.y) <= (2 * VEHICLE_HALF_SIZE) and abs(other.x - self.x) <= (2 * VEHICLE_HALF_SIZE) \
-                and other.y != max_positiony and other.x != max_positionx and other.x != min_positionx:
-            flag = 1
-        else:
+        if ((self.max_vertex_x < other.min_vertex_x) or (self.min_vertex_x > other.max_vertex_x) or
+            (self.max_vertex_y < other.min_vertex_y) or (self.min_vertex_y > other.max_vertex_y) or
+            other.y == max_positiony or other.x == max_positionx or other.x == min_positionx):
+
             flag = 0
+        else:
+            flag = 1
         return flag
 
     # 玩家做动作
