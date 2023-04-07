@@ -430,11 +430,11 @@ class Rectangle_List_Reverse:
 
     def judgement(self, state):
         # max_x, min_x, max_y, min_y
-        # if state == 'straight_y+':
-        self.RectangleList[0][0] = Rectangle(0, -2*SINGLE_LANE_WIDTH, MAX_COORD, INTERSECTION_HALF_SIZE)
-        self.RectangleList[0][1] = Rectangle(MAX_COORD, INTERSECTION_HALF_SIZE, 2*SINGLE_LANE_WIDTH, 0)
-        self.RectangleList[0][2] = Rectangle(0, -2*SINGLE_LANE_WIDTH, -INTERSECTION_HALF_SIZE, MIN_COORD)
-        self.RectangleList[0][3] = Rectangle(-INTERSECTION_HALF_SIZE, MIN_COORD, 0, -2*SINGLE_LANE_WIDTH)
+        if state == 'straight_y+':
+            self.RectangleList[0][0] = Rectangle(0, -2*SINGLE_LANE_WIDTH, MAX_COORD, INTERSECTION_HALF_SIZE)
+            self.RectangleList[0][1] = Rectangle(MAX_COORD, INTERSECTION_HALF_SIZE, 2*SINGLE_LANE_WIDTH, 0)
+            self.RectangleList[0][2] = Rectangle(0, -2*SINGLE_LANE_WIDTH, -INTERSECTION_HALF_SIZE, MIN_COORD)
+            self.RectangleList[0][3] = Rectangle(-INTERSECTION_HALF_SIZE, MIN_COORD, 0, -2*SINGLE_LANE_WIDTH)
 
 
 
@@ -882,10 +882,6 @@ class envCube(gym.Env):
             self.vehicle.init_state = self.vehicle.state
 
         self.rectangle_list_reverse.judgement(self.vehicle.init_state)
-        print(self.episode_step)
-        print(self.vehicle.state)
-        print("state = ", self.vehicle.init_state)
-        print(self.rectangle_list_reverse.RectangleList)
 
         # 更新直道的之前动作的最大最小坐标值(intersection中之前动作不更新)
         self.vehicle.UpdatePreExtremeValue()
@@ -912,7 +908,6 @@ class envCube(gym.Env):
 
         if self.JUDGEMENT_IN_ROAD == True:
             for rec1 in range(self.rectangle_list_reverse.RectangleList.size):
-                print(self.rectangle_list_reverse.RectangleList[0][rec1])
                 if ((self.vehicle.max_vertex_x < self.rectangle_list_reverse.RectangleList[0][rec1].min_x) or
                         (self.vehicle.min_vertex_x > self.rectangle_list_reverse.RectangleList[0][rec1].max_x) or
                         (self.vehicle.max_vertex_y < self.rectangle_list_reverse.RectangleList[0][rec1].min_y) or
@@ -1719,7 +1714,7 @@ check_env(env)
 # # )
 # # print(best_mean_reward, best_std_reward)
 
-eposides = 100
+eposides = 1
 for ep in range(eposides):
     obs = env.reset()
     done = False
