@@ -41,7 +41,7 @@ VEHICLE_ANGLE = math.atan(VEHICLE_WIDTH/VEHICLE_LENGTH)
 VEHICLE_DIAGONAL = math.sqrt(VEHICLE_WIDTH**2+VEHICLE_LENGTH**2)
 
 VEHICLE_HALF_SIZE = 10
-VEHICLE_ILLUSTRATION_HALF_SIZE = 1 * SCALE
+VEHICLE_ILLUSTRATION_YAW_ANGLE_SIZE = 1.0 * SCALE
 SINGLE_LANE_WIDTH = 4.0 * SCALE
 SEPARATE_STRAIGHT_DISTANCE_OF_REWARDS = 40.0
 STRIKE_LENGTH = 10
@@ -51,10 +51,10 @@ STRAIGHT_LENGTH = float(((SIZE - 1.0) - 6 * SINGLE_LANE_WIDTH) / 2)
 INTERSECTION_HALF_SIZE = 3 * SINGLE_LANE_WIDTH
 REVERSE_DRIVING_LENGTH = 30.0
 
-min_positionx = MIN_COORD + VEHICLE_HALF_SIZE
-max_positionx = MAX_COORD - VEHICLE_HALF_SIZE
-min_positiony = MIN_COORD + VEHICLE_HALF_SIZE
-max_positiony = MAX_COORD - VEHICLE_HALF_SIZE
+min_positionx = MIN_COORD + VEHICLE_LENGTH / 2
+max_positionx = MAX_COORD - VEHICLE_LENGTH / 2
+min_positiony = MIN_COORD + VEHICLE_LENGTH / 2
+max_positiony = MAX_COORD - VEHICLE_LENGTH / 2
 
 
 # 智能体的类，有其 状态信息 和 动作函数
@@ -97,10 +97,10 @@ class Cube:
         self.vertex0y = self.y + VEHICLE_DIAGONAL/2 * math.cos(self.yaw_angle-VEHICLE_ANGLE)
         self.vertex1x = self.x + VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle+VEHICLE_ANGLE)
         self.vertex1y = self.y + VEHICLE_DIAGONAL / 2 * math.cos(self.yaw_angle + VEHICLE_ANGLE)
-        self.vertex2x = -self.vertex0x
-        self.vertex2y = -self.vertex0y
-        self.vertex3x = -self.vertex1x
-        self.vertex3y = -self.vertex1y
+        self.vertex2x = self.x - VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex2y = self.y - VEHICLE_DIAGONAL/2 * math.cos(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex3x = self.x - VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle+VEHICLE_ANGLE)
+        self.vertex3y = self.y - VEHICLE_DIAGONAL / 2 * math.cos(self.yaw_angle + VEHICLE_ANGLE)
 
         self.max_vertex_x = max(self.vertex0x, self.vertex1x, self.vertex2x, self.vertex3x)
         self.min_vertex_x = min(self.vertex0x, self.vertex1x, self.vertex2x, self.vertex3x)
@@ -252,9 +252,20 @@ class Cube:
         if self.next2_y < min_positiony:
             self.next2_y = min_positiony
 
-        # 更新车辆四个顶点的坐标
+        # 更新车辆四周的坐标，车头朝向正北(yaw_angle = 0),vertex0为左前点，1为右前点，2为右后点，3为左后点，按顺时针方向。
+        self.vertex0x = self.x + VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex0y = self.y + VEHICLE_DIAGONAL/2 * math.cos(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex1x = self.x + VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle+VEHICLE_ANGLE)
+        self.vertex1y = self.y + VEHICLE_DIAGONAL / 2 * math.cos(self.yaw_angle + VEHICLE_ANGLE)
+        self.vertex2x = self.x - VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex2y = self.y - VEHICLE_DIAGONAL/2 * math.cos(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex3x = self.x - VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle+VEHICLE_ANGLE)
+        self.vertex3y = self.y - VEHICLE_DIAGONAL / 2 * math.cos(self.yaw_angle + VEHICLE_ANGLE)
 
-
+        self.max_vertex_x = max(self.vertex0x, self.vertex1x, self.vertex2x, self.vertex3x)
+        self.min_vertex_x = min(self.vertex0x, self.vertex1x, self.vertex2x, self.vertex3x)
+        self.max_vertex_y = max(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
+        self.min_vertex_y = min(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
 
         # 0点方向起始，顺时针；以此为：上，右，下，左
         self.edge0 = self.x - VEHICLE_HALF_SIZE
@@ -355,16 +366,16 @@ class Cube:
         pre_y_prime = self.pre_y + INTERSECTION_HALF_SIZE
 
         self.polar_radius = math.sqrt(x_prime ** 2 + y_prime ** 2)
-        self.polar_radius_min_edge = self.polar_radius - VEHICLE_HALF_SIZE
-        self.polar_radius_max_edge = self.polar_radius + VEHICLE_HALF_SIZE
+        self.polar_radius_min_edge = self.polar_radius - VEHICLE_WIDTH / 2
+        self.polar_radius_max_edge = self.polar_radius + VEHICLE_WIDTH / 2
 
         self.next1_polar_radius = math.sqrt(next1_x_prime ** 2 + next1_y_prime ** 2)
-        self.next1_polar_radius_min_edge = self.next1_polar_radius - VEHICLE_HALF_SIZE
-        self.next1_polar_radius_max_edge = self.next1_polar_radius + VEHICLE_HALF_SIZE
+        self.next1_polar_radius_min_edge = self.next1_polar_radius - VEHICLE_WIDTH / 2
+        self.next1_polar_radius_max_edge = self.next1_polar_radius + VEHICLE_WIDTH / 2
 
         self.next2_polar_radius = math.sqrt(next2_x_prime ** 2 + next2_y_prime ** 2)
-        self.next2_polar_radius_min_edge = self.next2_polar_radius - VEHICLE_HALF_SIZE
-        self.next2_polar_radius_max_edge = self.next2_polar_radius + VEHICLE_HALF_SIZE
+        self.next2_polar_radius_min_edge = self.next2_polar_radius - VEHICLE_WIDTH / 2
+        self.next2_polar_radius_max_edge = self.next2_polar_radius + VEHICLE_WIDTH / 2
 
         self.pre_polar_radius = math.sqrt(pre_x_prime ** 2 + pre_y_prime ** 2)
         if x_prime == 0:
@@ -391,11 +402,26 @@ class Forward_Cube_First:
     def __init__(self, size):  # 初始化状态
         self.size = size
         self.x = float(SINGLE_LANE_WIDTH / 2 + SINGLE_LANE_WIDTH)
-        self.y = MIN_COORD + 2 * VEHICLE_HALF_SIZE
+        self.y = MIN_COORD + 2 * VEHICLE_LENGTH
         self.velocity = 0.0 * SCALE
-        self.acceleration = 0.0
+        self.acceleration = 0.0 * SCALE
         self.move_step = 0
         self.yaw_angle = 0.0
+
+        # 车头朝向正北(yaw_angle = 0),vertex0为左前点，1为右前点，2为右后点，3为左后点，按顺时针方向。
+        self.vertex0x = self.x + VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex0y = self.y + VEHICLE_DIAGONAL/2 * math.cos(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex1x = self.x + VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle+VEHICLE_ANGLE)
+        self.vertex1y = self.y + VEHICLE_DIAGONAL / 2 * math.cos(self.yaw_angle + VEHICLE_ANGLE)
+        self.vertex2x = self.x - VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex2y = self.y - VEHICLE_DIAGONAL/2 * math.cos(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex3x = self.x - VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle+VEHICLE_ANGLE)
+        self.vertex3y = self.y - VEHICLE_DIAGONAL / 2 * math.cos(self.yaw_angle + VEHICLE_ANGLE)
+
+        self.max_vertex_x = max(self.vertex0x, self.vertex1x, self.vertex2x, self.vertex3x)
+        self.min_vertex_x = min(self.vertex0x, self.vertex1x, self.vertex2x, self.vertex3x)
+        self.max_vertex_y = max(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
+        self.min_vertex_y = min(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
 
     def __str__(self):
         return f'{(self.x, self.y)},{self.velocity},{self.acceleration}'
@@ -423,6 +449,21 @@ class Forward_Cube_First:
         if self.y < min_positiony:
             self.y = min_positiony
 
+        # 更新车辆边界点的坐标，车头朝向正北(yaw_angle = 0),vertex0为左前点，1为右前点，2为右后点，3为左后点，按顺时针方向。
+        self.vertex0x = self.x + VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex0y = self.y + VEHICLE_DIAGONAL/2 * math.cos(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex1x = self.x + VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle+VEHICLE_ANGLE)
+        self.vertex1y = self.y + VEHICLE_DIAGONAL / 2 * math.cos(self.yaw_angle + VEHICLE_ANGLE)
+        self.vertex2x = self.x - VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex2y = self.y - VEHICLE_DIAGONAL/2 * math.cos(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex3x = self.x - VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle+VEHICLE_ANGLE)
+        self.vertex3y = self.y - VEHICLE_DIAGONAL / 2 * math.cos(self.yaw_angle + VEHICLE_ANGLE)
+
+        self.max_vertex_x = max(self.vertex0x, self.vertex1x, self.vertex2x, self.vertex3x)
+        self.min_vertex_x = min(self.vertex0x, self.vertex1x, self.vertex2x, self.vertex3x)
+        self.max_vertex_y = max(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
+        self.min_vertex_y = min(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
+
 
 
 # 前车的类 有其 状态信息 和 行动
@@ -431,11 +472,26 @@ class Forward_Cube_Second:
     def __init__(self, size):  # 初始化状态
         self.size = size
         self.x = float(SINGLE_LANE_WIDTH / 2 + SINGLE_LANE_WIDTH)
-        self.y = MIN_COORD + 10 * VEHICLE_HALF_SIZE
+        self.y = MIN_COORD + 5 * VEHICLE_LENGTH
         self.velocity = 0.0 * SCALE
         self.acceleration = 0.0 * SCALE
         self.move_step = 0
         self.yaw_angle = 0.0
+
+        # 车头朝向正北(yaw_angle = 0),vertex0为左前点，1为右前点，2为右后点，3为左后点，按顺时针方向。
+        self.vertex0x = self.x + VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex0y = self.y + VEHICLE_DIAGONAL/2 * math.cos(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex1x = self.x + VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle+VEHICLE_ANGLE)
+        self.vertex1y = self.y + VEHICLE_DIAGONAL / 2 * math.cos(self.yaw_angle + VEHICLE_ANGLE)
+        self.vertex2x = self.x - VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex2y = self.y - VEHICLE_DIAGONAL/2 * math.cos(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex3x = self.x - VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle+VEHICLE_ANGLE)
+        self.vertex3y = self.y - VEHICLE_DIAGONAL / 2 * math.cos(self.yaw_angle + VEHICLE_ANGLE)
+
+        self.max_vertex_x = max(self.vertex0x, self.vertex1x, self.vertex2x, self.vertex3x)
+        self.min_vertex_x = min(self.vertex0x, self.vertex1x, self.vertex2x, self.vertex3x)
+        self.max_vertex_y = max(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
+        self.min_vertex_y = min(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
 
     def __str__(self):
         return f'{(self.x, self.y)},{self.velocity},{self.acceleration}'
@@ -462,6 +518,21 @@ class Forward_Cube_Second:
             self.y = max_positiony
         if self.y < min_positiony:
             self.y = min_positiony
+
+        # 更新车辆边界点的坐标，车头朝向正北(yaw_angle = 0),vertex0为左前点，1为右前点，2为右后点，3为左后点，按顺时针方向。
+        self.vertex0x = self.x + VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex0y = self.y + VEHICLE_DIAGONAL/2 * math.cos(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex1x = self.x + VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle+VEHICLE_ANGLE)
+        self.vertex1y = self.y + VEHICLE_DIAGONAL / 2 * math.cos(self.yaw_angle + VEHICLE_ANGLE)
+        self.vertex2x = self.x - VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex2y = self.y - VEHICLE_DIAGONAL/2 * math.cos(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex3x = self.x - VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle+VEHICLE_ANGLE)
+        self.vertex3y = self.y - VEHICLE_DIAGONAL / 2 * math.cos(self.yaw_angle + VEHICLE_ANGLE)
+
+        self.max_vertex_x = max(self.vertex0x, self.vertex1x, self.vertex2x, self.vertex3x)
+        self.min_vertex_x = min(self.vertex0x, self.vertex1x, self.vertex2x, self.vertex3x)
+        self.max_vertex_y = max(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
+        self.min_vertex_y = min(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
 
 # 信号灯及停止线的类
 class Signal_Light_Stop_Line:
@@ -1451,34 +1522,43 @@ class envCube(gym.Env):
                     env[INT_SIZE - z7 - 1][x7] = self.d[self.LINE_N]
 
         # 画出智能体及前车的位置
-        v_position: np.ndarry = [0, 0]
         INT_VEHICLE_Y = int(round(self.vehicle.y, 0))
         INT_VEHICLE_X = int(round(self.vehicle.x, 0))
+        INT_VEHICLE_MAX_VERTEX_X = int(round(self.vehicle.max_vertex_x, 0))
+        INT_VEHICLE_MIN_VERTEX_X = int(round(self.vehicle.min_vertex_x, 0))
+        INT_VEHICLE_MAX_VERTEX_Y = int(round(self.vehicle.max_vertex_y, 0))
+        INT_VEHICLE_MIN_VERTEX_Y = int(round(self.vehicle.min_vertex_y, 0))
+
+
         INT_FIRST_OTHER_VEHICLE_Y = int(round(self.first_other_vehicle.y, 0))
         INT_FIRST_OTHER_VEHICLE_X = int(round(self.first_other_vehicle.x, 0))
+        INT_FIRST_OTHER_VEHICLE_MAX_VERTEX_X = int(round(self.first_other_vehicle.max_vertex_x, 0))
+        INT_FIRST_OTHER_VEHICLE_MIN_VERTEX_X = int(round(self.first_other_vehicle.min_vertex_x, 0))
+        INT_FIRST_OTHER_VEHICLE_MAX_VERTEX_Y = int(round(self.first_other_vehicle.max_vertex_y, 0))
+        INT_FIRST_OTHER_VEHICLE_MIN_VERTEX_Y = int(round(self.first_other_vehicle.min_vertex_y, 0))
+
         INT_SECOND_OTHER_VEHICLE_Y = int(round(self.second_other_vehicle.y, 0))
         INT_SECOND_OTHER_VEHICLE_X = int(round(self.second_other_vehicle.x, 0))
-        v_position[0] = -INT_VEHICLE_Y + INT_MAX_COORD
-        v_position[1] = INT_VEHICLE_X + INT_MAX_COORD
-        first_other_vehicle_v_position: np.ndarry = [0, 0]
-        first_other_vehicle_v_position[0] = -INT_FIRST_OTHER_VEHICLE_Y + INT_MAX_COORD
-        first_other_vehicle_v_position[1] = INT_FIRST_OTHER_VEHICLE_X + INT_MAX_COORD
-        second_other_vehicle_v_position: np.ndarry = [0, 0]
-        second_other_vehicle_v_position[0] = -INT_SECOND_OTHER_VEHICLE_Y + INT_MAX_COORD
-        second_other_vehicle_v_position[1] = INT_SECOND_OTHER_VEHICLE_X + INT_MAX_COORD
+        INT_SECOND_OTHER_VEHICLE_MAX_VERTEX_X = int(round(self.second_other_vehicle.max_vertex_x, 0))
+        INT_SECOND_OTHER_VEHICLE_MIN_VERTEX_X = int(round(self.second_other_vehicle.min_vertex_x, 0))
+        INT_SECOND_OTHER_VEHICLE_MAX_VERTEX_Y = int(round(self.second_other_vehicle.max_vertex_y, 0))
+        INT_SECOND_OTHER_VEHICLE_MIN_VERTEX_Y = int(round(self.second_other_vehicle.min_vertex_y, 0))
 
-        for x3 in range(-VEHICLE_ILLUSTRATION_HALF_SIZE, VEHICLE_ILLUSTRATION_HALF_SIZE):
-            for y3 in range(-VEHICLE_ILLUSTRATION_HALF_SIZE, VEHICLE_ILLUSTRATION_HALF_SIZE):
-                env[v_position[0] + x3][v_position[1] + y3] = self.d[self.VEHICLE_N]
-                if first_other_vehicle_v_position[1] < INT_MAX_COORD + max_positiony:
-                    env[first_other_vehicle_v_position[0] + x3][first_other_vehicle_v_position[1] + y3] = self.d[
-                          self.VEHICLE_OTHER_N]
-                if second_other_vehicle_v_position[1] < INT_MAX_COORD + max_positiony:
-                    env[second_other_vehicle_v_position[0] + x3][second_other_vehicle_v_position[1] + y3] = self.d[
-                          self.VEHICLE_OTHER_N]
-        for x5 in range(0, int(2.0 * VEHICLE_ILLUSTRATION_HALF_SIZE)):
-            x = v_position[0] - int(x5 * math.cos(self.vehicle.yaw_angle))
-            y = v_position[1] + int(x5 * math.sin(self.vehicle.yaw_angle))
+        for x3 in range(INT_VEHICLE_MIN_VERTEX_X + INT_MAX_COORD, INT_VEHICLE_MAX_VERTEX_X + INT_MAX_COORD):
+            for y3 in range(INT_VEHICLE_MIN_VERTEX_Y + INT_MAX_COORD, INT_VEHICLE_MAX_VERTEX_Y + INT_MAX_COORD):
+                env[-y3][x3] = self.d[self.VEHICLE_N]
+        if INT_FIRST_OTHER_VEHICLE_Y < INT_MAX_COORD + max_positiony:
+            for x13 in range(INT_FIRST_OTHER_VEHICLE_MIN_VERTEX_X + INT_MAX_COORD, INT_FIRST_OTHER_VEHICLE_MAX_VERTEX_X + INT_MAX_COORD):
+                for y13 in range(INT_FIRST_OTHER_VEHICLE_MIN_VERTEX_Y + INT_MAX_COORD, INT_FIRST_OTHER_VEHICLE_MAX_VERTEX_Y + INT_MAX_COORD):
+                    env[-y13][x13] = self.d[self.VEHICLE_OTHER_N]
+        if INT_SECOND_OTHER_VEHICLE_Y < INT_MAX_COORD + max_positiony:
+            for x23 in range(INT_SECOND_OTHER_VEHICLE_MIN_VERTEX_X + INT_MAX_COORD, INT_SECOND_OTHER_VEHICLE_MAX_VERTEX_X + INT_MAX_COORD):
+                for y23 in range(INT_SECOND_OTHER_VEHICLE_MIN_VERTEX_Y + INT_MAX_COORD, INT_SECOND_OTHER_VEHICLE_MAX_VERTEX_Y + INT_MAX_COORD):
+                    env[-y23][x23] = self.d[self.VEHICLE_OTHER_N]
+
+        for x5 in range(0, int(2.0 * VEHICLE_ILLUSTRATION_YAW_ANGLE_SIZE)):
+            x = INT_MAX_COORD - INT_VEHICLE_Y - int(x5 * math.cos(self.vehicle.yaw_angle))
+            y = INT_MAX_COORD + INT_VEHICLE_X + int(x5 * math.sin(self.vehicle.yaw_angle))
             if x >= INT_SIZE:
                 x = INT_SIZE - 1
             if y >= INT_SIZE:
