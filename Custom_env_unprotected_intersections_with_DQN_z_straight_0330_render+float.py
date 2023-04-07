@@ -134,6 +134,7 @@ class Cube:
         # y+方向为yaw_angle = 0, 顺时针方向为角度正方向，在yaw_angle= [-pi,pi], yaw_angle大于0为右转。
 
         self.state = ''
+        self.init_state = ''
         self.pre_state = ''
         self.intersection_steering_choice = 2  # 2: default; 0: straight_y+; -1: turn left_x-; 1: turn right_x+.
         self.distance_to_off_road = np.array([self.edge0-0, self.edge2-INTERSECTION_HALF_SIZE], dtype=np.float32)
@@ -394,6 +395,48 @@ class Cube:
             self.pre_polar_angle = math.pi / 2
         else:
             self.pre_polar_angle = math.atan(pre_y_prime / pre_x_prime)
+
+# Rectangle
+class Rectangle:
+
+    def __init__(self,max_x,min_x,max_y,min_y ):
+        self.max_x = max_x
+        self.min_x = min_x
+        self.max_y = max_y
+        self.min_y = min_y
+
+# Rectangle of Off-road
+class Rectangle_List_Off_Road:
+
+    def __init__(self):
+        # max_x, min_x, max_y, min_y
+        self.RectangleList = np.ndarray(shape=(1, 8), dtype=Rectangle)
+
+        self.RectangleList[0][0] = Rectangle(-2*SINGLE_LANE_WIDTH, MIN_COORD, MAX_COORD, INTERSECTION_HALF_SIZE)
+        self.RectangleList[0][1] = Rectangle(MAX_COORD, 2*SINGLE_LANE_WIDTH, MAX_COORD, INTERSECTION_HALF_SIZE)
+        self.RectangleList[0][2] = Rectangle(MAX_COORD, 2*SINGLE_LANE_WIDTH, -INTERSECTION_HALF_SIZE, MIN_COORD)
+        self.RectangleList[0][3] = Rectangle(-2*SINGLE_LANE_WIDTH, MIN_COORD, -INTERSECTION_HALF_SIZE, MIN_COORD)
+        self.RectangleList[0][4] = Rectangle(-INTERSECTION_HALF_SIZE, MIN_COORD, INTERSECTION_HALF_SIZE, 2*SINGLE_LANE_WIDTH)
+        self.RectangleList[0][5] = Rectangle(MAX_COORD, INTERSECTION_HALF_SIZE, INTERSECTION_HALF_SIZE, 2*SINGLE_LANE_WIDTH)
+        self.RectangleList[0][6] = Rectangle(MAX_COORD, INTERSECTION_HALF_SIZE, -2*SINGLE_LANE_WIDTH, -INTERSECTION_HALF_SIZE)
+        self.RectangleList[0][7] = Rectangle(-INTERSECTION_HALF_SIZE, MIN_COORD, -2*SINGLE_LANE_WIDTH, -INTERSECTION_HALF_SIZE)
+
+# Rectangle of Reverse
+# 根据车辆状态定义逆行区域
+class Rectangle_List_Reverse:
+
+    def __init__(self):
+        self.RectangleList = np.ndarray(shape=(1, 4), dtype=Rectangle)
+
+    def judgement(self, state):
+        # max_x, min_x, max_y, min_y
+        # if state == 'straight_y+':
+        self.RectangleList[0][0] = Rectangle(0, -2*SINGLE_LANE_WIDTH, MAX_COORD, INTERSECTION_HALF_SIZE)
+        self.RectangleList[0][1] = Rectangle(MAX_COORD, INTERSECTION_HALF_SIZE, 2*SINGLE_LANE_WIDTH, 0)
+        self.RectangleList[0][2] = Rectangle(0, -2*SINGLE_LANE_WIDTH, -INTERSECTION_HALF_SIZE, MIN_COORD)
+        self.RectangleList[0][3] = Rectangle(-INTERSECTION_HALF_SIZE, MIN_COORD, 0, -2*SINGLE_LANE_WIDTH)
+
+
 
 
 # 前车的类 有其 状态信息 和 行动
@@ -833,6 +876,17 @@ class envCube(gym.Env):
 
         # 判断智能体处在什么阶段(其中十字路口中的统一模糊判断为intersection)
         self.vehicle.judgment()
+
+        # 前两步判断出初始车辆状态，利用初始状态辨别出逆行区域
+        if self.episode_step == 1:
+            self.vehicle.init_state = self.vehicle.state
+
+        self.rectangle_list_reverse.judgement(self.vehicle.init_state)
+        print(self.episode_step)
+        print(self.vehicle.state)
+        print("state = ", self.vehicle.init_state)
+        print(self.rectangle_list_reverse.RectangleList)
+
         # 更新直道的之前动作的最大最小坐标值(intersection中之前动作不更新)
         self.vehicle.UpdatePreExtremeValue()
 
@@ -846,68 +900,78 @@ class envCube(gym.Env):
         self.Time_to_off_road = 3
 
         # 进入逆行车道或者道路外，终止训练，并给予-500分惩罚
-        if self.vehicle.edge3 <= MIN_COORD + STRAIGHT_LENGTH:
-            if self.vehicle.edge0 <= 0 or self.vehicle.edge2 >= INTERSECTION_HALF_SIZE:
+        for rec in range(self.rectangle_list_off_road.RectangleList.size):
+            if ((self.vehicle.max_vertex_x < self.rectangle_list_off_road.RectangleList[0][rec].min_x) or
+                    (self.vehicle.min_vertex_x > self.rectangle_list_off_road.RectangleList[0][rec].max_x) or
+                    (self.vehicle.max_vertex_y < self.rectangle_list_off_road.RectangleList[0][rec].min_y) or
+                    (self.vehicle.min_vertex_y > self.rectangle_list_off_road.RectangleList[0][rec].max_y)):
+                self.JUDGEMENT_IN_ROAD = True
+            else:
                 self.JUDGEMENT_IN_ROAD = False
-        elif -INTERSECTION_HALF_SIZE < self.vehicle.edge3 and self.vehicle.edge1 < 0:
-            if self.vehicle.edge0 <= -INTERSECTION_HALF_SIZE:
-                self.JUDGEMENT_IN_ROAD = False
-        elif self.vehicle.edge1 >= 0 and self.vehicle.edge3 <= 0:
-            if self.vehicle.edge0 <= -INTERSECTION_HALF_SIZE or self.vehicle.edge2 >= INTERSECTION_HALF_SIZE:
-                self.JUDGEMENT_IN_ROAD = False
-        elif self.vehicle.edge3 > 0 and self.vehicle.edge1 < INTERSECTION_HALF_SIZE:
-            if self.vehicle.edge2 >= INTERSECTION_HALF_SIZE:
-                self.JUDGEMENT_IN_ROAD = False
-        elif self.vehicle.edge1 >= MAX_COORD - STRAIGHT_LENGTH:
-            if self.vehicle.edge0 <= 0 or self.vehicle.edge2 >= INTERSECTION_HALF_SIZE:
-                self.JUDGEMENT_IN_ROAD = False
+                break
 
-        # 按当前路径下一步进入逆行车道或者道路外
-        if self.vehicle.next1_edge3 <= MIN_COORD + STRAIGHT_LENGTH:
-            if self.vehicle.next1_edge0 <= 0 or self.vehicle.next1_edge2 >= INTERSECTION_HALF_SIZE:
-                self.NEXT_1_IN_ROAD = False
-        elif -INTERSECTION_HALF_SIZE < self.vehicle.next1_edge3 and self.vehicle.next1_edge1 < 0:
-            if self.vehicle.next1_edge0 <= -INTERSECTION_HALF_SIZE:
-                self.NEXT_1_IN_ROAD = False
-        elif self.vehicle.next1_edge1 >= 0 and self.vehicle.next1_edge3 <= 0:
-            if self.vehicle.next1_edge0 <= -INTERSECTION_HALF_SIZE or self.vehicle.next1_edge2 >= INTERSECTION_HALF_SIZE:
-                self.NEXT_1_IN_ROAD = False
-        elif self.vehicle.next1_edge3 > 0 and self.vehicle.next1_edge1 < INTERSECTION_HALF_SIZE:
-            if self.vehicle.next1_edge2 >= INTERSECTION_HALF_SIZE:
-                self.NEXT_1_IN_ROAD = False
-        elif self.vehicle.next1_edge1 >= MAX_COORD - STRAIGHT_LENGTH:
-            if self.vehicle.next1_edge0 <= 0 or self.vehicle.next1_edge2 >= INTERSECTION_HALF_SIZE:
-                self.NEXT_1_IN_ROAD = False
+        if self.JUDGEMENT_IN_ROAD == True:
+            for rec1 in range(self.rectangle_list_reverse.RectangleList.size):
+                print(self.rectangle_list_reverse.RectangleList[0][rec1])
+                if ((self.vehicle.max_vertex_x < self.rectangle_list_reverse.RectangleList[0][rec1].min_x) or
+                        (self.vehicle.min_vertex_x > self.rectangle_list_reverse.RectangleList[0][rec1].max_x) or
+                        (self.vehicle.max_vertex_y < self.rectangle_list_reverse.RectangleList[0][rec1].min_y) or
+                        (self.vehicle.min_vertex_y > self.rectangle_list_reverse.RectangleList[0][rec1].max_y)):
+                    self.JUDGEMENT_IN_ROAD = True
+                else:
+                    self.JUDGEMENT_IN_ROAD = False
+                    break
+        elif self.JUDGEMENT_IN_ROAD == False:
+            self.JUDGEMENT_IN_ROAD = False
 
-        # 按当前路径下两步进入逆行车道或者道路外
-        if self.vehicle.next2_edge3 <= MIN_COORD + STRAIGHT_LENGTH:
-            if self.vehicle.next2_edge0 <= 0 or self.vehicle.next2_edge2 >= INTERSECTION_HALF_SIZE:
-                self.NEXT_2_IN_ROAD = False
-        elif -INTERSECTION_HALF_SIZE < self.vehicle.next2_edge3 and self.vehicle.next2_edge1 < 0:
-            if self.vehicle.next2_edge0 <= -INTERSECTION_HALF_SIZE:
-                self.NEXT_2_IN_ROAD = False
-        elif self.vehicle.next2_edge1 >= 0 and self.vehicle.next2_edge3 <= 0:
-            if self.vehicle.next2_edge0 <= -INTERSECTION_HALF_SIZE or self.vehicle.next2_edge2 >= INTERSECTION_HALF_SIZE:
-                self.NEXT_2_IN_ROAD = False
-        elif self.vehicle.next2_edge3 > 0 and self.vehicle.next2_edge1 < INTERSECTION_HALF_SIZE:
-            if self.vehicle.next2_edge2 >= INTERSECTION_HALF_SIZE:
-                self.NEXT_2_IN_ROAD = False
-        elif self.vehicle.next2_edge1 >= MAX_COORD - STRAIGHT_LENGTH:
-            if self.vehicle.next2_edge0 <= 0 or self.vehicle.next2_edge2 >= INTERSECTION_HALF_SIZE:
-                self.NEXT_2_IN_ROAD = False
+
+        # # 按当前路径下一步进入逆行车道或者道路外
+        # if self.vehicle.next1_edge3 <= MIN_COORD + STRAIGHT_LENGTH:
+        #     if self.vehicle.next1_edge0 <= 0 or self.vehicle.next1_edge2 >= INTERSECTION_HALF_SIZE:
+        #         self.NEXT_1_IN_ROAD = False
+        # elif -INTERSECTION_HALF_SIZE < self.vehicle.next1_edge3 and self.vehicle.next1_edge1 < 0:
+        #     if self.vehicle.next1_edge0 <= -INTERSECTION_HALF_SIZE:
+        #         self.NEXT_1_IN_ROAD = False
+        # elif self.vehicle.next1_edge1 >= 0 and self.vehicle.next1_edge3 <= 0:
+        #     if self.vehicle.next1_edge0 <= -INTERSECTION_HALF_SIZE or self.vehicle.next1_edge2 >= INTERSECTION_HALF_SIZE:
+        #         self.NEXT_1_IN_ROAD = False
+        # elif self.vehicle.next1_edge3 > 0 and self.vehicle.next1_edge1 < INTERSECTION_HALF_SIZE:
+        #     if self.vehicle.next1_edge2 >= INTERSECTION_HALF_SIZE:
+        #         self.NEXT_1_IN_ROAD = False
+        # elif self.vehicle.next1_edge1 >= MAX_COORD - STRAIGHT_LENGTH:
+        #     if self.vehicle.next1_edge0 <= 0 or self.vehicle.next1_edge2 >= INTERSECTION_HALF_SIZE:
+        #         self.NEXT_1_IN_ROAD = False
+        #
+        # # 按当前路径下两步进入逆行车道或者道路外
+        # if self.vehicle.next2_edge3 <= MIN_COORD + STRAIGHT_LENGTH:
+        #     if self.vehicle.next2_edge0 <= 0 or self.vehicle.next2_edge2 >= INTERSECTION_HALF_SIZE:
+        #         self.NEXT_2_IN_ROAD = False
+        # elif -INTERSECTION_HALF_SIZE < self.vehicle.next2_edge3 and self.vehicle.next2_edge1 < 0:
+        #     if self.vehicle.next2_edge0 <= -INTERSECTION_HALF_SIZE:
+        #         self.NEXT_2_IN_ROAD = False
+        # elif self.vehicle.next2_edge1 >= 0 and self.vehicle.next2_edge3 <= 0:
+        #     if self.vehicle.next2_edge0 <= -INTERSECTION_HALF_SIZE or self.vehicle.next2_edge2 >= INTERSECTION_HALF_SIZE:
+        #         self.NEXT_2_IN_ROAD = False
+        # elif self.vehicle.next2_edge3 > 0 and self.vehicle.next2_edge1 < INTERSECTION_HALF_SIZE:
+        #     if self.vehicle.next2_edge2 >= INTERSECTION_HALF_SIZE:
+        #         self.NEXT_2_IN_ROAD = False
+        # elif self.vehicle.next2_edge1 >= MAX_COORD - STRAIGHT_LENGTH:
+        #     if self.vehicle.next2_edge0 <= 0 or self.vehicle.next2_edge2 >= INTERSECTION_HALF_SIZE:
+        #         self.NEXT_2_IN_ROAD = False
 
         # 主车进入到车祸区域
         if -VEHICLE_HALF_SIZE <= self.vehicle.x <= SINGLE_LANE_WIDTH + VEHICLE_HALF_SIZE and \
                 -VEHICLE_HALF_SIZE - INTERSECTION_HALF_SIZE <= self.vehicle.y <= VEHICLE_HALF_SIZE - SINGLE_LANE_WIDTH:
             self.JUDGEMENT_IN_ROAD = False
-        # 主车下一步进入到车祸区域
-        if -VEHICLE_HALF_SIZE <= self.vehicle.next1_x <= SINGLE_LANE_WIDTH + VEHICLE_HALF_SIZE and \
-                -VEHICLE_HALF_SIZE - INTERSECTION_HALF_SIZE <= self.vehicle.next1_y <= VEHICLE_HALF_SIZE - SINGLE_LANE_WIDTH:
-            self.NEXT_1_IN_ROAD = False
-        # 主车下两步进入到车祸区域
-        if -VEHICLE_HALF_SIZE <= self.vehicle.next2_x <= SINGLE_LANE_WIDTH + VEHICLE_HALF_SIZE and \
-                -VEHICLE_HALF_SIZE - INTERSECTION_HALF_SIZE <= self.vehicle.next2_y <= VEHICLE_HALF_SIZE - SINGLE_LANE_WIDTH:
-            self.NEXT_2_IN_ROAD = False
+
+        # # 主车下一步进入到车祸区域
+        # if -VEHICLE_HALF_SIZE <= self.vehicle.next1_x <= SINGLE_LANE_WIDTH + VEHICLE_HALF_SIZE and \
+        #         -VEHICLE_HALF_SIZE - INTERSECTION_HALF_SIZE <= self.vehicle.next1_y <= VEHICLE_HALF_SIZE - SINGLE_LANE_WIDTH:
+        #     self.NEXT_1_IN_ROAD = False
+        # # 主车下两步进入到车祸区域
+        # if -VEHICLE_HALF_SIZE <= self.vehicle.next2_x <= SINGLE_LANE_WIDTH + VEHICLE_HALF_SIZE and \
+        #         -VEHICLE_HALF_SIZE - INTERSECTION_HALF_SIZE <= self.vehicle.next2_y <= VEHICLE_HALF_SIZE - SINGLE_LANE_WIDTH:
+        #     self.NEXT_2_IN_ROAD = False
 
         # 两车相撞，终止训练，并给予-500分惩罚
         if self.vehicle.collision(self.first_other_vehicle) == 0 and self.vehicle.collision(self.second_other_vehicle) == 0:
@@ -1407,6 +1471,8 @@ class envCube(gym.Env):
         self.second_other_vehicle = Forward_Cube_Second(SIZE)
         self.signal_stop = Signal_Light_Stop_Line(SIZE)
         self.vehicle_track = Track(SIZE)
+        self.rectangle_list_off_road = Rectangle_List_Off_Road()
+        self.rectangle_list_reverse = Rectangle_List_Reverse()
 
         self.vehicle_position = np.array(
             [self.vehicle.x, self.vehicle.y], dtype=np.float32)
