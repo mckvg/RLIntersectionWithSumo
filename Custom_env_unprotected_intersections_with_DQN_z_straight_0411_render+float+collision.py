@@ -41,7 +41,7 @@ VEHICLE_ANGLE = math.atan(VEHICLE_WIDTH/VEHICLE_LENGTH)
 VEHICLE_DIAGONAL = math.sqrt(VEHICLE_WIDTH**2+VEHICLE_LENGTH**2)
 
 VEHICLE_HALF_SIZE = 10
-VEHICLE_ILLUSTRATION_HALF_SIZE = 1 * SCALE
+VEHICLE_ILLUSTRATION_YAW_ANGLE_SIZE = 1.0 * SCALE
 SINGLE_LANE_WIDTH = 4.0 * SCALE
 SEPARATE_STRAIGHT_DISTANCE_OF_REWARDS = 40.0
 STRIKE_LENGTH = 10
@@ -51,10 +51,10 @@ STRAIGHT_LENGTH = float(((SIZE - 1.0) - 6 * SINGLE_LANE_WIDTH) / 2)
 INTERSECTION_HALF_SIZE = 3 * SINGLE_LANE_WIDTH
 REVERSE_DRIVING_LENGTH = 30.0
 
-min_positionx = MIN_COORD + VEHICLE_HALF_SIZE
-max_positionx = MAX_COORD - VEHICLE_HALF_SIZE
-min_positiony = MIN_COORD + VEHICLE_HALF_SIZE
-max_positiony = MAX_COORD - VEHICLE_HALF_SIZE
+min_positionx = MIN_COORD + VEHICLE_LENGTH / 2
+max_positionx = MAX_COORD - VEHICLE_LENGTH / 2
+min_positiony = MIN_COORD + VEHICLE_LENGTH / 2
+max_positiony = MAX_COORD - VEHICLE_LENGTH / 2
 
 
 # 智能体的类，有其 状态信息 和 动作函数
@@ -97,10 +97,15 @@ class Cube:
         self.vertex0y = self.y + VEHICLE_DIAGONAL/2 * math.cos(self.yaw_angle-VEHICLE_ANGLE)
         self.vertex1x = self.x + VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle+VEHICLE_ANGLE)
         self.vertex1y = self.y + VEHICLE_DIAGONAL / 2 * math.cos(self.yaw_angle + VEHICLE_ANGLE)
-        self.vertex2x = -self.vertex0x
-        self.vertex2y = -self.vertex0y
-        self.vertex3x = -self.vertex1x
-        self.vertex3y = -self.vertex1y
+        self.vertex2x = self.x - VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex2y = self.y - VEHICLE_DIAGONAL/2 * math.cos(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex3x = self.x - VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle+VEHICLE_ANGLE)
+        self.vertex3y = self.y - VEHICLE_DIAGONAL / 2 * math.cos(self.yaw_angle + VEHICLE_ANGLE)
+
+        self.max_vertex_x = max(self.vertex0x, self.vertex1x, self.vertex2x, self.vertex3x)
+        self.min_vertex_x = min(self.vertex0x, self.vertex1x, self.vertex2x, self.vertex3x)
+        self.max_vertex_y = max(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
+        self.min_vertex_y = min(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
 
         self.edge0 = self.x - VEHICLE_HALF_SIZE
         self.edge1 = self.y + VEHICLE_HALF_SIZE
@@ -129,6 +134,7 @@ class Cube:
         # y+方向为yaw_angle = 0, 顺时针方向为角度正方向，在yaw_angle= [-pi,pi], yaw_angle大于0为右转。
 
         self.state = ''
+        self.init_state = ''
         self.pre_state = ''
         self.intersection_steering_choice = 2  # 2: default; 0: straight_y+; -1: turn left_x-; 1: turn right_x+.
         self.distance_to_off_road = np.array([self.edge0-0, self.edge2-INTERSECTION_HALF_SIZE], dtype=np.float32)
@@ -139,11 +145,13 @@ class Cube:
 
     def collision(self, other):
         flag = 0
-        if abs(self.y - other.y) <= (2 * VEHICLE_HALF_SIZE) and abs(other.x - self.x) <= (2 * VEHICLE_HALF_SIZE) \
-                and other.y != max_positiony and other.x != max_positionx and other.x != min_positionx:
-            flag = 1
-        else:
+        if ((self.max_vertex_x < other.min_vertex_x) or (self.min_vertex_x > other.max_vertex_x) or
+            (self.max_vertex_y < other.min_vertex_y) or (self.min_vertex_y > other.max_vertex_y) or
+            other.y == max_positiony or other.x == max_positionx or other.x == min_positionx):
+
             flag = 0
+        else:
+            flag = 1
         return flag
 
     # 玩家做动作
@@ -245,9 +253,20 @@ class Cube:
         if self.next2_y < min_positiony:
             self.next2_y = min_positiony
 
-        # 更新车辆四个顶点的坐标
+        # 更新车辆四周的坐标，车头朝向正北(yaw_angle = 0),vertex0为左前点，1为右前点，2为右后点，3为左后点，按顺时针方向。
+        self.vertex0x = self.x + VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex0y = self.y + VEHICLE_DIAGONAL/2 * math.cos(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex1x = self.x + VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle+VEHICLE_ANGLE)
+        self.vertex1y = self.y + VEHICLE_DIAGONAL / 2 * math.cos(self.yaw_angle + VEHICLE_ANGLE)
+        self.vertex2x = self.x - VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex2y = self.y - VEHICLE_DIAGONAL/2 * math.cos(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex3x = self.x - VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle+VEHICLE_ANGLE)
+        self.vertex3y = self.y - VEHICLE_DIAGONAL / 2 * math.cos(self.yaw_angle + VEHICLE_ANGLE)
 
-
+        self.max_vertex_x = max(self.vertex0x, self.vertex1x, self.vertex2x, self.vertex3x)
+        self.min_vertex_x = min(self.vertex0x, self.vertex1x, self.vertex2x, self.vertex3x)
+        self.max_vertex_y = max(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
+        self.min_vertex_y = min(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
 
         # 0点方向起始，顺时针；以此为：上，右，下，左
         self.edge0 = self.x - VEHICLE_HALF_SIZE
@@ -348,16 +367,16 @@ class Cube:
         pre_y_prime = self.pre_y + INTERSECTION_HALF_SIZE
 
         self.polar_radius = math.sqrt(x_prime ** 2 + y_prime ** 2)
-        self.polar_radius_min_edge = self.polar_radius - VEHICLE_HALF_SIZE
-        self.polar_radius_max_edge = self.polar_radius + VEHICLE_HALF_SIZE
+        self.polar_radius_min_edge = self.polar_radius - VEHICLE_WIDTH / 2
+        self.polar_radius_max_edge = self.polar_radius + VEHICLE_WIDTH / 2
 
         self.next1_polar_radius = math.sqrt(next1_x_prime ** 2 + next1_y_prime ** 2)
-        self.next1_polar_radius_min_edge = self.next1_polar_radius - VEHICLE_HALF_SIZE
-        self.next1_polar_radius_max_edge = self.next1_polar_radius + VEHICLE_HALF_SIZE
+        self.next1_polar_radius_min_edge = self.next1_polar_radius - VEHICLE_WIDTH / 2
+        self.next1_polar_radius_max_edge = self.next1_polar_radius + VEHICLE_WIDTH / 2
 
         self.next2_polar_radius = math.sqrt(next2_x_prime ** 2 + next2_y_prime ** 2)
-        self.next2_polar_radius_min_edge = self.next2_polar_radius - VEHICLE_HALF_SIZE
-        self.next2_polar_radius_max_edge = self.next2_polar_radius + VEHICLE_HALF_SIZE
+        self.next2_polar_radius_min_edge = self.next2_polar_radius - VEHICLE_WIDTH / 2
+        self.next2_polar_radius_max_edge = self.next2_polar_radius + VEHICLE_WIDTH / 2
 
         self.pre_polar_radius = math.sqrt(pre_x_prime ** 2 + pre_y_prime ** 2)
         if x_prime == 0:
@@ -377,6 +396,54 @@ class Cube:
         else:
             self.pre_polar_angle = math.atan(pre_y_prime / pre_x_prime)
 
+# Rectangle
+class Rectangle:
+
+    def __init__(self,max_x,min_x,max_y,min_y ):
+        self.max_x = max_x
+        self.min_x = min_x
+        self.max_y = max_y
+        self.min_y = min_y
+
+# Rectangle of Off-road
+class Rectangle_List_Off_Road:
+
+    def __init__(self):
+        # max_x, min_x, max_y, min_y
+        self.RectangleList = np.ndarray(shape=(1, 8), dtype=Rectangle)
+
+        self.RectangleList[0][0] = Rectangle(-2*SINGLE_LANE_WIDTH, MIN_COORD, MAX_COORD, INTERSECTION_HALF_SIZE)
+        self.RectangleList[0][1] = Rectangle(MAX_COORD, 2*SINGLE_LANE_WIDTH, MAX_COORD, INTERSECTION_HALF_SIZE)
+        self.RectangleList[0][2] = Rectangle(MAX_COORD, 2*SINGLE_LANE_WIDTH, -INTERSECTION_HALF_SIZE, MIN_COORD)
+        self.RectangleList[0][3] = Rectangle(-2*SINGLE_LANE_WIDTH, MIN_COORD, -INTERSECTION_HALF_SIZE, MIN_COORD)
+        self.RectangleList[0][4] = Rectangle(-INTERSECTION_HALF_SIZE, MIN_COORD, INTERSECTION_HALF_SIZE, 2*SINGLE_LANE_WIDTH)
+        self.RectangleList[0][5] = Rectangle(MAX_COORD, INTERSECTION_HALF_SIZE, INTERSECTION_HALF_SIZE, 2*SINGLE_LANE_WIDTH)
+        self.RectangleList[0][6] = Rectangle(MAX_COORD, INTERSECTION_HALF_SIZE, -2*SINGLE_LANE_WIDTH, -INTERSECTION_HALF_SIZE)
+        self.RectangleList[0][7] = Rectangle(-INTERSECTION_HALF_SIZE, MIN_COORD, -2*SINGLE_LANE_WIDTH, -INTERSECTION_HALF_SIZE)
+
+# Rectangle of Reverse
+# 根据车辆状态定义逆行区域
+class Rectangle_List_Reverse:
+
+    def __init__(self):
+        self.RectangleList = np.ndarray(shape=(1, 4), dtype=Rectangle)
+
+    def judgement(self, state):
+        # max_x, min_x, max_y, min_y
+        if state == 'straight_y+':
+            self.RectangleList[0][0] = Rectangle(0, -2*SINGLE_LANE_WIDTH, MAX_COORD, INTERSECTION_HALF_SIZE)
+            self.RectangleList[0][1] = Rectangle(MAX_COORD, INTERSECTION_HALF_SIZE, 2*SINGLE_LANE_WIDTH, 0)
+            self.RectangleList[0][2] = Rectangle(0, -2*SINGLE_LANE_WIDTH, -INTERSECTION_HALF_SIZE, MIN_COORD)
+            self.RectangleList[0][3] = Rectangle(-INTERSECTION_HALF_SIZE, MIN_COORD, 0, -2*SINGLE_LANE_WIDTH)
+
+class Rectangle_List_Crash_Area:
+
+    def __init__(self):
+        # max_x, min_x, max_y, min_y
+        self.RectangleList = np.ndarray(shape=(1, 1), dtype=Rectangle)
+
+        self.RectangleList[0][0] = Rectangle(SINGLE_LANE_WIDTH, 0, -SINGLE_LANE_WIDTH, -2*SINGLE_LANE_WIDTH)
+
 
 # 前车的类 有其 状态信息 和 行动
 class Forward_Cube_First:
@@ -384,11 +451,26 @@ class Forward_Cube_First:
     def __init__(self, size):  # 初始化状态
         self.size = size
         self.x = float(SINGLE_LANE_WIDTH / 2 + SINGLE_LANE_WIDTH)
-        self.y = MIN_COORD + 2 * VEHICLE_HALF_SIZE
+        self.y = MIN_COORD + 2 * VEHICLE_LENGTH
         self.velocity = 0.0 * SCALE
-        self.acceleration = 0.0
+        self.acceleration = 0.0 * SCALE
         self.move_step = 0
         self.yaw_angle = 0.0
+
+        # 车头朝向正北(yaw_angle = 0),vertex0为左前点，1为右前点，2为右后点，3为左后点，按顺时针方向。
+        self.vertex0x = self.x + VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex0y = self.y + VEHICLE_DIAGONAL/2 * math.cos(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex1x = self.x + VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle+VEHICLE_ANGLE)
+        self.vertex1y = self.y + VEHICLE_DIAGONAL / 2 * math.cos(self.yaw_angle + VEHICLE_ANGLE)
+        self.vertex2x = self.x - VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex2y = self.y - VEHICLE_DIAGONAL/2 * math.cos(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex3x = self.x - VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle+VEHICLE_ANGLE)
+        self.vertex3y = self.y - VEHICLE_DIAGONAL / 2 * math.cos(self.yaw_angle + VEHICLE_ANGLE)
+
+        self.max_vertex_x = max(self.vertex0x, self.vertex1x, self.vertex2x, self.vertex3x)
+        self.min_vertex_x = min(self.vertex0x, self.vertex1x, self.vertex2x, self.vertex3x)
+        self.max_vertex_y = max(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
+        self.min_vertex_y = min(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
 
     def __str__(self):
         return f'{(self.x, self.y)},{self.velocity},{self.acceleration}'
@@ -416,6 +498,21 @@ class Forward_Cube_First:
         if self.y < min_positiony:
             self.y = min_positiony
 
+        # 更新车辆边界点的坐标，车头朝向正北(yaw_angle = 0),vertex0为左前点，1为右前点，2为右后点，3为左后点，按顺时针方向。
+        self.vertex0x = self.x + VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex0y = self.y + VEHICLE_DIAGONAL/2 * math.cos(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex1x = self.x + VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle+VEHICLE_ANGLE)
+        self.vertex1y = self.y + VEHICLE_DIAGONAL / 2 * math.cos(self.yaw_angle + VEHICLE_ANGLE)
+        self.vertex2x = self.x - VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex2y = self.y - VEHICLE_DIAGONAL/2 * math.cos(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex3x = self.x - VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle+VEHICLE_ANGLE)
+        self.vertex3y = self.y - VEHICLE_DIAGONAL / 2 * math.cos(self.yaw_angle + VEHICLE_ANGLE)
+
+        self.max_vertex_x = max(self.vertex0x, self.vertex1x, self.vertex2x, self.vertex3x)
+        self.min_vertex_x = min(self.vertex0x, self.vertex1x, self.vertex2x, self.vertex3x)
+        self.max_vertex_y = max(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
+        self.min_vertex_y = min(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
+
 
 
 # 前车的类 有其 状态信息 和 行动
@@ -424,11 +521,26 @@ class Forward_Cube_Second:
     def __init__(self, size):  # 初始化状态
         self.size = size
         self.x = float(SINGLE_LANE_WIDTH / 2 + SINGLE_LANE_WIDTH)
-        self.y = MIN_COORD + 10 * VEHICLE_HALF_SIZE
+        self.y = MIN_COORD + 5 * VEHICLE_LENGTH
         self.velocity = 0.0 * SCALE
         self.acceleration = 0.0 * SCALE
         self.move_step = 0
         self.yaw_angle = 0.0
+
+        # 车头朝向正北(yaw_angle = 0),vertex0为左前点，1为右前点，2为右后点，3为左后点，按顺时针方向。
+        self.vertex0x = self.x + VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex0y = self.y + VEHICLE_DIAGONAL/2 * math.cos(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex1x = self.x + VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle+VEHICLE_ANGLE)
+        self.vertex1y = self.y + VEHICLE_DIAGONAL / 2 * math.cos(self.yaw_angle + VEHICLE_ANGLE)
+        self.vertex2x = self.x - VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex2y = self.y - VEHICLE_DIAGONAL/2 * math.cos(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex3x = self.x - VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle+VEHICLE_ANGLE)
+        self.vertex3y = self.y - VEHICLE_DIAGONAL / 2 * math.cos(self.yaw_angle + VEHICLE_ANGLE)
+
+        self.max_vertex_x = max(self.vertex0x, self.vertex1x, self.vertex2x, self.vertex3x)
+        self.min_vertex_x = min(self.vertex0x, self.vertex1x, self.vertex2x, self.vertex3x)
+        self.max_vertex_y = max(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
+        self.min_vertex_y = min(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
 
     def __str__(self):
         return f'{(self.x, self.y)},{self.velocity},{self.acceleration}'
@@ -455,6 +567,21 @@ class Forward_Cube_Second:
             self.y = max_positiony
         if self.y < min_positiony:
             self.y = min_positiony
+
+        # 更新车辆边界点的坐标，车头朝向正北(yaw_angle = 0),vertex0为左前点，1为右前点，2为右后点，3为左后点，按顺时针方向。
+        self.vertex0x = self.x + VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex0y = self.y + VEHICLE_DIAGONAL/2 * math.cos(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex1x = self.x + VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle+VEHICLE_ANGLE)
+        self.vertex1y = self.y + VEHICLE_DIAGONAL / 2 * math.cos(self.yaw_angle + VEHICLE_ANGLE)
+        self.vertex2x = self.x - VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex2y = self.y - VEHICLE_DIAGONAL/2 * math.cos(self.yaw_angle-VEHICLE_ANGLE)
+        self.vertex3x = self.x - VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle+VEHICLE_ANGLE)
+        self.vertex3y = self.y - VEHICLE_DIAGONAL / 2 * math.cos(self.yaw_angle + VEHICLE_ANGLE)
+
+        self.max_vertex_x = max(self.vertex0x, self.vertex1x, self.vertex2x, self.vertex3x)
+        self.min_vertex_x = min(self.vertex0x, self.vertex1x, self.vertex2x, self.vertex3x)
+        self.max_vertex_y = max(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
+        self.min_vertex_y = min(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
 
 # 信号灯及停止线的类
 class Signal_Light_Stop_Line:
@@ -755,6 +882,13 @@ class envCube(gym.Env):
 
         # 判断智能体处在什么阶段(其中十字路口中的统一模糊判断为intersection)
         self.vehicle.judgment()
+
+        # 前两步判断出初始车辆状态，利用初始状态辨别出逆行区域
+        if self.episode_step == 1:
+            self.vehicle.init_state = self.vehicle.state
+
+        self.rectangle_list_reverse.judgement(self.vehicle.init_state)
+
         # 更新直道的之前动作的最大最小坐标值(intersection中之前动作不更新)
         self.vehicle.UpdatePreExtremeValue()
 
@@ -767,69 +901,88 @@ class envCube(gym.Env):
         self.NEXT_2_IN_ROAD = True
         self.Time_to_off_road = 3
 
-        # 进入逆行车道或者道路外，终止训练，并给予-500分惩罚
-        if self.vehicle.edge3 <= MIN_COORD + STRAIGHT_LENGTH:
-            if self.vehicle.edge0 <= 0 or self.vehicle.edge2 >= INTERSECTION_HALF_SIZE:
+        # 进入道路外，终止训练，并给予-500分惩罚
+        for rec in range(self.rectangle_list_off_road.RectangleList.size):
+            if ((self.vehicle.max_vertex_x < self.rectangle_list_off_road.RectangleList[0][rec].min_x) or
+                    (self.vehicle.min_vertex_x > self.rectangle_list_off_road.RectangleList[0][rec].max_x) or
+                    (self.vehicle.max_vertex_y < self.rectangle_list_off_road.RectangleList[0][rec].min_y) or
+                    (self.vehicle.min_vertex_y > self.rectangle_list_off_road.RectangleList[0][rec].max_y)):
+                self.JUDGEMENT_IN_ROAD = True
+            else:
                 self.JUDGEMENT_IN_ROAD = False
-        elif -INTERSECTION_HALF_SIZE < self.vehicle.edge3 and self.vehicle.edge1 < 0:
-            if self.vehicle.edge0 <= -INTERSECTION_HALF_SIZE:
-                self.JUDGEMENT_IN_ROAD = False
-        elif self.vehicle.edge1 >= 0 and self.vehicle.edge3 <= 0:
-            if self.vehicle.edge0 <= -INTERSECTION_HALF_SIZE or self.vehicle.edge2 >= INTERSECTION_HALF_SIZE:
-                self.JUDGEMENT_IN_ROAD = False
-        elif self.vehicle.edge3 > 0 and self.vehicle.edge1 < INTERSECTION_HALF_SIZE:
-            if self.vehicle.edge2 >= INTERSECTION_HALF_SIZE:
-                self.JUDGEMENT_IN_ROAD = False
-        elif self.vehicle.edge1 >= MAX_COORD - STRAIGHT_LENGTH:
-            if self.vehicle.edge0 <= 0 or self.vehicle.edge2 >= INTERSECTION_HALF_SIZE:
-                self.JUDGEMENT_IN_ROAD = False
-
-        # 按当前路径下一步进入逆行车道或者道路外
-        if self.vehicle.next1_edge3 <= MIN_COORD + STRAIGHT_LENGTH:
-            if self.vehicle.next1_edge0 <= 0 or self.vehicle.next1_edge2 >= INTERSECTION_HALF_SIZE:
-                self.NEXT_1_IN_ROAD = False
-        elif -INTERSECTION_HALF_SIZE < self.vehicle.next1_edge3 and self.vehicle.next1_edge1 < 0:
-            if self.vehicle.next1_edge0 <= -INTERSECTION_HALF_SIZE:
-                self.NEXT_1_IN_ROAD = False
-        elif self.vehicle.next1_edge1 >= 0 and self.vehicle.next1_edge3 <= 0:
-            if self.vehicle.next1_edge0 <= -INTERSECTION_HALF_SIZE or self.vehicle.next1_edge2 >= INTERSECTION_HALF_SIZE:
-                self.NEXT_1_IN_ROAD = False
-        elif self.vehicle.next1_edge3 > 0 and self.vehicle.next1_edge1 < INTERSECTION_HALF_SIZE:
-            if self.vehicle.next1_edge2 >= INTERSECTION_HALF_SIZE:
-                self.NEXT_1_IN_ROAD = False
-        elif self.vehicle.next1_edge1 >= MAX_COORD - STRAIGHT_LENGTH:
-            if self.vehicle.next1_edge0 <= 0 or self.vehicle.next1_edge2 >= INTERSECTION_HALF_SIZE:
-                self.NEXT_1_IN_ROAD = False
-
-        # 按当前路径下两步进入逆行车道或者道路外
-        if self.vehicle.next2_edge3 <= MIN_COORD + STRAIGHT_LENGTH:
-            if self.vehicle.next2_edge0 <= 0 or self.vehicle.next2_edge2 >= INTERSECTION_HALF_SIZE:
-                self.NEXT_2_IN_ROAD = False
-        elif -INTERSECTION_HALF_SIZE < self.vehicle.next2_edge3 and self.vehicle.next2_edge1 < 0:
-            if self.vehicle.next2_edge0 <= -INTERSECTION_HALF_SIZE:
-                self.NEXT_2_IN_ROAD = False
-        elif self.vehicle.next2_edge1 >= 0 and self.vehicle.next2_edge3 <= 0:
-            if self.vehicle.next2_edge0 <= -INTERSECTION_HALF_SIZE or self.vehicle.next2_edge2 >= INTERSECTION_HALF_SIZE:
-                self.NEXT_2_IN_ROAD = False
-        elif self.vehicle.next2_edge3 > 0 and self.vehicle.next2_edge1 < INTERSECTION_HALF_SIZE:
-            if self.vehicle.next2_edge2 >= INTERSECTION_HALF_SIZE:
-                self.NEXT_2_IN_ROAD = False
-        elif self.vehicle.next2_edge1 >= MAX_COORD - STRAIGHT_LENGTH:
-            if self.vehicle.next2_edge0 <= 0 or self.vehicle.next2_edge2 >= INTERSECTION_HALF_SIZE:
-                self.NEXT_2_IN_ROAD = False
-
-        # 主车进入到车祸区域
-        if -VEHICLE_HALF_SIZE <= self.vehicle.x <= SINGLE_LANE_WIDTH + VEHICLE_HALF_SIZE and \
-                -VEHICLE_HALF_SIZE - INTERSECTION_HALF_SIZE <= self.vehicle.y <= VEHICLE_HALF_SIZE - SINGLE_LANE_WIDTH:
+                break
+        # 进入逆行车道，终止训练，并给予-500分惩罚
+        if self.JUDGEMENT_IN_ROAD == True:
+            for rec1 in range(self.rectangle_list_reverse.RectangleList.size):
+                if ((self.vehicle.max_vertex_x < self.rectangle_list_reverse.RectangleList[0][rec1].min_x) or
+                        (self.vehicle.min_vertex_x > self.rectangle_list_reverse.RectangleList[0][rec1].max_x) or
+                        (self.vehicle.max_vertex_y < self.rectangle_list_reverse.RectangleList[0][rec1].min_y) or
+                        (self.vehicle.min_vertex_y > self.rectangle_list_reverse.RectangleList[0][rec1].max_y)):
+                    self.JUDGEMENT_IN_ROAD = True
+                else:
+                    self.JUDGEMENT_IN_ROAD = False
+                    break
+        elif self.JUDGEMENT_IN_ROAD == False:
             self.JUDGEMENT_IN_ROAD = False
-        # 主车下一步进入到车祸区域
-        if -VEHICLE_HALF_SIZE <= self.vehicle.next1_x <= SINGLE_LANE_WIDTH + VEHICLE_HALF_SIZE and \
-                -VEHICLE_HALF_SIZE - INTERSECTION_HALF_SIZE <= self.vehicle.next1_y <= VEHICLE_HALF_SIZE - SINGLE_LANE_WIDTH:
-            self.NEXT_1_IN_ROAD = False
-        # 主车下两步进入到车祸区域
-        if -VEHICLE_HALF_SIZE <= self.vehicle.next2_x <= SINGLE_LANE_WIDTH + VEHICLE_HALF_SIZE and \
-                -VEHICLE_HALF_SIZE - INTERSECTION_HALF_SIZE <= self.vehicle.next2_y <= VEHICLE_HALF_SIZE - SINGLE_LANE_WIDTH:
-            self.NEXT_2_IN_ROAD = False
+
+
+        # # 按当前路径下一步进入逆行车道或者道路外
+        # if self.vehicle.next1_edge3 <= MIN_COORD + STRAIGHT_LENGTH:
+        #     if self.vehicle.next1_edge0 <= 0 or self.vehicle.next1_edge2 >= INTERSECTION_HALF_SIZE:
+        #         self.NEXT_1_IN_ROAD = False
+        # elif -INTERSECTION_HALF_SIZE < self.vehicle.next1_edge3 and self.vehicle.next1_edge1 < 0:
+        #     if self.vehicle.next1_edge0 <= -INTERSECTION_HALF_SIZE:
+        #         self.NEXT_1_IN_ROAD = False
+        # elif self.vehicle.next1_edge1 >= 0 and self.vehicle.next1_edge3 <= 0:
+        #     if self.vehicle.next1_edge0 <= -INTERSECTION_HALF_SIZE or self.vehicle.next1_edge2 >= INTERSECTION_HALF_SIZE:
+        #         self.NEXT_1_IN_ROAD = False
+        # elif self.vehicle.next1_edge3 > 0 and self.vehicle.next1_edge1 < INTERSECTION_HALF_SIZE:
+        #     if self.vehicle.next1_edge2 >= INTERSECTION_HALF_SIZE:
+        #         self.NEXT_1_IN_ROAD = False
+        # elif self.vehicle.next1_edge1 >= MAX_COORD - STRAIGHT_LENGTH:
+        #     if self.vehicle.next1_edge0 <= 0 or self.vehicle.next1_edge2 >= INTERSECTION_HALF_SIZE:
+        #         self.NEXT_1_IN_ROAD = False
+        #
+        # # 按当前路径下两步进入逆行车道或者道路外
+        # if self.vehicle.next2_edge3 <= MIN_COORD + STRAIGHT_LENGTH:
+        #     if self.vehicle.next2_edge0 <= 0 or self.vehicle.next2_edge2 >= INTERSECTION_HALF_SIZE:
+        #         self.NEXT_2_IN_ROAD = False
+        # elif -INTERSECTION_HALF_SIZE < self.vehicle.next2_edge3 and self.vehicle.next2_edge1 < 0:
+        #     if self.vehicle.next2_edge0 <= -INTERSECTION_HALF_SIZE:
+        #         self.NEXT_2_IN_ROAD = False
+        # elif self.vehicle.next2_edge1 >= 0 and self.vehicle.next2_edge3 <= 0:
+        #     if self.vehicle.next2_edge0 <= -INTERSECTION_HALF_SIZE or self.vehicle.next2_edge2 >= INTERSECTION_HALF_SIZE:
+        #         self.NEXT_2_IN_ROAD = False
+        # elif self.vehicle.next2_edge3 > 0 and self.vehicle.next2_edge1 < INTERSECTION_HALF_SIZE:
+        #     if self.vehicle.next2_edge2 >= INTERSECTION_HALF_SIZE:
+        #         self.NEXT_2_IN_ROAD = False
+        # elif self.vehicle.next2_edge1 >= MAX_COORD - STRAIGHT_LENGTH:
+        #     if self.vehicle.next2_edge0 <= 0 or self.vehicle.next2_edge2 >= INTERSECTION_HALF_SIZE:
+        #         self.NEXT_2_IN_ROAD = False
+
+        # 主车进入到车祸区域，终止训练，并给予-500分惩罚
+        if self.JUDGEMENT_IN_ROAD == True:
+            for rec in range(self.rectangle_list_crash_area.RectangleList.size):
+                if ((self.vehicle.max_vertex_x < self.rectangle_list_crash_area.RectangleList[0][rec].min_x) or
+                        (self.vehicle.min_vertex_x > self.rectangle_list_crash_area.RectangleList[0][rec].max_x) or
+                        (self.vehicle.max_vertex_y < self.rectangle_list_crash_area.RectangleList[0][rec].min_y) or
+                        (self.vehicle.min_vertex_y > self.rectangle_list_crash_area.RectangleList[0][rec].max_y)):
+                    self.JUDGEMENT_IN_ROAD = True
+                else:
+                    self.JUDGEMENT_IN_ROAD = False
+                    break
+        elif self.JUDGEMENT_IN_ROAD == False:
+            self.JUDGEMENT_IN_ROAD = False
+
+
+        # # 主车下一步进入到车祸区域
+        # if -VEHICLE_HALF_SIZE <= self.vehicle.next1_x <= SINGLE_LANE_WIDTH + VEHICLE_HALF_SIZE and \
+        #         -VEHICLE_HALF_SIZE - INTERSECTION_HALF_SIZE <= self.vehicle.next1_y <= VEHICLE_HALF_SIZE - SINGLE_LANE_WIDTH:
+        #     self.NEXT_1_IN_ROAD = False
+        # # 主车下两步进入到车祸区域
+        # if -VEHICLE_HALF_SIZE <= self.vehicle.next2_x <= SINGLE_LANE_WIDTH + VEHICLE_HALF_SIZE and \
+        #         -VEHICLE_HALF_SIZE - INTERSECTION_HALF_SIZE <= self.vehicle.next2_y <= VEHICLE_HALF_SIZE - SINGLE_LANE_WIDTH:
+        #     self.NEXT_2_IN_ROAD = False
 
         # 两车相撞，终止训练，并给予-500分惩罚
         if self.vehicle.collision(self.first_other_vehicle) == 0 and self.vehicle.collision(self.second_other_vehicle) == 0:
@@ -1329,6 +1482,9 @@ class envCube(gym.Env):
         self.second_other_vehicle = Forward_Cube_Second(SIZE)
         self.signal_stop = Signal_Light_Stop_Line(SIZE)
         self.vehicle_track = Track(SIZE)
+        self.rectangle_list_off_road = Rectangle_List_Off_Road()
+        self.rectangle_list_reverse = Rectangle_List_Reverse()
+        self.rectangle_list_crash_area = Rectangle_List_Crash_Area()
 
         self.vehicle_position = np.array(
             [self.vehicle.x, self.vehicle.y], dtype=np.float32)
@@ -1444,34 +1600,43 @@ class envCube(gym.Env):
                     env[INT_SIZE - z7 - 1][x7] = self.d[self.LINE_N]
 
         # 画出智能体及前车的位置
-        v_position: np.ndarry = [0, 0]
         INT_VEHICLE_Y = int(round(self.vehicle.y, 0))
         INT_VEHICLE_X = int(round(self.vehicle.x, 0))
+        INT_VEHICLE_MAX_VERTEX_X = int(round(self.vehicle.max_vertex_x, 0))
+        INT_VEHICLE_MIN_VERTEX_X = int(round(self.vehicle.min_vertex_x, 0))
+        INT_VEHICLE_MAX_VERTEX_Y = int(round(self.vehicle.max_vertex_y, 0))
+        INT_VEHICLE_MIN_VERTEX_Y = int(round(self.vehicle.min_vertex_y, 0))
+
+
         INT_FIRST_OTHER_VEHICLE_Y = int(round(self.first_other_vehicle.y, 0))
         INT_FIRST_OTHER_VEHICLE_X = int(round(self.first_other_vehicle.x, 0))
+        INT_FIRST_OTHER_VEHICLE_MAX_VERTEX_X = int(round(self.first_other_vehicle.max_vertex_x, 0))
+        INT_FIRST_OTHER_VEHICLE_MIN_VERTEX_X = int(round(self.first_other_vehicle.min_vertex_x, 0))
+        INT_FIRST_OTHER_VEHICLE_MAX_VERTEX_Y = int(round(self.first_other_vehicle.max_vertex_y, 0))
+        INT_FIRST_OTHER_VEHICLE_MIN_VERTEX_Y = int(round(self.first_other_vehicle.min_vertex_y, 0))
+
         INT_SECOND_OTHER_VEHICLE_Y = int(round(self.second_other_vehicle.y, 0))
         INT_SECOND_OTHER_VEHICLE_X = int(round(self.second_other_vehicle.x, 0))
-        v_position[0] = -INT_VEHICLE_Y + INT_MAX_COORD
-        v_position[1] = INT_VEHICLE_X + INT_MAX_COORD
-        first_other_vehicle_v_position: np.ndarry = [0, 0]
-        first_other_vehicle_v_position[0] = -INT_FIRST_OTHER_VEHICLE_Y + INT_MAX_COORD
-        first_other_vehicle_v_position[1] = INT_FIRST_OTHER_VEHICLE_X + INT_MAX_COORD
-        second_other_vehicle_v_position: np.ndarry = [0, 0]
-        second_other_vehicle_v_position[0] = -INT_SECOND_OTHER_VEHICLE_Y + INT_MAX_COORD
-        second_other_vehicle_v_position[1] = INT_SECOND_OTHER_VEHICLE_X + INT_MAX_COORD
+        INT_SECOND_OTHER_VEHICLE_MAX_VERTEX_X = int(round(self.second_other_vehicle.max_vertex_x, 0))
+        INT_SECOND_OTHER_VEHICLE_MIN_VERTEX_X = int(round(self.second_other_vehicle.min_vertex_x, 0))
+        INT_SECOND_OTHER_VEHICLE_MAX_VERTEX_Y = int(round(self.second_other_vehicle.max_vertex_y, 0))
+        INT_SECOND_OTHER_VEHICLE_MIN_VERTEX_Y = int(round(self.second_other_vehicle.min_vertex_y, 0))
 
-        for x3 in range(-VEHICLE_ILLUSTRATION_HALF_SIZE, VEHICLE_ILLUSTRATION_HALF_SIZE):
-            for y3 in range(-VEHICLE_ILLUSTRATION_HALF_SIZE, VEHICLE_ILLUSTRATION_HALF_SIZE):
-                env[v_position[0] + x3][v_position[1] + y3] = self.d[self.VEHICLE_N]
-                if first_other_vehicle_v_position[1] < INT_MAX_COORD + max_positiony:
-                    env[first_other_vehicle_v_position[0] + x3][first_other_vehicle_v_position[1] + y3] = self.d[
-                          self.VEHICLE_OTHER_N]
-                if second_other_vehicle_v_position[1] < INT_MAX_COORD + max_positiony:
-                    env[second_other_vehicle_v_position[0] + x3][second_other_vehicle_v_position[1] + y3] = self.d[
-                          self.VEHICLE_OTHER_N]
-        for x5 in range(0, int(2.0 * VEHICLE_ILLUSTRATION_HALF_SIZE)):
-            x = v_position[0] - int(x5 * math.cos(self.vehicle.yaw_angle))
-            y = v_position[1] + int(x5 * math.sin(self.vehicle.yaw_angle))
+        for x3 in range(INT_VEHICLE_MIN_VERTEX_X + INT_MAX_COORD, INT_VEHICLE_MAX_VERTEX_X + INT_MAX_COORD):
+            for y3 in range(INT_VEHICLE_MIN_VERTEX_Y + INT_MAX_COORD, INT_VEHICLE_MAX_VERTEX_Y + INT_MAX_COORD):
+                env[-y3][x3] = self.d[self.VEHICLE_N]
+        if INT_FIRST_OTHER_VEHICLE_Y < INT_MAX_COORD + max_positiony:
+            for x13 in range(INT_FIRST_OTHER_VEHICLE_MIN_VERTEX_X + INT_MAX_COORD, INT_FIRST_OTHER_VEHICLE_MAX_VERTEX_X + INT_MAX_COORD):
+                for y13 in range(INT_FIRST_OTHER_VEHICLE_MIN_VERTEX_Y + INT_MAX_COORD, INT_FIRST_OTHER_VEHICLE_MAX_VERTEX_Y + INT_MAX_COORD):
+                    env[-y13][x13] = self.d[self.VEHICLE_OTHER_N]
+        if INT_SECOND_OTHER_VEHICLE_Y < INT_MAX_COORD + max_positiony:
+            for x23 in range(INT_SECOND_OTHER_VEHICLE_MIN_VERTEX_X + INT_MAX_COORD, INT_SECOND_OTHER_VEHICLE_MAX_VERTEX_X + INT_MAX_COORD):
+                for y23 in range(INT_SECOND_OTHER_VEHICLE_MIN_VERTEX_Y + INT_MAX_COORD, INT_SECOND_OTHER_VEHICLE_MAX_VERTEX_Y + INT_MAX_COORD):
+                    env[-y23][x23] = self.d[self.VEHICLE_OTHER_N]
+
+        for x5 in range(0, int(2.0 * VEHICLE_ILLUSTRATION_YAW_ANGLE_SIZE)):
+            x = INT_MAX_COORD - INT_VEHICLE_Y - int(x5 * math.cos(self.vehicle.yaw_angle))
+            y = INT_MAX_COORD + INT_VEHICLE_X + int(x5 * math.sin(self.vehicle.yaw_angle))
             if x >= INT_SIZE:
                 x = INT_SIZE - 1
             if y >= INT_SIZE:
@@ -1566,7 +1731,7 @@ check_env(env)
 # # )
 # # print(best_mean_reward, best_std_reward)
 
-eposides = 100
+eposides = 1
 for ep in range(eposides):
     obs = env.reset()
     done = False
