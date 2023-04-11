@@ -5,6 +5,7 @@
 #   @author olin322
 #
 ###########################
+import math
 
 from CONSTANTS import SCALE
 from CONSTANTS import SIZE
