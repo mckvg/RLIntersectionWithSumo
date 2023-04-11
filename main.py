@@ -9,7 +9,6 @@ import CONSTANTS
 from envCube import envCube
 import gym
 from gym import spaces
-import pygame
 from gym import spaces
 from gym.spaces.space import Space
 from gym.spaces import Box, Dict, Discrete, MultiDiscrete, Tuple
@@ -23,7 +22,7 @@ from stable_baselines3.common.callbacks import EvalCallback
 env = envCube()
 check_env(env)
 
-eposides = 100
+eposides = 1
 for ep in range(eposides):
     obs = env.reset()
     done = False

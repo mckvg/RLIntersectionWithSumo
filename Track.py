@@ -104,4 +104,3 @@ class Track:
             if self.steering_frontier_polar_coord_negative_angle >= vehicle_y_or_angle:
                 self.steering_frontier_polar_coord_negative_angle = vehicle_y_or_angle
                 self.steering_frontier_polar_coord_negative_radius = vehicle_x_or_radius
-
