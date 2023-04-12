@@ -48,6 +48,7 @@ class Cube:
         self.velocity = 2.0 * SCALE
         self.acceleration = 0.0 * SCALE
         self.yaw_angle = 0.0
+        self.distance_to_mid_lane_line = abs(self.x-SINGLE_LANE_WIDTH)
 
         self.polar_radius = 0.0
         self.polar_angle = 0.0

@@ -84,7 +84,7 @@ check_env(env)
 # # # )
 # # # print(best_mean_reward, best_std_reward)
 
-eposides = 10
+eposides = 1
 for ep in range(eposides):
     obs = env.reset()
     done = False

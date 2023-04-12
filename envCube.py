@@ -80,6 +80,7 @@ class envCube(gym.Env):
     NEXT_1_IN_ROAD = True
     NEXT_2_IN_ROAD = True
     EXCEED_MAX_STEP = False
+    OCCUPIED_MID_LANE_LINE = False
 
     d = {
         1: (255, 0, 0),  # blue
@@ -199,6 +200,7 @@ class envCube(gym.Env):
                 'second_other_vehicle_speed': Box(self.min_speed, self.max_speed, shape=(1,), dtype=np.float32),
                 'relative_distance_2_goal': Box(2*MIN_COORD-1.0, 2*MAX_COORD+1.0, shape=(1,), dtype=np.float32),
                 'judgement_in_road': Discrete(self.judgement_space),
+                'distance_2_mid_lane_line': Box(2*MIN_COORD-1.0, 2*MAX_COORD+1.0, shape=(1,), dtype=np.float32),
                 # 'risk_off_road': Discrete(self.risk_space),
                 'distance_2_nearest_off_road': Box(2*MIN_COORD-1.0, 2*MAX_COORD+1.0, shape=(2,), dtype=np.float32),
 
@@ -237,6 +239,7 @@ class envCube(gym.Env):
 
         terminated = False
         break_out = False
+        self.OCCUPIED_MID_LANE_LINE = False
 
         # self.NEXT_1_IN_ROAD = True
         # self.NEXT_2_IN_ROAD = True
@@ -407,6 +410,11 @@ class envCube(gym.Env):
                 if self.mid_goal_rear_positiony[self.mid_goal_rear_space_y - 1] <= self.vehicle.y <= self.goal_straight_positiony \
                         and num >= self.mid_goal_rear_space_y:
                     self.distance_2_goal = abs(self.vehicle.y - self.goal_straight_positiony)
+            # 计算智能体距mid-road-line的距离
+            self.vehicle.distance_to_mid_lane_line = abs(self.vehicle.x - SINGLE_LANE_WIDTH)
+            # 如果车辆范围与中线有交点，给予一个惩罚
+            if self.vehicle.min_vertex_x < SINGLE_LANE_WIDTH < self.vehicle.max_vertex_x:
+                self.OCCUPIED_MID_LANE_LINE = True
 
         elif self.vehicle.state == 'straight_x+':
             # 更新智能体当前track的直道前沿坐标值
@@ -448,6 +456,11 @@ class envCube(gym.Env):
             if self.mid_goal_front_positionx[self.mid_goal_front_space_x-1] <= self.vehicle.x <= self.goal_turn_right_positionx \
                     and num >= self.mid_goal_front_space_x:
                 self.distance_2_goal = abs(self.vehicle.x - self.goal_turn_right_positionx)
+            # 计算智能体距mid-road-line的距离
+            self.vehicle.distance_to_mid_lane_line = abs(self.vehicle.y + SINGLE_LANE_WIDTH)
+            # 如果车辆范围与中线有交点，给予一个惩罚
+            if self.vehicle.min_vertex_y < -SINGLE_LANE_WIDTH < self.vehicle.max_vertex_y:
+                self.OCCUPIED_MID_LANE_LINE = True
         #
         # elif self.vehicle.state == 'straight_y-':
         #     # 更新智能体当前track的直道前沿坐标值
@@ -509,8 +522,13 @@ class envCube(gym.Env):
             if self.mid_goal_rear_positionx[self.mid_goal_rear_space_x-1] >= self.vehicle.x >= self.goal_turn_left_positionx \
                     and num >= self.mid_goal_rear_space_x:
                 self.distance_2_goal = abs(self.vehicle.x - self.goal_turn_left_positionx)
+            # 计算智能体距mid-road-line的距离
+            self.vehicle.distance_to_mid_lane_line = abs(self.vehicle.y - SINGLE_LANE_WIDTH)
+            # 如果车辆范围与中线有交点，给予一个惩罚
+            if self.vehicle.min_vertex_y < SINGLE_LANE_WIDTH < self.vehicle.max_vertex_y:
+                self.OCCUPIED_MID_LANE_LINE = True
 
-        # 十字路口内选择直行
+        # 十字路口内选择
         self.vehicle.intersection_steering_choice = -1  # 0: straight; -1: turn left;  1: turn right
 
         # 进入十字路口范围内，根据intersection_steering_choice，绘制track路线图，带有rewards，转弯部分利用极坐标系绘制
@@ -755,7 +773,11 @@ class envCube(gym.Env):
             break_out = True
 
         # 油门及刹车动作的惩罚
-        reward -= math.pow((real_action[0]+real_action[1]), 2) * 0.1
+        reward -= math.pow((real_action[0]+real_action[1]), 2) * 1
+
+        #如果车辆压到中线，返回一个小惩罚
+        if self.OCCUPIED_MID_LANE_LINE == True:
+            reward -= 30
 
         if break_out:
             reward += -500.0
@@ -783,18 +805,22 @@ class envCube(gym.Env):
             [self.vehicle.x - self.second_other_vehicle.x, self.vehicle.y - self.second_other_vehicle.y], dtype=np.float32)
         self.second_other_vehicle_speed = np.array([self.second_other_vehicle.velocity], dtype=np.float32)
         self.relative_distance_to_goal = np.array([self.distance_2_goal], dtype=np.float32)
+        self.distance_to_mid_lane_line = np.array([self.vehicle.distance_to_mid_lane_line], dtype=np.float32)
 
         # self.signal_stop_position = np.array([self.signal_stop.x, self.signal_stop.y], dtype=np.int32)
         # self.signal_stop_state = np.array([phase, countdown], dtype=np.int32)
 
         print(self.episode_step, ':', 'Action:', action, ';',
               'Position:', self.vehicle_position, ';', 'Speed_YawAngle:', self.vehicle_speed_yawangle, ';',
-              'Relative_distance_to_goal:', self.relative_distance_to_goal, ';',
+              # 'Relative_distance_to_goal:', self.relative_distance_to_goal, ';',
               'vehicle_state:', self.vehicle.state, ';',
-              'Judgement_in_road:', self.JUDGEMENT_IN_ROAD, ';',
-              'Distance_to_off_road:', self.vehicle.distance_to_off_road, ';',
-              'Polar_radius:', self.vehicle.polar_radius, ';',
-              'Polar_angle:', self.vehicle.polar_angle, ';')
+              # 'Judgement_in_road:', self.JUDGEMENT_IN_ROAD, ';',
+              # 'Distance_to_off_road:', self.vehicle.distance_to_off_road, ';',
+              'Distance_to_mid_lane_line', self.vehicle.distance_to_mid_lane_line, ';',
+              # 'Polar_radius:', self.vehicle.polar_radius, ';',
+              # 'Polar_angle:', self.vehicle.polar_angle, ';'
+              'reward:', reward
+              )
         if reward < -100 or reward > 100:
           print(reward)
 
@@ -811,6 +837,7 @@ class envCube(gym.Env):
                 'second_other_vehicle_speed': self.second_other_vehicle_speed,
                 'relative_distance_2_goal': self.relative_distance_to_goal,
                 'judgement_in_road': self.JUDGEMENT_IN_ROAD,
+                'distance_2_mid_lane_line': self.distance_to_mid_lane_line,
                 # 'risk_off_road': self.Time_to_off_road,
                 'distance_2_nearest_off_road': self.vehicle.distance_to_off_road,
                 # 'stop_line_position': self.signal_stop_position,
@@ -851,6 +878,7 @@ class envCube(gym.Env):
             [self.vehicle.x - self.second_other_vehicle.x, self.vehicle.y - self.second_other_vehicle.y], dtype=np.float32)
         self.second_other_vehicle_speed = np.array([self.second_other_vehicle.velocity], dtype=np.float32)
         self.relative_distance_to_goal = np.array([abs(self.vehicle.y - self.mid_goal_front_positiony[0])], dtype=np.float32)
+        self.distance_to_mid_lane_line = np.array([self.vehicle.distance_to_mid_lane_line], dtype=np.float32)
 
         # self.signal_stop_position = np.array([self.signal_stop.x, self.signal_stop.y], dtype=np.int32)
         # self.signal_stop_state = np.array([self.signal_stop.signal, self.signal_stop.countdown], dtype=np.int64)
@@ -864,6 +892,7 @@ class envCube(gym.Env):
         self.NEXT_1_IN_ROAD = True
         self.NEXT_2_IN_ROAD = True
         self.EXCEED_MAX_STEP = False
+        self.OCCUPIED_MID_LANE_LINE = False
         # self.Time_to_off_road = 3
         self.CIRCLE_COUNT = 0
         self.ARRIVE_AT_MID_GOAL = np.zeros((self.mid_goal_front_space_y), dtype=np.int32)
@@ -884,6 +913,7 @@ class envCube(gym.Env):
                 'second_other_vehicle_speed': self.second_other_vehicle_speed,
                 'relative_distance_2_goal': self.relative_distance_to_goal,
                 'judgement_in_road': self.JUDGEMENT_IN_ROAD,
+                'distance_2_mid_lane_line': self.distance_to_mid_lane_line,
                 # 'risk_off_road': self.Time_to_off_road,
                 'distance_2_nearest_off_road': self.vehicle.distance_to_off_road,
                 # 'stop_line_position': self.signal_stop_position,
