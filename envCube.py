@@ -535,6 +535,8 @@ class envCube(gym.Env):
         if self.vehicle.state == 'intersection':
             # 更新车辆在十字路口内的track的细分阶段
             self.vehicle_track.IntersectionJudgment(self.vehicle.intersection_steering_choice)
+            # 更新车辆距离中线的距离(定义为最佳远离距离)
+            self.vehicle.distance_to_mid_lane_line = SINGLE_LANE_WIDTH / 2
             # 如果路口内状态为直道直行_y+：
             if self.vehicle_track.judgment_str == 'intersection_straight_y+':
                 # 更新智能体在十字路口内的直行y+的之前动作的最大最小坐标值
