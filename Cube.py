@@ -18,7 +18,7 @@ from CONSTANTS import VEHICLE_LENGTH
 from CONSTANTS import VEHICLE_WIDTH 
 from CONSTANTS import VEHICLE_ANGLE 
 from CONSTANTS import VEHICLE_DIAGONAL
-from CONSTANTS import VEHICLE_HALF_SIZE
+# from CONSTANTS import VEHICLE_HALF_SIZE
 from CONSTANTS import VEHICLE_ILLUSTRATION_YAW_ANGLE_SIZE
 from CONSTANTS import SINGLE_LANE_WIDTH
 from CONSTANTS import SEPARATE_STRAIGHT_DISTANCE_OF_REWARDS
@@ -38,13 +38,13 @@ class Cube:
     def __init__(self, size):  # 初始化状态
         self.size = size
         self.x = float(SINGLE_LANE_WIDTH / 2)
-        self.y = MIN_COORD + 2 * VEHICLE_HALF_SIZE
+        self.y = MIN_COORD + 1 * VEHICLE_LENGTH
         self.pre_x = self.x
         self.pre_y = self.y
-        self.next1_x = self.x
-        self.next1_y = self.y
-        self.next2_x = self.x
-        self.next2_y = self.y
+        # self.next1_x = self.x
+        # self.next1_y = self.y
+        # self.next2_x = self.x
+        # self.next2_y = self.y
         self.velocity = 2.0 * SCALE
         self.acceleration = 0.0 * SCALE
         self.yaw_angle = 0.0
@@ -57,15 +57,15 @@ class Cube:
         self.pre_polar_radius = 0.0
         self.pre_polar_angle = 0.0
 
-        self.next1_polar_radius = 0.0
-        self.next1_polar_angle = 0.0
-        self.next1_polar_radius_min_edge = 0.0
-        self.next1_polar_radius_max_edge = 0.0
-
-        self.next2_polar_radius = 0.0
-        self.next2_polar_angle = 0.0
-        self.next2_polar_radius_min_edge = 0.0
-        self.next2_polar_radius_max_edge = 0.0
+        # self.next1_polar_radius = 0.0
+        # self.next1_polar_angle = 0.0
+        # self.next1_polar_radius_min_edge = 0.0
+        # self.next1_polar_radius_max_edge = 0.0
+        #
+        # self.next2_polar_radius = 0.0
+        # self.next2_polar_angle = 0.0
+        # self.next2_polar_radius_min_edge = 0.0
+        # self.next2_polar_radius_max_edge = 0.0
 
         # 车头朝向正北(yaw_angle = 0),vertex0为左前点，1为右前点，2为右后点，3为左后点，按顺时针方向。
         self.vertex0x = self.x + VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle-VEHICLE_ANGLE)
@@ -82,20 +82,20 @@ class Cube:
         self.max_vertex_y = max(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
         self.min_vertex_y = min(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
 
-        self.edge0 = self.x - VEHICLE_HALF_SIZE
-        self.edge1 = self.y + VEHICLE_HALF_SIZE
-        self.edge2 = self.x + VEHICLE_HALF_SIZE
-        self.edge3 = self.y - VEHICLE_HALF_SIZE
-
-        self.next1_edge0 = self.next1_x - VEHICLE_HALF_SIZE
-        self.next1_edge1 = self.next1_y + VEHICLE_HALF_SIZE
-        self.next1_edge2 = self.next1_x + VEHICLE_HALF_SIZE
-        self.next1_edge3 = self.next1_y - VEHICLE_HALF_SIZE
-
-        self.next2_edge0 = self.next2_x - VEHICLE_HALF_SIZE
-        self.next2_edge1 = self.next2_y + VEHICLE_HALF_SIZE
-        self.next2_edge2 = self.next2_x + VEHICLE_HALF_SIZE
-        self.next2_edge3 = self.next2_y - VEHICLE_HALF_SIZE
+        # self.edge0 = self.x - VEHICLE_HALF_SIZE
+        # self.edge1 = self.y + VEHICLE_HALF_SIZE
+        # self.edge2 = self.x + VEHICLE_HALF_SIZE
+        # self.edge3 = self.y - VEHICLE_HALF_SIZE
+        #
+        # self.next1_edge0 = self.next1_x - VEHICLE_HALF_SIZE
+        # self.next1_edge1 = self.next1_y + VEHICLE_HALF_SIZE
+        # self.next1_edge2 = self.next1_x + VEHICLE_HALF_SIZE
+        # self.next1_edge3 = self.next1_y - VEHICLE_HALF_SIZE
+        #
+        # self.next2_edge0 = self.next2_x - VEHICLE_HALF_SIZE
+        # self.next2_edge1 = self.next2_y + VEHICLE_HALF_SIZE
+        # self.next2_edge2 = self.next2_x + VEHICLE_HALF_SIZE
+        # self.next2_edge3 = self.next2_y - VEHICLE_HALF_SIZE
 
         self.move_step = 0
         self.max_pre_x = min_positionx
@@ -112,7 +112,7 @@ class Cube:
         self.init_state = ''
         self.pre_state = ''
         self.intersection_steering_choice = 2  # 2: default; 0: straight_y+; -1: turn left_x-; 1: turn right_x+.
-        self.distance_to_off_road = np.array([self.edge0-0, self.edge2-INTERSECTION_HALF_SIZE], dtype=np.float32)
+        self.distance_to_off_road = np.array([self.min_vertex_x-0, self.max_vertex_x-2*SINGLE_LANE_WIDTH], dtype=np.float32)
         # self.intersection_judgment = False
 
     def __str__(self):
@@ -138,7 +138,7 @@ class Cube:
         min_action_steering = -math.pi/6
         max_action_steering = math.pi/6
         min_speed = 0.0 * SCALE
-        max_speed = 55.55 * SCALE
+        max_speed = 12.00 * SCALE
         action0 = 1.0 * SCALE
         action1 = -1.0 * SCALE
         action2 = min_action_steering / 2  # turn left pi/12
@@ -194,39 +194,39 @@ class Cube:
             self.yaw_angle = 2*math.pi + self.yaw_angle
         # 转化为x坐标
         self.x += math.sin(self.yaw_angle) * self.velocity
-        self.next1_x = self.x + (math.sin(self.yaw_angle) * self.velocity)
-        self.next2_x = self.x + 2 * (math.sin(self.yaw_angle) * self.velocity)
+        # self.next1_x = self.x + (math.sin(self.yaw_angle) * self.velocity)
+        # self.next2_x = self.x + 2 * (math.sin(self.yaw_angle) * self.velocity)
 
         if self.x > max_positionx:
             self.x = max_positionx
         if self.x < min_positionx:
             self.x = min_positionx
-        if self.next1_x > max_positionx:
-            self.next1_x = max_positionx
-        if self.next1_x < min_positionx:
-            self.next1_x = min_positionx
-        if self.next2_x > max_positionx:
-            self.next2_x = max_positionx
-        if self.next2_x < min_positionx:
-            self.next2_x = min_positionx
+        # if self.next1_x > max_positionx:
+        #     self.next1_x = max_positionx
+        # if self.next1_x < min_positionx:
+        #     self.next1_x = min_positionx
+        # if self.next2_x > max_positionx:
+        #     self.next2_x = max_positionx
+        # if self.next2_x < min_positionx:
+        #     self.next2_x = min_positionx
 
         # 转化为y坐标
         self.y += (math.cos(self.yaw_angle) * self.velocity)
-        self.next1_y = self.y + (math.cos(self.yaw_angle) * self.velocity)
-        self.next2_y = self.y + 2 * (math.cos(self.yaw_angle) * self.velocity)
+        # self.next1_y = self.y + (math.cos(self.yaw_angle) * self.velocity)
+        # self.next2_y = self.y + 2 * (math.cos(self.yaw_angle) * self.velocity)
 
         if self.y > max_positiony:
             self.y = max_positiony
         if self.y < min_positiony:
             self.y = min_positiony
-        if self.next1_y > max_positiony:
-            self.next1_y = max_positiony
-        if self.next1_y < min_positiony:
-            self.next1_y = min_positiony
-        if self.next2_y > max_positiony:
-            self.next2_y = max_positiony
-        if self.next2_y < min_positiony:
-            self.next2_y = min_positiony
+        # if self.next1_y > max_positiony:
+        #     self.next1_y = max_positiony
+        # if self.next1_y < min_positiony:
+        #     self.next1_y = min_positiony
+        # if self.next2_y > max_positiony:
+        #     self.next2_y = max_positiony
+        # if self.next2_y < min_positiony:
+        #     self.next2_y = min_positiony
 
         # 更新车辆四周的坐标，车头朝向正北(yaw_angle = 0),vertex0为左前点，1为右前点，2为右后点，3为左后点，按顺时针方向。
         self.vertex0x = self.x + VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle-VEHICLE_ANGLE)
@@ -243,21 +243,21 @@ class Cube:
         self.max_vertex_y = max(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
         self.min_vertex_y = min(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
 
-        # 0点方向起始，顺时针；以此为：上，右，下，左
-        self.edge0 = self.x - VEHICLE_HALF_SIZE
-        self.edge1 = self.y + VEHICLE_HALF_SIZE
-        self.edge2 = self.x + VEHICLE_HALF_SIZE
-        self.edge3 = self.y - VEHICLE_HALF_SIZE
-
-        self.next1_edge0 = self.next1_x - VEHICLE_HALF_SIZE
-        self.next1_edge1 = self.next1_y + VEHICLE_HALF_SIZE
-        self.next1_edge2 = self.next1_x + VEHICLE_HALF_SIZE
-        self.next1_edge3 = self.next1_y - VEHICLE_HALF_SIZE
-
-        self.next2_edge0 = self.next2_x - VEHICLE_HALF_SIZE
-        self.next2_edge1 = self.next2_y + VEHICLE_HALF_SIZE
-        self.next2_edge2 = self.next2_x + VEHICLE_HALF_SIZE
-        self.next2_edge3 = self.next2_y - VEHICLE_HALF_SIZE
+        # # 0点方向起始，顺时针；以此为：上，右，下，左
+        # self.edge0 = self.x - VEHICLE_HALF_SIZE
+        # self.edge1 = self.y + VEHICLE_HALF_SIZE
+        # self.edge2 = self.x + VEHICLE_HALF_SIZE
+        # self.edge3 = self.y - VEHICLE_HALF_SIZE
+        #
+        # self.next1_edge0 = self.next1_x - VEHICLE_HALF_SIZE
+        # self.next1_edge1 = self.next1_y + VEHICLE_HALF_SIZE
+        # self.next1_edge2 = self.next1_x + VEHICLE_HALF_SIZE
+        # self.next1_edge3 = self.next1_y - VEHICLE_HALF_SIZE
+        #
+        # self.next2_edge0 = self.next2_x - VEHICLE_HALF_SIZE
+        # self.next2_edge1 = self.next2_y + VEHICLE_HALF_SIZE
+        # self.next2_edge2 = self.next2_x + VEHICLE_HALF_SIZE
+        # self.next2_edge3 = self.next2_y - VEHICLE_HALF_SIZE
 
         return np.array([self.acceleration_gas, self.acceleration_break, self.yaw_angle], dtype=np.float32)
 
@@ -321,51 +321,51 @@ class Cube:
     def PolarCoord(self, judgment_str: str):
 
         x_prime = 0
-        next1_x_prime = 0
-        next2_x_prime = 0
+        # next1_x_prime = 0
+        # next2_x_prime = 0
         pre_x_prime = 0
 
         if judgment_str == 'intersection_left_y+':
             x_prime = self.x + INTERSECTION_HALF_SIZE
-            next1_x_prime = self.next1_x + INTERSECTION_HALF_SIZE
-            next2_x_prime = self.next2_x + INTERSECTION_HALF_SIZE
+            # next1_x_prime = self.next1_x + INTERSECTION_HALF_SIZE
+            # next2_x_prime = self.next2_x + INTERSECTION_HALF_SIZE
             pre_x_prime = self.pre_x + INTERSECTION_HALF_SIZE
         elif judgment_str == 'intersection_right_y+':
             x_prime = self.x - INTERSECTION_HALF_SIZE
             pre_x_prime = self.pre_x - INTERSECTION_HALF_SIZE
-            next1_x_prime = self.next1_x - INTERSECTION_HALF_SIZE
-            next2_x_prime = self.next2_x - INTERSECTION_HALF_SIZE
+            # next1_x_prime = self.next1_x - INTERSECTION_HALF_SIZE
+            # next2_x_prime = self.next2_x - INTERSECTION_HALF_SIZE
 
         y_prime = self.y + INTERSECTION_HALF_SIZE
-        next1_y_prime = self.next1_y + INTERSECTION_HALF_SIZE
-        next2_y_prime = self.next2_y + INTERSECTION_HALF_SIZE
+        # next1_y_prime = self.next1_y + INTERSECTION_HALF_SIZE
+        # next2_y_prime = self.next2_y + INTERSECTION_HALF_SIZE
         pre_y_prime = self.pre_y + INTERSECTION_HALF_SIZE
 
         self.polar_radius = math.sqrt(x_prime ** 2 + y_prime ** 2)
         self.polar_radius_min_edge = self.polar_radius - VEHICLE_WIDTH / 2
-        self.polar_radius_max_edge = self.polar_radius + VEHICLE_WIDTH / 2
+        self.polar_radius_max_edge = self.polar_radius + VEHICLE_LENGTH / 2
 
-        self.next1_polar_radius = math.sqrt(next1_x_prime ** 2 + next1_y_prime ** 2)
-        self.next1_polar_radius_min_edge = self.next1_polar_radius - VEHICLE_WIDTH / 2
-        self.next1_polar_radius_max_edge = self.next1_polar_radius + VEHICLE_WIDTH / 2
-
-        self.next2_polar_radius = math.sqrt(next2_x_prime ** 2 + next2_y_prime ** 2)
-        self.next2_polar_radius_min_edge = self.next2_polar_radius - VEHICLE_WIDTH / 2
-        self.next2_polar_radius_max_edge = self.next2_polar_radius + VEHICLE_WIDTH / 2
+        # self.next1_polar_radius = math.sqrt(next1_x_prime ** 2 + next1_y_prime ** 2)
+        # self.next1_polar_radius_min_edge = self.next1_polar_radius - VEHICLE_WIDTH / 2
+        # self.next1_polar_radius_max_edge = self.next1_polar_radius + VEHICLE_WIDTH / 2
+        #
+        # self.next2_polar_radius = math.sqrt(next2_x_prime ** 2 + next2_y_prime ** 2)
+        # self.next2_polar_radius_min_edge = self.next2_polar_radius - VEHICLE_WIDTH / 2
+        # self.next2_polar_radius_max_edge = self.next2_polar_radius + VEHICLE_WIDTH / 2
 
         self.pre_polar_radius = math.sqrt(pre_x_prime ** 2 + pre_y_prime ** 2)
         if x_prime == 0:
             self.polar_angle = math.pi / 2
         else:
             self.polar_angle = math.atan(y_prime / x_prime)
-        if next1_x_prime == 0:
-            self.next1_polar_angle = math.pi / 2
-        else:
-            self.next1_polar_angle = math.atan(next1_y_prime / next1_x_prime)
-        if next2_x_prime == 0:
-            self.next2_polar_angle = math.pi / 2
-        else:
-            self.next2_polar_angle = math.atan(next2_y_prime / next2_x_prime)
+        # if next1_x_prime == 0:
+        #     self.next1_polar_angle = math.pi / 2
+        # else:
+        #     self.next1_polar_angle = math.atan(next1_y_prime / next1_x_prime)
+        # if next2_x_prime == 0:
+        #     self.next2_polar_angle = math.pi / 2
+        # else:
+        #     self.next2_polar_angle = math.atan(next2_y_prime / next2_x_prime)
         if pre_x_prime == 0:
             self.pre_polar_angle = math.pi / 2
         else:

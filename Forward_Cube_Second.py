@@ -11,7 +11,7 @@ from CONSTANTS import SCALE
 from CONSTANTS import SIZE
 from CONSTANTS import MIN_COORD
 from CONSTANTS import MAX_COORD
-from CONSTANTS import VEHICLE_HALF_SIZE
+# from CONSTANTS import VEHICLE_HALF_SIZE
 from CONSTANTS import SINGLE_LANE_WIDTH
 from CONSTANTS import min_positionx
 from CONSTANTS import max_positionx
@@ -54,7 +54,7 @@ class Forward_Cube_Second:
         min_acceleration = -4.5 * SCALE
         max_acceleration = 2.6 * SCALE
         min_speed = 0.0 * SCALE
-        max_speed = 55.55 * SCALE
+        max_speed = 12.00 * SCALE
         mid_speed = 8.0 * SCALE
 
         self.move_step += 1

@@ -52,7 +52,7 @@ from CONSTANTS import VEHICLE_LENGTH
 from CONSTANTS import VEHICLE_WIDTH 
 from CONSTANTS import VEHICLE_ANGLE 
 from CONSTANTS import VEHICLE_DIAGONAL
-from CONSTANTS import VEHICLE_HALF_SIZE
+# from CONSTANTS import VEHICLE_HALF_SIZE
 from CONSTANTS import VEHICLE_ILLUSTRATION_YAW_ANGLE_SIZE
 from CONSTANTS import SINGLE_LANE_WIDTH
 from CONSTANTS import SEPARATE_STRAIGHT_DISTANCE_OF_REWARDS
@@ -107,24 +107,24 @@ class envCube(gym.Env):
         self.min_action_steering = -math.pi/6  # left
         self.max_action_steering = math.pi/6  # right
         self.min_speed = 0.0 * SCALE
-        self.max_speed = 55.55 * SCALE
+        self.max_speed = 12.00 * SCALE
         self.goal_min_positionx = min_positionx
         self.goal_max_positionx = max_positionx
         # straight goal
         self.goal_straight_positiony = max_positiony
 
         self.mid_goal_front_positiony = np.arange(
-            min_positiony+2*VEHICLE_HALF_SIZE, -INTERSECTION_HALF_SIZE,
+            min_positiony + 35, -SINGLE_LANE_WIDTH,
             SEPARATE_STRAIGHT_DISTANCE_OF_REWARDS, dtype=np.float32)
         self.mid_goal_front_space_y = self.mid_goal_front_positiony.shape[0]
 
         self.mid_goal_intersection_positiony = np.arange(
-            -INTERSECTION_HALF_SIZE+SINGLE_LANE_WIDTH/2, INTERSECTION_HALF_SIZE+SINGLE_LANE_WIDTH,
-            SINGLE_LANE_WIDTH, dtype=np.float32)
+            -INTERSECTION_HALF_SIZE / 2, 2 * INTERSECTION_HALF_SIZE,
+            INTERSECTION_HALF_SIZE, dtype=np.float32)
         self.mid_goal_intersection_space_y = self.mid_goal_intersection_positiony.shape[0]
 
         self.mid_goal_rear_positiony = np.arange(
-            INTERSECTION_HALF_SIZE+SINGLE_LANE_WIDTH/2, max_positiony,
+            INTERSECTION_HALF_SIZE + 16, max_positiony - 5,
             SEPARATE_STRAIGHT_DISTANCE_OF_REWARDS, dtype=np.float32)
         self.mid_goal_rear_space_y = self.mid_goal_rear_positiony.shape[0]
 
@@ -136,7 +136,7 @@ class envCube(gym.Env):
         self.mid_goal_turn_left_space_angle = self.mid_goal_turn_left_angle.shape[0]
 
         self.mid_goal_rear_positionx = np.arange(
-            -INTERSECTION_HALF_SIZE-SINGLE_LANE_WIDTH/2, min_positionx,
+            -INTERSECTION_HALF_SIZE - 16, min_positionx + 5,
             -SEPARATE_STRAIGHT_DISTANCE_OF_REWARDS, dtype=np.float32)
         self.mid_goal_rear_space_x = self.mid_goal_rear_positionx.shape[0]
 
@@ -148,12 +148,12 @@ class envCube(gym.Env):
         self.mid_goal_turn_right_space_angle = self.mid_goal_turn_right_angle.shape[0]
 
         self.mid_goal_front_positionx = np.arange(
-            INTERSECTION_HALF_SIZE + SINGLE_LANE_WIDTH/2, max_positionx,
+            INTERSECTION_HALF_SIZE + 16, max_positionx - 5,
             SEPARATE_STRAIGHT_DISTANCE_OF_REWARDS, dtype=np.float32)
         self.mid_goal_front_space_x = self.mid_goal_front_positionx.shape[0]
 
         self.judgement_space = 2
-        self.risk_space = 4
+        # self.risk_space = 4
         self.ACTION_SPACE_VALUES = 5
         # self.signal_light_phase_space_values = 3
         # self.signal_light_count_down_space_values = 60
@@ -199,7 +199,7 @@ class envCube(gym.Env):
                 'second_other_vehicle_speed': Box(self.min_speed, self.max_speed, shape=(1,), dtype=np.float32),
                 'relative_distance_2_goal': Box(2*MIN_COORD-1.0, 2*MAX_COORD+1.0, shape=(1,), dtype=np.float32),
                 'judgement_in_road': Discrete(self.judgement_space),
-                'risk_off_road': Discrete(self.risk_space),
+                # 'risk_off_road': Discrete(self.risk_space),
                 'distance_2_nearest_off_road': Box(2*MIN_COORD-1.0, 2*MAX_COORD+1.0, shape=(2,), dtype=np.float32),
 
                 # 'distance_2_center_line': Discrete(MAX_COORD),
@@ -238,9 +238,9 @@ class envCube(gym.Env):
         terminated = False
         break_out = False
 
-        self.NEXT_1_IN_ROAD = True
-        self.NEXT_2_IN_ROAD = True
-        self.Time_to_off_road = 3
+        # self.NEXT_1_IN_ROAD = True
+        # self.NEXT_2_IN_ROAD = True
+        # self.Time_to_off_road = 3
 
         # 进入道路外，终止训练，并给予-500分惩罚
         for rec in range(self.rectangle_list_off_road.RectangleList.size):
@@ -301,19 +301,19 @@ class envCube(gym.Env):
         #     if self.vehicle.next2_edge0 <= 0 or self.vehicle.next2_edge2 >= INTERSECTION_HALF_SIZE:
         #         self.NEXT_2_IN_ROAD = False
 
-        # 主车进入到车祸区域，终止训练，并给予-500分惩罚
-        if self.JUDGEMENT_IN_ROAD == True:
-            for rec in range(self.rectangle_list_crash_area.RectangleList.size):
-                if ((self.vehicle.max_vertex_x < self.rectangle_list_crash_area.RectangleList[0][rec].min_x) or
-                        (self.vehicle.min_vertex_x > self.rectangle_list_crash_area.RectangleList[0][rec].max_x) or
-                        (self.vehicle.max_vertex_y < self.rectangle_list_crash_area.RectangleList[0][rec].min_y) or
-                        (self.vehicle.min_vertex_y > self.rectangle_list_crash_area.RectangleList[0][rec].max_y)):
-                    self.JUDGEMENT_IN_ROAD = True
-                else:
-                    self.JUDGEMENT_IN_ROAD = False
-                    break
-        elif self.JUDGEMENT_IN_ROAD == False:
-            self.JUDGEMENT_IN_ROAD = False
+        # # 主车进入到车祸区域，终止训练，并给予-500分惩罚
+        # if self.JUDGEMENT_IN_ROAD == True:
+        #     for rec in range(self.rectangle_list_crash_area.RectangleList.size):
+        #         if ((self.vehicle.max_vertex_x < self.rectangle_list_crash_area.RectangleList[0][rec].min_x) or
+        #                 (self.vehicle.min_vertex_x > self.rectangle_list_crash_area.RectangleList[0][rec].max_x) or
+        #                 (self.vehicle.max_vertex_y < self.rectangle_list_crash_area.RectangleList[0][rec].min_y) or
+        #                 (self.vehicle.min_vertex_y > self.rectangle_list_crash_area.RectangleList[0][rec].max_y)):
+        #             self.JUDGEMENT_IN_ROAD = True
+        #         else:
+        #             self.JUDGEMENT_IN_ROAD = False
+        #             break
+        # elif self.JUDGEMENT_IN_ROAD == False:
+        #     self.JUDGEMENT_IN_ROAD = False
 
 
         # # 主车下一步进入到车祸区域
@@ -357,24 +357,24 @@ class envCube(gym.Env):
             if self.vehicle_track.straight_frontier_coord_positive_y - self.vehicle.y > REVERSE_DRIVING_LENGTH:
                 reward -= abs(self.vehicle_track.straight_frontier_coord_positive_y - self.vehicle.y) * 1
             # 计算智能体距off-road最近距离
-            self.vehicle.distance_to_off_road[0] = self.vehicle.edge0 - 0 if self.vehicle.edge0 > 0 else 0
-            self.vehicle.distance_to_off_road[1] = self.vehicle.edge2 - INTERSECTION_HALF_SIZE \
-                if self.vehicle.edge2 < INTERSECTION_HALF_SIZE else 0
+            self.vehicle.distance_to_off_road[0] = self.vehicle.min_vertex_x - 0 if self.vehicle.min_vertex_x > 0 else 0
+            self.vehicle.distance_to_off_road[1] = self.vehicle.max_vertex_x - 2 * SINGLE_LANE_WIDTH \
+                if self.vehicle.max_vertex_x < 2 * SINGLE_LANE_WIDTH else 0
             # 制定出发时车辆不能逆行回到出生点的边界
-            if self.vehicle.edge3 <= MIN_COORD:
+            if self.vehicle.min_vertex_y <= MIN_COORD:
                 self.JUDGEMENT_IN_ROAD = False
-            if self.vehicle.next1_edge3 <= MIN_COORD:
-                self.NEXT_1_IN_ROAD = False
-            if self.vehicle.next2_edge3 <= MIN_COORD:
-                self.NEXT_2_IN_ROAD = False
+            # if self.vehicle.next1_edge3 <= MIN_COORD:
+            #     self.NEXT_1_IN_ROAD = False
+            # if self.vehicle.next2_edge3 <= MIN_COORD:
+            #     self.NEXT_2_IN_ROAD = False
             # 如果第一次或再次进入直行道，更新阶段目标空间和计数器
-            if self.vehicle.pre_state != 'straight_y+' and self.vehicle.y < 0:
+            if self.episode_step == 1 and self.vehicle.y < 0:
                 self.CIRCLE_COUNT = 0
                 self.ARRIVE_AT_MID_GOAL = np.zeros((self.mid_goal_front_space_y), dtype=np.int32)
             elif self.vehicle.pre_state != 'straight_y+' and self.vehicle.y > 0:
                 self.CIRCLE_COUNT = 0
                 self.ARRIVE_AT_MID_GOAL = np.zeros((self.mid_goal_rear_space_y), dtype=np.int32)
-            # 计算与阶段目标的相对位置，并获得阶段reward和distance_2_goal
+            # 计算front阶段目标的相对位置，并获得阶段reward和distance_2_goal
             if self.vehicle.y < 0:
                 num = self.CIRCLE_COUNT
                 if num < self.mid_goal_front_space_y:
@@ -385,11 +385,11 @@ class envCube(gym.Env):
                         self.CIRCLE_COUNT = num + 1
                     if self.vehicle.y >= self.mid_goal_front_positiony[num] and \
                             self.ARRIVE_AT_MID_GOAL[num] == 0 and \
-                                0 <= self.vehicle.edge0 and self.vehicle.edge2 <= INTERSECTION_HALF_SIZE:
+                                0 <= self.vehicle.min_vertex_x and self.vehicle.max_vertex_x <= 2*SINGLE_LANE_WIDTH:
                         reward += 200.0
                         self.ARRIVE_AT_MID_GOAL[num] = 1
                         self.distance_2_goal = 0
-            # 计算与阶段目标的相对位置，并获得阶段reward和distance_2_goal
+            # 计算rear阶段目标的相对位置，并获得阶段reward和distance_2_goal
             if self.vehicle.y > 0:
                 num = self.CIRCLE_COUNT
                 if num < self.mid_goal_rear_space_y:
@@ -400,7 +400,7 @@ class envCube(gym.Env):
                         self.CIRCLE_COUNT = num + 1
                     if self.vehicle.y >= self.mid_goal_rear_positiony[num] and \
                             self.ARRIVE_AT_MID_GOAL[num] == 0 and \
-                                0 <= self.vehicle.edge0 and self.vehicle.edge2 <= INTERSECTION_HALF_SIZE:
+                                0 <= self.vehicle.min_vertex_x and self.vehicle.max_vertex_x <= 2*SINGLE_LANE_WIDTH:
                         reward += 200.0
                         self.ARRIVE_AT_MID_GOAL[num] = 1
                         self.distance_2_goal = 0
@@ -417,18 +417,18 @@ class envCube(gym.Env):
             if self.vehicle_track.straight_frontier_coord_positive_x - self.vehicle.x > REVERSE_DRIVING_LENGTH:
                 reward -= abs(self.vehicle_track.straight_frontier_coord_positive_x - self.vehicle.x) * 1
             # 计算智能体距off-road最近距离
-            self.vehicle.distance_to_off_road[0] = 0 - self.vehicle.edge1 - 0 if self.vehicle.edge1 > 0 else 0
-            self.vehicle.distance_to_off_road[1] = INTERSECTION_HALF_SIZE - self.vehicle.edge3 \
-                if self.vehicle.edge3 < INTERSECTION_HALF_SIZE else 0
+            self.vehicle.distance_to_off_road[0] = 0 - self.vehicle.max_vertex_y if self.vehicle.max_vertex_y > 0 else 0
+            self.vehicle.distance_to_off_road[1] = 2*SINGLE_LANE_WIDTH - self.vehicle.min_vertex_y \
+                if self.vehicle.min_vertex_y < 2*SINGLE_LANE_WIDTH else 0
             # 制定出发时车辆不能逆行回到出生点的边界
-            if self.vehicle.edge0 <= MIN_COORD:
+            if self.vehicle.min_vertex_x <= MIN_COORD:
                 self.JUDGEMENT_IN_ROAD = False
-            if self.vehicle.next1_edge0 <= MIN_COORD:
-                self.NEXT_1_IN_ROAD = False
-            if self.vehicle.next2_edge0 <= MIN_COORD:
-                self.NEXT_2_IN_ROAD = False
-            # 如果第一次或再次进入直行道，更新阶段目标空间和计数器
-            if self.vehicle.pre_state != 'straight_x+':
+            # if self.vehicle.next1_edge0 <= MIN_COORD:
+            #     self.NEXT_1_IN_ROAD = False
+            # if self.vehicle.next2_edge0 <= MIN_COORD:
+            #     self.NEXT_2_IN_ROAD = False
+            # 如果再次进入直行道，更新阶段目标空间和计数器
+            if self.vehicle.pre_state != 'straight_x+' and self.vehicle.x > 0:
                 self.CIRCLE_COUNT = 0
                 self.ARRIVE_AT_MID_GOAL = np.zeros((self.mid_goal_front_space_x), dtype=np.int32)
             # 计算与阶段目标的相对位置，并获得阶段reward和distance_2_goal
@@ -441,33 +441,33 @@ class envCube(gym.Env):
                     self.CIRCLE_COUNT = num + 1
                 if self.vehicle.x >= self.mid_goal_front_positionx[num] and \
                         self.ARRIVE_AT_MID_GOAL[num] == 0 and \
-                        0 >= self.vehicle.edge1 and self.vehicle.edge3 >= -INTERSECTION_HALF_SIZE:
+                        0 >= self.vehicle.max_vertex_y and self.vehicle.min_vertex_y >= -2*SINGLE_LANE_WIDTH:
                     reward += 200.0
                     self.ARRIVE_AT_MID_GOAL[num] = 1
                     self.distance_2_goal = 0
             if self.mid_goal_front_positionx[self.mid_goal_front_space_x-1] <= self.vehicle.x <= self.goal_turn_right_positionx \
                     and num >= self.mid_goal_front_space_x:
                 self.distance_2_goal = abs(self.vehicle.x - self.goal_turn_right_positionx)
-
-        elif self.vehicle.state == 'straight_y-':
-            # 更新智能体当前track的直道前沿坐标值
-            self.vehicle_track.StraightFrontier(self.vehicle.x, self.vehicle.y, self.vehicle.state)
-            # 前进track的奖励
-            reward += abs(self.vehicle_track.straight_frontier_coord_negative_y - self.vehicle.min_pre_y) * 1
-            # 如果逆行，逆行的惩罚
-            if self.vehicle.y - self.vehicle_track.straight_frontier_coord_negative_y > REVERSE_DRIVING_LENGTH:
-                reward -= abs(self.vehicle.y - self.vehicle_track.straight_frontier_coord_negative_y) * 1
-            # 计算智能体距off-road最近距离
-            self.vehicle.distance_to_off_road[0] = 0 - self.vehicle.edge2 if self.vehicle.edge2 > 0 else 0
-            self.vehicle.distance_to_off_road[1] = INTERSECTION_HALF_SIZE - self.vehicle.edge0 \
-                if self.vehicle.edge0 < INTERSECTION_HALF_SIZE else 0
-            # 制定出发时车辆不能逆行回到出生点的边界
-            if self.vehicle.edge1 >= MAX_COORD:
-                self.JUDGEMENT_IN_ROAD = False
-            if self.vehicle.next1_edge1 >= MAX_COORD:
-                self.NEXT_1_IN_ROAD = False
-            if self.vehicle.next2_edge1 >= MAX_COORD:
-                self.NEXT_2_IN_ROAD = False
+        #
+        # elif self.vehicle.state == 'straight_y-':
+        #     # 更新智能体当前track的直道前沿坐标值
+        #     self.vehicle_track.StraightFrontier(self.vehicle.x, self.vehicle.y, self.vehicle.state)
+        #     # 前进track的奖励
+        #     reward += abs(self.vehicle_track.straight_frontier_coord_negative_y - self.vehicle.min_pre_y) * 1
+        #     # 如果逆行，逆行的惩罚
+        #     if self.vehicle.y - self.vehicle_track.straight_frontier_coord_negative_y > REVERSE_DRIVING_LENGTH:
+        #         reward -= abs(self.vehicle.y - self.vehicle_track.straight_frontier_coord_negative_y) * 1
+        #     # 计算智能体距off-road最近距离
+        #     self.vehicle.distance_to_off_road[0] = 0 - self.vehicle.edge2 if self.vehicle.edge2 > 0 else 0
+        #     self.vehicle.distance_to_off_road[1] = INTERSECTION_HALF_SIZE - self.vehicle.edge0 \
+        #         if self.vehicle.edge0 < INTERSECTION_HALF_SIZE else 0
+        #     # 制定出发时车辆不能逆行回到出生点的边界
+        #     if self.vehicle.edge1 >= MAX_COORD:
+        #         self.JUDGEMENT_IN_ROAD = False
+        #     if self.vehicle.next1_edge1 >= MAX_COORD:
+        #         self.NEXT_1_IN_ROAD = False
+        #     if self.vehicle.next2_edge1 >= MAX_COORD:
+        #         self.NEXT_2_IN_ROAD = False
 
         elif self.vehicle.state == 'straight_x-':
             # 更新智能体当前track的直道前沿坐标值
@@ -478,18 +478,18 @@ class envCube(gym.Env):
             if self.vehicle.x - self.vehicle_track.straight_frontier_coord_negative_x > REVERSE_DRIVING_LENGTH:
                 reward -= abs(self.vehicle.x - self.vehicle_track.straight_frontier_coord_negative_x) * 1
             # 计算智能体距off-road最近距离
-            self.vehicle.distance_to_off_road[0] = self.vehicle.edge3 - 0 if self.vehicle.edge3 > 0 else 0
-            self.vehicle.distance_to_off_road[1] = self.vehicle.edge1 - INTERSECTION_HALF_SIZE \
-                if self.vehicle.edge1 < INTERSECTION_HALF_SIZE else 0
+            self.vehicle.distance_to_off_road[0] = self.vehicle.min_vertex_y - 0 if self.vehicle.min_vertex_y > 0 else 0
+            self.vehicle.distance_to_off_road[1] = self.vehicle.max_vertex_y - 2*SINGLE_LANE_WIDTH \
+                if self.vehicle.max_vertex_y < 2*SINGLE_LANE_WIDTH else 0
             # 制定出发时车辆不能逆行回到出生点的边界
-            if self.vehicle.edge2 >= MAX_COORD:
+            if self.vehicle.max_vertex_x >= MAX_COORD:
                 self.JUDGEMENT_IN_ROAD = False
-            if self.vehicle.next1_edge2 >= MAX_COORD:
-                self.NEXT_1_IN_ROAD = False
-            if self.vehicle.next2_edge2 >= MAX_COORD:
-                self.NEXT_2_IN_ROAD = False
-            # 如果第一次或再次进入直行道，更新阶段目标空间和计数器
-            if self.vehicle.pre_state != 'straight_x-':
+            # if self.vehicle.next1_edge2 >= MAX_COORD:
+            #     self.NEXT_1_IN_ROAD = False
+            # if self.vehicle.next2_edge2 >= MAX_COORD:
+            #     self.NEXT_2_IN_ROAD = False
+            # 如果再次进入直行道，更新阶段目标空间和计数器
+            if self.vehicle.pre_state != 'straight_x-' and self.vehicle.x < 0:
                 self.CIRCLE_COUNT = 0
                 self.ARRIVE_AT_MID_GOAL = np.zeros((self.mid_goal_rear_space_x), dtype=np.int32)
             # 计算与阶段目标的相对位置，并获得阶段reward和distance_2_goal
@@ -502,7 +502,7 @@ class envCube(gym.Env):
                     self.CIRCLE_COUNT = num + 1
                 if self.vehicle.x <= self.mid_goal_rear_positionx[num] and \
                         self.ARRIVE_AT_MID_GOAL[num] == 0 and \
-                        0 <= self.vehicle.edge3 and self.vehicle.edge1 <= INTERSECTION_HALF_SIZE:
+                        0 <= self.vehicle.min_vertex_y and self.vehicle.max_vertex_y <= 2*SINGLE_LANE_WIDTH:
                     reward += 200.0
                     self.ARRIVE_AT_MID_GOAL[num] = 1
                     self.distance_2_goal = 0
@@ -511,7 +511,7 @@ class envCube(gym.Env):
                 self.distance_2_goal = abs(self.vehicle.x - self.goal_turn_left_positionx)
 
         # 十字路口内选择直行
-        self.vehicle.intersection_steering_choice = 0  # 0: straight; -1: turn left;  1: turn right
+        self.vehicle.intersection_steering_choice = -1  # 0: straight; -1: turn left;  1: turn right
 
         # 进入十字路口范围内，根据intersection_steering_choice，绘制track路线图，带有rewards，转弯部分利用极坐标系绘制
         if self.vehicle.state == 'intersection':
@@ -527,19 +527,19 @@ class envCube(gym.Env):
                 # 更新智能体当前track的直道前沿坐标值
                 self.vehicle_track.IntersectionFrontier(self.vehicle.x, self.vehicle.y, self.vehicle_track.judgment_str)
                 # 如果智能体在十字路口内的直行范围内，更新rewards
-                if 0 <= self.vehicle.edge0 and self.vehicle.edge2 <= INTERSECTION_HALF_SIZE:
+                if 0 <= self.vehicle.min_vertex_x and self.vehicle.max_vertex_x <= 2*SINGLE_LANE_WIDTH:
                     reward += abs(self.vehicle_track.straight_frontier_coord_positive_y - self.vehicle.max_pre_y) * 1
                 # 计算智能体距off-road最近距离
-                self.vehicle.distance_to_off_road[0] = self.vehicle.edge0 - 0 if self.vehicle.edge0 > 0 else 0
-                self.vehicle.distance_to_off_road[1] = self.vehicle.edge2 - INTERSECTION_HALF_SIZE \
-                    if self.vehicle.edge2 < INTERSECTION_HALF_SIZE else 0
+                self.vehicle.distance_to_off_road[0] = self.vehicle.min_vertex_x - 0 if self.vehicle.min_vertex_x > 0 else 0
+                self.vehicle.distance_to_off_road[1] = self.vehicle.max_vertex_x - 2*SINGLE_LANE_WIDTH \
+                    if self.vehicle.max_vertex_x < 2*SINGLE_LANE_WIDTH else 0
                 # 制定道路范围内边界
-                if self.vehicle.edge0 < 0 or self.vehicle.edge2 > INTERSECTION_HALF_SIZE:
+                if self.vehicle.min_vertex_x < 0 or self.vehicle.max_vertex_x > 2*SINGLE_LANE_WIDTH:
                     self.JUDGEMENT_IN_ROAD = False
-                if self.vehicle.next1_edge0 < 0 or self.vehicle.next1_edge2 > INTERSECTION_HALF_SIZE:
-                    self.NEXT_1_IN_ROAD = False
-                if self.vehicle.next2_edge0 < 0 or self.vehicle.next2_edge2 > INTERSECTION_HALF_SIZE:
-                    self.NEXT_2_IN_ROAD = False
+                # if self.vehicle.next1_edge0 < 0 or self.vehicle.next1_edge2 > INTERSECTION_HALF_SIZE:
+                #     self.NEXT_1_IN_ROAD = False
+                # if self.vehicle.next2_edge0 < 0 or self.vehicle.next2_edge2 > INTERSECTION_HALF_SIZE:
+                #     self.NEXT_2_IN_ROAD = False
                 # 如果第一次进入交叉口，更新阶段目标空间和计数器
                 if self.vehicle.pre_state != 'intersection':
                     self.CIRCLE_COUNT = 0
@@ -554,7 +554,7 @@ class envCube(gym.Env):
                         self.CIRCLE_COUNT = num + 1
                     if self.vehicle.y >= self.mid_goal_intersection_positiony[num] and \
                             self.ARRIVE_AT_MID_GOAL[num] == 0 and \
-                            0 <= self.vehicle.edge0 and self.vehicle.edge2 <= INTERSECTION_HALF_SIZE:
+                            0 <= self.vehicle.min_vertex_x and self.vehicle.max_vertex_x <= 2*SINGLE_LANE_WIDTH:
                         reward += 200.0
                         self.ARRIVE_AT_MID_GOAL[num] = 1
                         self.distance_2_goal = 0
@@ -577,27 +577,27 @@ class envCube(gym.Env):
                     self.CIRCLE_COUNT = 0
                     self.ARRIVE_AT_MID_GOAL = np.zeros((self.mid_goal_turn_left_space_angle), dtype=np.int32)
                 # 如果智能体在十字路口内的左转_y+范围内，分三个阶段，更新rewards，并计算off-road最近距离，并指定道路范围边界。
-                # 第1阶段：angle = [0, atan1/2], min_radius = INTERSECTION_HALF_SIZE, max_radius = 2*INTERSECTION_HALF_SIZE/cos(angle)
+                # 第1阶段：angle = [0, atan1/2], min_radius = SINGLE_LANE_WIDTH, max_radius = 2*INTERSECTION_HALF_SIZE/cos(angle)
                 if 0 <= self.vehicle.polar_angle < math.atan(1.0 / 2.0):
-                    if INTERSECTION_HALF_SIZE <= self.vehicle.polar_radius_min_edge and \
+                    if SINGLE_LANE_WIDTH <= self.vehicle.polar_radius_min_edge and \
                             self.vehicle.polar_radius_max_edge <= 2*INTERSECTION_HALF_SIZE/math.cos(self.vehicle.polar_angle):
                         reward += abs(
                             self.vehicle_track.steering_frontier_polar_coord_positive_angle - self.vehicle.max_pre_polar_angle ) * 100.0
                     # 计算智能体距off-road最近距离
-                    self.vehicle.distance_to_off_road[0] = self.vehicle.polar_radius_min_edge - INTERSECTION_HALF_SIZE \
-                        if self.vehicle.polar_radius_min_edge > INTERSECTION_HALF_SIZE else 0
+                    self.vehicle.distance_to_off_road[0] = self.vehicle.polar_radius_min_edge - SINGLE_LANE_WIDTH \
+                        if self.vehicle.polar_radius_min_edge > SINGLE_LANE_WIDTH else 0
                     self.vehicle.distance_to_off_road[1] = self.vehicle.polar_radius_max_edge - 2*INTERSECTION_HALF_SIZE/math.cos(self.vehicle.polar_angle) \
                         if self.vehicle.polar_radius_max_edge < 2*INTERSECTION_HALF_SIZE/math.cos(self.vehicle.polar_angle) else 0
                     # 制定道路范围内边界
-                    if self.vehicle.polar_radius_min_edge < INTERSECTION_HALF_SIZE or \
+                    if self.vehicle.polar_radius_min_edge < SINGLE_LANE_WIDTH or \
                             self.vehicle.polar_radius_max_edge > 2*INTERSECTION_HALF_SIZE/math.cos(self.vehicle.polar_angle):
                         self.JUDGEMENT_IN_ROAD = False
-                    if self.vehicle.next1_polar_radius_min_edge < INTERSECTION_HALF_SIZE or \
-                            self.vehicle.next1_polar_radius_max_edge > 2 * INTERSECTION_HALF_SIZE/math.cos(self.vehicle.next1_polar_angle):
-                        self.NEXT_1_IN_ROAD = False
-                    if self.vehicle.next2_polar_radius_min_edge < INTERSECTION_HALF_SIZE or \
-                            self.vehicle.next2_polar_radius_max_edge > 2 * INTERSECTION_HALF_SIZE/math.cos(self.vehicle.next2_polar_angle):
-                        self.NEXT_2_IN_ROAD = False
+                    # if self.vehicle.next1_polar_radius_min_edge < INTERSECTION_HALF_SIZE or \
+                    #         self.vehicle.next1_polar_radius_max_edge > 2 * INTERSECTION_HALF_SIZE/math.cos(self.vehicle.next1_polar_angle):
+                    #     self.NEXT_1_IN_ROAD = False
+                    # if self.vehicle.next2_polar_radius_min_edge < INTERSECTION_HALF_SIZE or \
+                    #         self.vehicle.next2_polar_radius_max_edge > 2 * INTERSECTION_HALF_SIZE/math.cos(self.vehicle.next2_polar_angle):
+                    #     self.NEXT_2_IN_ROAD = False
                     # 计算与阶段目标的相对位置，并获得阶段reward和distance_2_goal
                     num = self.CIRCLE_COUNT
                     if num < self.mid_goal_turn_left_space_angle:
@@ -607,32 +607,32 @@ class envCube(gym.Env):
                         if self.vehicle.polar_angle >= self.mid_goal_turn_left_angle[num]:
                             self.CIRCLE_COUNT = num + 1
                         if self.vehicle.polar_angle >= self.mid_goal_turn_left_angle[num] and self.ARRIVE_AT_MID_GOAL[num] == 0 and \
-                                INTERSECTION_HALF_SIZE <= self.vehicle.polar_radius_min_edge and \
+                                SINGLE_LANE_WIDTH <= self.vehicle.polar_radius_min_edge and \
                                 self.vehicle.polar_radius_max_edge <= 2 * INTERSECTION_HALF_SIZE / math.cos(self.vehicle.polar_angle):
                             reward += 200.0
                             self.ARRIVE_AT_MID_GOAL[num] = 1
                             self.distance_2_goal = 0
-                # 第2阶段：angle = (atan1/2, atan2), min_radius = INTERSECTION_HALF_SIZE, max_radius = INTERSECTION_HALF_SIZE*sqrt(5.0)
+                # 第2阶段：angle = (atan1/2, atan2), min_radius = SINGLE_LANE_WIDTH, max_radius = INTERSECTION_HALF_SIZE*sqrt(5.0)
                 elif math.atan(1.0 / 2.0) <= self.vehicle.polar_angle <= math.atan(2.0):
-                    if INTERSECTION_HALF_SIZE <= self.vehicle.polar_radius_min_edge and \
+                    if SINGLE_LANE_WIDTH <= self.vehicle.polar_radius_min_edge and \
                             self.vehicle.polar_radius_max_edge <= INTERSECTION_HALF_SIZE * math.sqrt(5.0):
                         reward += abs(
                             self.vehicle_track.steering_frontier_polar_coord_positive_angle - self.vehicle.max_pre_polar_angle ) * 100.0
                     # 计算智能体距off-road最近距离
-                    self.vehicle.distance_to_off_road[0] = self.vehicle.polar_radius_min_edge - INTERSECTION_HALF_SIZE \
-                        if self.vehicle.polar_radius_min_edge > INTERSECTION_HALF_SIZE else 0
+                    self.vehicle.distance_to_off_road[0] = self.vehicle.polar_radius_min_edge - SINGLE_LANE_WIDTH \
+                        if self.vehicle.polar_radius_min_edge > SINGLE_LANE_WIDTH else 0
                     self.vehicle.distance_to_off_road[1] = self.vehicle.polar_radius_max_edge - INTERSECTION_HALF_SIZE * math.sqrt ( 5.0 ) \
                         if self.vehicle.polar_radius_max_edge < INTERSECTION_HALF_SIZE * math.sqrt(5.0) else 0
                     # 制定道路范围内边界
-                    if self.vehicle.polar_radius_min_edge < INTERSECTION_HALF_SIZE or \
+                    if self.vehicle.polar_radius_min_edge < SINGLE_LANE_WIDTH or \
                             self.vehicle.polar_radius_max_edge > INTERSECTION_HALF_SIZE * math.sqrt(5.0):
                         self.JUDGEMENT_IN_ROAD = False
-                    if self.vehicle.next1_polar_radius_min_edge < INTERSECTION_HALF_SIZE or \
-                            self.vehicle.next1_polar_radius_max_edge > INTERSECTION_HALF_SIZE * math.sqrt(5.0):
-                        self.NEXT_1_IN_ROAD = False
-                    if self.vehicle.next2_polar_radius_min_edge < INTERSECTION_HALF_SIZE or \
-                            self.vehicle.next2_polar_radius_max_edge > INTERSECTION_HALF_SIZE * math.sqrt(5.0):
-                        self.NEXT_2_IN_ROAD = False
+                    # if self.vehicle.next1_polar_radius_min_edge < INTERSECTION_HALF_SIZE or \
+                    #         self.vehicle.next1_polar_radius_max_edge > INTERSECTION_HALF_SIZE * math.sqrt(5.0):
+                    #     self.NEXT_1_IN_ROAD = False
+                    # if self.vehicle.next2_polar_radius_min_edge < INTERSECTION_HALF_SIZE or \
+                    #         self.vehicle.next2_polar_radius_max_edge > INTERSECTION_HALF_SIZE * math.sqrt(5.0):
+                    #     self.NEXT_2_IN_ROAD = False
                     # 计算与阶段目标的相对位置，并获得阶段reward和distance_2_goal
                     num = self.CIRCLE_COUNT
                     if num < self.mid_goal_turn_left_space_angle:
@@ -642,32 +642,32 @@ class envCube(gym.Env):
                         if self.vehicle.polar_angle >= self.mid_goal_turn_left_angle[num]:
                             self.CIRCLE_COUNT = num + 1
                         if self.vehicle.polar_angle >= self.mid_goal_turn_left_angle[num] and self.ARRIVE_AT_MID_GOAL[num] == 0 and \
-                                INTERSECTION_HALF_SIZE <= self.vehicle.polar_radius_min_edge and \
+                                SINGLE_LANE_WIDTH <= self.vehicle.polar_radius_min_edge and \
                                 self.vehicle.polar_radius_max_edge <= INTERSECTION_HALF_SIZE * math.sqrt ( 5.0 ):
                             reward += 200.0
                             self.ARRIVE_AT_MID_GOAL[num] = 1
                             self.distance_2_goal = 0
-                # 第3阶段：angle = (atan2, pi/2], min_radius = INTERSECTION_HALF_SIZE, max_radius = 2*INTERSECTION_HALF_SIZE/sin(angle)
+                # 第3阶段：angle = (atan2, pi/2], min_radius = SINGLE_LANE_WIDTH, max_radius = 2*INTERSECTION_HALF_SIZE/sin(angle)
                 elif math.atan(2.0) < self.vehicle.polar_angle <= math.pi/2:
-                    if INTERSECTION_HALF_SIZE <= self.vehicle.polar_radius_min_edge and \
+                    if SINGLE_LANE_WIDTH <= self.vehicle.polar_radius_min_edge and \
                             self.vehicle.polar_radius_max_edge <= 2*INTERSECTION_HALF_SIZE/math.sin(self.vehicle.polar_angle):
                         reward += abs(
                             self.vehicle_track.steering_frontier_polar_coord_positive_angle - self.vehicle.max_pre_polar_angle ) * 100.0
                     # 计算智能体距off-road最近距离
-                    self.vehicle.distance_to_off_road[0] = self.vehicle.polar_radius_min_edge - INTERSECTION_HALF_SIZE \
-                        if self.vehicle.polar_radius_min_edge > INTERSECTION_HALF_SIZE else 0
+                    self.vehicle.distance_to_off_road[0] = self.vehicle.polar_radius_min_edge - SINGLE_LANE_WIDTH \
+                        if self.vehicle.polar_radius_min_edge > SINGLE_LANE_WIDTH else 0
                     self.vehicle.distance_to_off_road[1] = self.vehicle.polar_radius_max_edge - 2*INTERSECTION_HALF_SIZE/math.sin(self.vehicle.polar_angle) \
                         if self.vehicle.polar_radius_max_edge < 2*INTERSECTION_HALF_SIZE/math.sin(self.vehicle.polar_angle) else 0
                     # 制定道路范围内边界
-                    if self.vehicle.polar_radius_min_edge < INTERSECTION_HALF_SIZE or \
+                    if self.vehicle.polar_radius_min_edge < SINGLE_LANE_WIDTH or \
                             self.vehicle.polar_radius_max_edge > 2*INTERSECTION_HALF_SIZE/math.sin(self.vehicle.polar_angle):
                         self.JUDGEMENT_IN_ROAD = False
-                    if self.vehicle.next1_polar_radius_min_edge < INTERSECTION_HALF_SIZE or \
-                            self.vehicle.next1_polar_radius_max_edge > 2*INTERSECTION_HALF_SIZE/math.sin(self.vehicle.next1_polar_angle):
-                        self.NEXT_1_IN_ROAD = False
-                    if self.vehicle.next2_polar_radius_min_edge < INTERSECTION_HALF_SIZE or \
-                            self.vehicle.next2_polar_radius_max_edge > 2*INTERSECTION_HALF_SIZE/math.sin(self.vehicle.next2_polar_angle):
-                        self.NEXT_2_IN_ROAD = False
+                    # if self.vehicle.next1_polar_radius_min_edge < INTERSECTION_HALF_SIZE or \
+                    #         self.vehicle.next1_polar_radius_max_edge > 2*INTERSECTION_HALF_SIZE/math.sin(self.vehicle.next1_polar_angle):
+                    #     self.NEXT_1_IN_ROAD = False
+                    # if self.vehicle.next2_polar_radius_min_edge < INTERSECTION_HALF_SIZE or \
+                    #         self.vehicle.next2_polar_radius_max_edge > 2*INTERSECTION_HALF_SIZE/math.sin(self.vehicle.next2_polar_angle):
+                    #     self.NEXT_2_IN_ROAD = False
                     # 计算与阶段目标的相对位置，并获得阶段reward和distance_2_goal
                     num = self.CIRCLE_COUNT
                     if num < self.mid_goal_turn_left_space_angle:
@@ -677,7 +677,7 @@ class envCube(gym.Env):
                         if self.vehicle.polar_angle >= self.mid_goal_turn_left_angle[num]:
                             self.CIRCLE_COUNT = num + 1
                         if self.vehicle.polar_angle >= self.mid_goal_turn_left_angle[num] and self.ARRIVE_AT_MID_GOAL[num] == 0 and \
-                                INTERSECTION_HALF_SIZE <= self.vehicle.polar_radius_min_edge and \
+                                SINGLE_LANE_WIDTH <= self.vehicle.polar_radius_min_edge and \
                                 self.vehicle.polar_radius_max_edge <= 2 * INTERSECTION_HALF_SIZE / math.sin(self.vehicle.polar_angle):
                             reward += 200.0
                             self.ARRIVE_AT_MID_GOAL[num] = 1
@@ -708,12 +708,12 @@ class envCube(gym.Env):
                 if self.vehicle.polar_radius_min_edge < 0 or \
                         self.vehicle.polar_radius_max_edge > INTERSECTION_HALF_SIZE:
                     self.JUDGEMENT_IN_ROAD = False
-                if self.vehicle.next1_polar_radius_min_edge < 0 or \
-                        self.vehicle.next1_polar_radius_max_edge > INTERSECTION_HALF_SIZE:
-                    self.NEXT_1_IN_ROAD = False
-                if self.vehicle.next2_polar_radius_min_edge < 0 or \
-                        self.vehicle.next2_polar_radius_max_edge > INTERSECTION_HALF_SIZE:
-                    self.NEXT_2_IN_ROAD = False
+                # if self.vehicle.next1_polar_radius_min_edge < 0 or \
+                #         self.vehicle.next1_polar_radius_max_edge > INTERSECTION_HALF_SIZE:
+                #     self.NEXT_1_IN_ROAD = False
+                # if self.vehicle.next2_polar_radius_min_edge < 0 or \
+                #         self.vehicle.next2_polar_radius_max_edge > INTERSECTION_HALF_SIZE:
+                #     self.NEXT_2_IN_ROAD = False
                 # 如果第一次进入交叉口，更新阶段目标空间和计数器
                 if self.vehicle.pre_state != 'intersection':
                     self.CIRCLE_COUNT = 0
@@ -733,12 +733,12 @@ class envCube(gym.Env):
                             self.distance_2_goal = 0
 
         # 如果主车进入到禁止进入区域，break-out.并根据主车下两步的路径更新Time_to_off_road
-        if self.NEXT_2_IN_ROAD == False:
-            self.Time_to_off_road = 2
-        if self.NEXT_1_IN_ROAD == False:
-            self.Time_to_off_road = 1
+        # if self.NEXT_2_IN_ROAD == False:
+        #     self.Time_to_off_road = 2
+        # if self.NEXT_1_IN_ROAD == False:
+        #     self.Time_to_off_road = 1
         if self.JUDGEMENT_IN_ROAD == False:
-            self.Time_to_off_road = 0
+            # self.Time_to_off_road = 0
             break_out = True
 
         # 成功驶出十字路口范围，到达目标，给予1000分奖赏
@@ -767,7 +767,7 @@ class envCube(gym.Env):
 
         self.vehicle_position = np.array(
             [self.vehicle.x, self.vehicle.y], dtype=np.float32)
-        self.vehicle_state = np.array(
+        self.vehicle_speed_yawangle = np.array(
             [self.vehicle.velocity,
              self.vehicle.yaw_angle/math.pi], dtype=np.float32)
         self.relative_position_2_danger = np.array(
@@ -787,15 +787,21 @@ class envCube(gym.Env):
         # self.signal_stop_position = np.array([self.signal_stop.x, self.signal_stop.y], dtype=np.int32)
         # self.signal_stop_state = np.array([phase, countdown], dtype=np.int32)
 
-        print(self.episode_step, ':', 'action:', action, self.vehicle_position, self.vehicle_state, self.relative_distance_to_goal,
-              self.JUDGEMENT_IN_ROAD, self.Time_to_off_road, self.vehicle.distance_to_off_road)
+        print(self.episode_step, ':', 'Action:', action, ';',
+              'Position:', self.vehicle_position, ';', 'Speed_YawAngle:', self.vehicle_speed_yawangle, ';',
+              'Relative_distance_to_goal:', self.relative_distance_to_goal, ';',
+              'vehicle_state:', self.vehicle.state, ';',
+              'Judgement_in_road:', self.JUDGEMENT_IN_ROAD, ';',
+              'Distance_to_off_road:', self.vehicle.distance_to_off_road, ';',
+              'Polar_radius:', self.vehicle.polar_radius, ';',
+              'Polar_angle:', self.vehicle.polar_angle, ';')
         if reward < -100 or reward > 100:
           print(reward)
 
         self.state: dict = (
             {
                 'agent_position': self.vehicle_position,
-                'agent_speed_yawangle': self.vehicle_state,
+                'agent_speed_yawangle': self.vehicle_speed_yawangle,
                 'relative_position_2_danger': self.relative_position_2_danger,
                 'first_other_vehicle_position': self.first_other_vehicle_position,
                 'first_other_vehicle_relative_position': self.first_other_vehicle_relative_position,
@@ -805,7 +811,7 @@ class envCube(gym.Env):
                 'second_other_vehicle_speed': self.second_other_vehicle_speed,
                 'relative_distance_2_goal': self.relative_distance_to_goal,
                 'judgement_in_road': self.JUDGEMENT_IN_ROAD,
-                'risk_off_road': self.Time_to_off_road,
+                # 'risk_off_road': self.Time_to_off_road,
                 'distance_2_nearest_off_road': self.vehicle.distance_to_off_road,
                 # 'stop_line_position': self.signal_stop_position,
                 # 'signal_light_phase_countdown': self.signal_stop_state
@@ -829,7 +835,7 @@ class envCube(gym.Env):
 
         self.vehicle_position = np.array(
             [self.vehicle.x, self.vehicle.y], dtype=np.float32)
-        self.vehicle_state = np.array(
+        self.vehicle_speed_yawangle = np.array(
             [self.vehicle.velocity,
              self.vehicle.yaw_angle/math.pi], dtype=np.float32)
         self.relative_position_2_danger = np.array(
@@ -858,7 +864,7 @@ class envCube(gym.Env):
         self.NEXT_1_IN_ROAD = True
         self.NEXT_2_IN_ROAD = True
         self.EXCEED_MAX_STEP = False
-        self.Time_to_off_road = 3
+        # self.Time_to_off_road = 3
         self.CIRCLE_COUNT = 0
         self.ARRIVE_AT_MID_GOAL = np.zeros((self.mid_goal_front_space_y), dtype=np.int32)
 
@@ -868,7 +874,7 @@ class envCube(gym.Env):
         self.state: dict = (
             {
                 'agent_position': self.vehicle_position,
-                'agent_speed_yawangle': self.vehicle_state,
+                'agent_speed_yawangle': self.vehicle_speed_yawangle,
                 'relative_position_2_danger': self.relative_position_2_danger,
                 'first_other_vehicle_position': self.first_other_vehicle_position,
                 'first_other_vehicle_relative_position': self.first_other_vehicle_relative_position,
@@ -878,7 +884,7 @@ class envCube(gym.Env):
                 'second_other_vehicle_speed': self.second_other_vehicle_speed,
                 'relative_distance_2_goal': self.relative_distance_to_goal,
                 'judgement_in_road': self.JUDGEMENT_IN_ROAD,
-                'risk_off_road': self.Time_to_off_road,
+                # 'risk_off_road': self.Time_to_off_road,
                 'distance_2_nearest_off_road': self.vehicle.distance_to_off_road,
                 # 'stop_line_position': self.signal_stop_position,
                 # 'signal_light_phase_countdown': self.signal_stop_state
@@ -905,7 +911,7 @@ class envCube(gym.Env):
         INT_STRAIGHT_LENGTH = int(round(STRAIGHT_LENGTH,0))
         INT_SINGLE_LANE_WIDTH = int(round(SINGLE_LANE_WIDTH,0))
         INT_INTERSECTION_HALF_SIZE = int(round(INTERSECTION_HALF_SIZE,0))
-        INT_VEHICLE_HALF_SIZE = int(round(VEHICLE_HALF_SIZE, 0))
+        # INT_VEHICLE_HALF_SIZE = int(round(VEHICLE_HALF_SIZE, 0))
         # 十字路口框架
         for x1 in range(0, INT_STRAIGHT_LENGTH):
             for y1 in range(0, INT_STRAIGHT_LENGTH):
@@ -984,10 +990,10 @@ class envCube(gym.Env):
                 y = INT_SIZE - 1
             env[x][y] = self.d[self.RED_LIGHT_N]
 
-        # 画出车祸区域
-        for x6 in range(INT_MAX_COORD + INT_SINGLE_LANE_WIDTH, INT_MAX_COORD + 2 * INT_SINGLE_LANE_WIDTH):
-            for y6 in range(INT_MAX_COORD, INT_MAX_COORD + INT_SINGLE_LANE_WIDTH):
-                env[x6][y6] = self.d[self.RED_LIGHT_N]
+        # # 画出车祸区域
+        # for x6 in range(INT_MAX_COORD + INT_SINGLE_LANE_WIDTH, INT_MAX_COORD + 2 * INT_SINGLE_LANE_WIDTH):
+        #     for y6 in range(INT_MAX_COORD, INT_MAX_COORD + INT_SINGLE_LANE_WIDTH):
+        #         env[x6][y6] = self.d[self.RED_LIGHT_N]
 
         # # 画出车道的信号灯及停止线
         # ss_position: np.ndarry = [0, 0]

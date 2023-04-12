@@ -8,6 +8,7 @@
 
 import math
 
+import CONSTANTS
 from CONSTANTS import min_positionx
 from CONSTANTS import max_positionx
 from CONSTANTS import min_positiony
