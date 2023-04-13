@@ -134,3 +134,10 @@ class Image_Map_Observation:
             for j in range(INT_SEPARATE):
                 separate_map[i][j] = whole_map[int(vehicle_x) - INT_SEPARATE/2 + i][int(vehicle_y)- INT_SEPARATE/2 + j]
         return separate_map
+
+    def SeparateMap(self, vehicle_max_vertex_x, vehicle_min_vertex_x, vehicle_max_vertex_y, vehicle_min_vertex_y) -> ndarray:
+        vehicle_x = (int(round(vehicle_max_vertex_x, 0)) + int(round(vehicle_min_vertex_x, 0))) / 2
+        vehicle_y = (int(round(vehicle_max_vertex_y, 0)) + int(round(vehicle_min_vertex_y, 0))) / 2
+        return SeparateMap(vehicle_x, vehicle_y)
+                
+        
