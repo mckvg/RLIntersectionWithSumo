@@ -20,7 +20,7 @@ from stable_baselines3.common.callbacks import EvalCallback
 
 
 env = envCube()
-check_env(env)
+# check_env(env)
 
 
 # # Instantiate the agent

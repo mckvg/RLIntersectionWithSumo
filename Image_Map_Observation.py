@@ -48,7 +48,7 @@ class Image_Map_Observation:
         INT_SEPARATE = 64
         self.whole_map = np.zeros((INT_SIZE, INT_SIZE), dtype=np.uint8)
         self.illustration_whole_map = np.zeros((INT_SIZE, INT_SIZE), dtype=np.uint8)
-        self.separate_map = np.zeros((INT_SEPARATE,INT_SEPARATE),dtype=np.uint8)
+        self.separate_map = np.zeros((INT_SEPARATE,INT_SEPARATE),dtype=int)
         self.rectangle_list_off_road = Rectangle_List_Off_Road()
         self.rectangle_list_crash_area = Rectangle_List_Crash_Area()
 
@@ -128,6 +128,9 @@ class Image_Map_Observation:
             for y7 in range(INT_SIZE):
                 self.illustration_whole_map[-y7][x7] = self.whole_map[x7-int(MAX_COORD)][y7-int(MAX_COORD)]
 
-
-    # def SeparateMap(self):
-
+    # focused area
+    def SeparateMap(self, vehicle_x, vehicle_y) -> ndarray:
+        for i in range(INT_SEPARATE):
+            for j in range(INT_SEPARATE):
+                separate_map[i][j] = whole_map[int(vehicle_x) - INT_SEPARATE/2 + i][int(vehicle_y)- INT_SEPARATE/2 + j]
+        return separate_map
