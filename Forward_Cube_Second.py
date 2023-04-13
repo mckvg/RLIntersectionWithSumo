@@ -27,10 +27,13 @@ class Forward_Cube_Second:
         self.size = size
         self.x = float(SINGLE_LANE_WIDTH / 2 + SINGLE_LANE_WIDTH)
         self.y = MIN_COORD + 5 * VEHICLE_LENGTH
+        self.pre_x = self.x
+        self.pre_y = self.y
         self.velocity = 0.0 * SCALE
         self.acceleration = 0.0 * SCALE
         self.move_step = 0
         self.yaw_angle = 0.0
+        self.pre_yaw_angle = self.yaw_angle
 
         # 车头朝向正北(yaw_angle = 0),vertex0为左前点，1为右前点，2为右后点，3为左后点，按顺时针方向。
         self.vertex0x = self.x + VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle-VEHICLE_ANGLE)
@@ -47,6 +50,11 @@ class Forward_Cube_Second:
         self.max_vertex_y = max(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
         self.min_vertex_y = min(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
 
+        self.pre_max_vertex_x = self.max_vertex_x
+        self.pre_min_vertex_x = self.min_vertex_x
+        self.pre_max_vertex_y = self.max_vertex_y
+        self.pre_min_vertex_y = self.min_vertex_y
+
     def __str__(self):
         return f'{(self.x, self.y)},{self.velocity},{self.acceleration}'
 
@@ -58,6 +66,15 @@ class Forward_Cube_Second:
         mid_speed = 8.0 * SCALE
 
         self.move_step += 1
+
+        self.pre_x = self.x
+        self.pre_y = self.y
+        self.pre_yaw_angle = self.yaw_angle
+
+        self.pre_max_vertex_x = self.max_vertex_x
+        self.pre_min_vertex_x = self.min_vertex_x
+        self.pre_max_vertex_y = self.max_vertex_y
+        self.pre_min_vertex_y = self.min_vertex_y
 
         self.velocity = mid_speed
 

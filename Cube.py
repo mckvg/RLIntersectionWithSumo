@@ -48,6 +48,7 @@ class Cube:
         self.velocity = 2.0 * SCALE
         self.acceleration = 0.0 * SCALE
         self.yaw_angle = 0.0
+        self.pre_yaw_angle = 0.0
         self.distance_to_mid_lane_line = abs(self.x-SINGLE_LANE_WIDTH)
 
         self.polar_radius = 0.0
@@ -82,6 +83,11 @@ class Cube:
         self.min_vertex_x = min(self.vertex0x, self.vertex1x, self.vertex2x, self.vertex3x)
         self.max_vertex_y = max(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
         self.min_vertex_y = min(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
+
+        self.pre_max_vertex_x = self.max_vertex_x
+        self.pre_min_vertex_x = self.min_vertex_x
+        self.pre_max_vertex_y = self.max_vertex_y
+        self.pre_min_vertex_y = self.min_vertex_y
 
         # self.edge0 = self.x - VEHICLE_HALF_SIZE
         # self.edge1 = self.y + VEHICLE_HALF_SIZE
@@ -147,6 +153,14 @@ class Cube:
 
         self.pre_x = self.x
         self.pre_y = self.y
+        self.pre_yaw_angle = self.yaw_angle
+
+        self.pre_max_vertex_x = self.max_vertex_x
+        self.pre_min_vertex_x = self.min_vertex_x
+        self.pre_max_vertex_y = self.max_vertex_y
+        self.pre_min_vertex_y = self.min_vertex_y
+
+
         self.move_step += 1
         if choice == 0:
             self.acceleration = 0.0
@@ -243,6 +257,7 @@ class Cube:
         self.min_vertex_x = min(self.vertex0x, self.vertex1x, self.vertex2x, self.vertex3x)
         self.max_vertex_y = max(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
         self.min_vertex_y = min(self.vertex0y, self.vertex1y, self.vertex2y, self.vertex3y)
+
 
         # # 0点方向起始，顺时针；以此为：上，右，下，左
         # self.edge0 = self.x - VEHICLE_HALF_SIZE

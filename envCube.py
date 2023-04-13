@@ -64,6 +64,7 @@ from CONSTANTS import min_positionx
 from CONSTANTS import max_positionx
 from CONSTANTS import min_positiony
 from CONSTANTS import max_positiony
+from Image_Map_Observation import Image_Map_Observation
 
 
 
@@ -232,8 +233,27 @@ class envCube(gym.Env):
 
         self.rectangle_list_reverse.judgement(self.vehicle.init_state)
 
+        # observation里画出逆行区域
+        self.image_map_observation.reverse(self.rectangle_list_reverse.RectangleList)
+        # observation里画出智能体范围
+        self.image_map_observation.agent(self.vehicle.max_vertex_x, self.vehicle.min_vertex_x,
+                                         self.vehicle.max_vertex_y, self.vehicle.min_vertex_y,
+                                         self.vehicle.pre_max_vertex_x, self.vehicle.pre_min_vertex_x,
+                                         self.vehicle.pre_max_vertex_y, self.vehicle.pre_min_vertex_y)
+        # observation里画出远车范围
+        self.image_map_observation.RemoteVehicle(self.first_other_vehicle.max_vertex_x, self.first_other_vehicle.min_vertex_x,
+                                         self.first_other_vehicle.max_vertex_y, self.first_other_vehicle.min_vertex_y,
+                                         self.first_other_vehicle.pre_max_vertex_x, self.first_other_vehicle.pre_min_vertex_x,
+                                         self.first_other_vehicle.pre_max_vertex_y, self.first_other_vehicle.pre_min_vertex_y)
+
+        self.image_map_observation.RemoteVehicle(self.second_other_vehicle.max_vertex_x, self.second_other_vehicle.min_vertex_x,
+                                         self.second_other_vehicle.max_vertex_y, self.second_other_vehicle.min_vertex_y,
+                                         self.second_other_vehicle.pre_max_vertex_x, self.second_other_vehicle.pre_min_vertex_x,
+                                         self.second_other_vehicle.pre_max_vertex_y, self.second_other_vehicle.pre_min_vertex_y)
+
         # 更新直道的之前动作的最大最小坐标值(intersection中之前动作不更新)
         self.vehicle.UpdatePreExtremeValue()
+
 
         reward = 0.0
 
@@ -779,7 +799,7 @@ class envCube(gym.Env):
 
         #如果车辆压到中线，返回一个小惩罚
         if self.OCCUPIED_MID_LANE_LINE == True:
-            reward -= 30
+            reward -= 10
 
         if break_out:
             reward += -500.0
@@ -861,6 +881,7 @@ class envCube(gym.Env):
         self.rectangle_list_off_road = Rectangle_List_Off_Road()
         self.rectangle_list_reverse = Rectangle_List_Reverse()
         self.rectangle_list_crash_area = Rectangle_List_Crash_Area()
+        self.image_map_observation = Image_Map_Observation()
 
         self.vehicle_position = np.array(
             [self.vehicle.x, self.vehicle.y], dtype=np.float32)
@@ -1013,8 +1034,8 @@ class envCube(gym.Env):
                 for y23 in range(INT_SECOND_OTHER_VEHICLE_MIN_VERTEX_Y + INT_MAX_COORD, INT_SECOND_OTHER_VEHICLE_MAX_VERTEX_Y + INT_MAX_COORD):
                     env[-y23][x23] = self.d[self.VEHICLE_OTHER_N]
 
-        for x5 in range(0, int(2.0 * VEHICLE_ILLUSTRATION_YAW_ANGLE_SIZE)):
-            x = INT_MAX_COORD - INT_VEHICLE_Y - int(x5 * math.cos(self.vehicle.yaw_angle))
+        for x5 in range(0, int(4.0 * VEHICLE_ILLUSTRATION_YAW_ANGLE_SIZE)):
+            x = INT_MAX_COORD - INT_VEHICLE_Y - int(x5 * math.cos(self.vehicle.yaw_angle)) + 1
             y = INT_MAX_COORD + INT_VEHICLE_X + int(x5 * math.sin(self.vehicle.yaw_angle))
             if x >= INT_SIZE:
                 x = INT_SIZE - 1
@@ -1042,5 +1063,10 @@ class envCube(gym.Env):
         #     for x4 in range(ss_position[0] - SINGLE_LANE_WIDTH, ss_position[0] + SINGLE_LANE_WIDTH):
         #         env[x4][ss_position[1]] = self.d[self.YELLOW_LIGHT_N]
 
-        img = Image.fromarray(env, 'RGB')
+        # img = Image.fromarray(env, 'RGB')
+        # return img
+        self.image_map_observation.illustration(int(SIZE))
+        env1 = self.image_map_observation.illustration_whole_map
+
+        img = Image.fromarray(env1, 'L')
         return img
