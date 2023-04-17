@@ -553,7 +553,7 @@ class envCube(gym.Env):
                 self.OCCUPIED_MID_LANE_LINE = True
 
         # 十字路口内选择
-        self.vehicle.intersection_steering_choice = -1  # 0: straight; -1: turn left;  1: turn right
+        self.vehicle.intersection_steering_choice = 0  # 0: straight; -1: turn left;  1: turn right
 
         # 进入十字路口范围内，根据intersection_steering_choice，绘制track路线图，带有rewards，转弯部分利用极坐标系绘制
         if self.vehicle.state == 'intersection':
@@ -836,19 +836,19 @@ class envCube(gym.Env):
         # self.signal_stop_position = np.array([self.signal_stop.x, self.signal_stop.y], dtype=np.int32)
         # self.signal_stop_state = np.array([phase, countdown], dtype=np.int32)
 
-        print(self.episode_step, ':', 'Action:', action, ';',
-              'Position:', self.vehicle_position, ';', 'Speed_YawAngle:', self.vehicle_speed_yawangle, ';',
-              # 'Relative_distance_to_goal:', self.relative_distance_to_goal, ';',
-              'vehicle_state:', self.vehicle.state, ';',
-              # 'Judgement_in_road:', self.JUDGEMENT_IN_ROAD, ';',
-              # 'Distance_to_off_road:', self.vehicle.distance_to_off_road, ';',
-              'Distance_to_mid_lane_line', self.vehicle.distance_to_mid_lane_line, ';',
-              # 'Polar_radius:', self.vehicle.polar_radius, ';',
-              # 'Polar_angle:', self.vehicle.polar_angle, ';'
-              'reward:', reward
-              )
-        if reward < -100 or reward > 100:
-          print(reward)
+        # print(self.episode_step, ':', 'Action:', action, ';',
+        #       'Position:', self.vehicle_position, ';', 'Speed_YawAngle:', self.vehicle_speed_yawangle, ';',
+        #       # 'Relative_distance_to_goal:', self.relative_distance_to_goal, ';',
+        #       'vehicle_state:', self.vehicle.state, ';',
+        #       # 'Judgement_in_road:', self.JUDGEMENT_IN_ROAD, ';',
+        #       # 'Distance_to_off_road:', self.vehicle.distance_to_off_road, ';',
+        #       'Distance_to_mid_lane_line', self.vehicle.distance_to_mid_lane_line, ';',
+        #       # 'Polar_radius:', self.vehicle.polar_radius, ';',
+        #       # 'Polar_angle:', self.vehicle.polar_angle, ';'
+        #       'reward:', reward
+        #       )
+        # if reward < -100 or reward > 100:
+        #   print(reward)
 
         self.state: dict = (
             {
