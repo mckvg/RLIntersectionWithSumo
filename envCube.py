@@ -813,6 +813,7 @@ class envCube(gym.Env):
             reward += 1000.0
             terminated = True
 
+
         self.vehicle_position = np.array(
             [self.vehicle.x, self.vehicle.y], dtype=np.float32)
         self.vehicle_speed_yawangle = np.array(
