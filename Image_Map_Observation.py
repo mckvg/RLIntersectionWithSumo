@@ -6,7 +6,7 @@ from Track import Track
 from CONSTANTS import SCALE
 from CONSTANTS import SIZE
 from CONSTANTS import MIN_COORD
-from CONSTANTS import MAX_COORD
+from CONSTANTS import MAX_COORD, SEPARATE_SIZE
 from CONSTANTS import VEHICLE_LENGTH
 from CONSTANTS import VEHICLE_WIDTH
 from CONSTANTS import VEHICLE_ANGLE
@@ -24,7 +24,8 @@ from CONSTANTS import max_positionx
 from CONSTANTS import min_positiony
 from CONSTANTS import max_positiony
 import numpy as np
-from Rectangle import Rectangle_List_Reverse, Rectangle_List_Crash_Area, Rectangle_List_Off_Road, Rectangle
+from Rectangle import Rectangle_List_Reverse, Rectangle_List_Crash_Area, Rectangle_List_Off_Road, Rectangle, \
+    Rectangle_List_Expand_Area
 import Cube
 
 d = {
@@ -45,28 +46,39 @@ class Image_Map_Observation:
 
     def __init__(self):
         INT_SIZE = int(round(SIZE, 0))
-        INT_SEPARATE = 64
-        self.whole_map = np.zeros((INT_SIZE, INT_SIZE), dtype=np.uint8)
-        self.illustration_whole_map = np.zeros((INT_SIZE, INT_SIZE), dtype=np.uint8)
-        self.separate_map = np.zeros((INT_SEPARATE,INT_SEPARATE),dtype=int)
+        INT_EXPAND_SIZE = int(565)
+        self.INT_SEPARATE = int(64)
+        self.whole_map = np.zeros((INT_EXPAND_SIZE, INT_EXPAND_SIZE, 1), dtype=np.uint8)
+        self.illustration_whole_map = np.zeros((INT_EXPAND_SIZE, INT_EXPAND_SIZE), dtype=np.uint8)
+        self.separate_map = np.zeros((self.INT_SEPARATE, self.INT_SEPARATE, 1), dtype=np.uint8)
+        self.illustration_separate_map = np.zeros((self.INT_SEPARATE, self.INT_SEPARATE), dtype=np.uint8)
         self.rectangle_list_off_road = Rectangle_List_Off_Road()
         self.rectangle_list_crash_area = Rectangle_List_Crash_Area()
+        self.rectangle_list_expand_area = Rectangle_List_Expand_Area()
 
         # 根据Rectangle_List_Off_Road类进行填图，填色为block
         for rec in range(self.rectangle_list_off_road.RectangleList.size):
             for x1 in range(int(self.rectangle_list_off_road.RectangleList[0][rec].min_x),
-                            int(self.rectangle_list_off_road.RectangleList[0][rec].max_x) + 1, 1):
+                            int(self.rectangle_list_off_road.RectangleList[0][rec].max_x), 1):
                 for y1 in range(int(self.rectangle_list_off_road.RectangleList[0][rec].min_y),
-                                int(self.rectangle_list_off_road.RectangleList[0][rec].max_y + 1), 1):
+                                int(self.rectangle_list_off_road.RectangleList[0][rec].max_y), 1):
                     self.whole_map[x1][y1] = d[block]
 
         # 根据Rectangle_List_Crash_Area类进行填图，填色为block
         for rec in range(self.rectangle_list_crash_area.RectangleList.size):
             for x2 in range(int(self.rectangle_list_crash_area.RectangleList[0][rec].min_x),
-                            int(self.rectangle_list_crash_area.RectangleList[0][rec].max_x) + 1, 1):
+                            int(self.rectangle_list_crash_area.RectangleList[0][rec].max_x), 1):
                 for y2 in range(int(self.rectangle_list_crash_area.RectangleList[0][rec].min_y),
-                                int(self.rectangle_list_crash_area.RectangleList[0][rec].max_y + 1), 1):
+                                int(self.rectangle_list_crash_area.RectangleList[0][rec].max_y), 1):
                     self.whole_map[x2][y2] = d[block]
+
+        # 根据Rectangle_List_Expand_Area类进行填图，填色为block
+        for rec in range(self.rectangle_list_expand_area.RectangleList.size):
+            for x22 in range(int(self.rectangle_list_expand_area.RectangleList[0][rec].min_x),
+                            int(self.rectangle_list_expand_area.RectangleList[0][rec].max_x), 1):
+                for y22 in range(int(self.rectangle_list_expand_area.RectangleList[0][rec].min_y),
+                                int(self.rectangle_list_expand_area.RectangleList[0][rec].max_y), 1):
+                    self.whole_map[x22][y22] = d[block]
 
         # 将剩余区域填色为road
         for x3 in range(int(MIN_COORD),int(MAX_COORD)+1,1 ):
@@ -79,9 +91,9 @@ class Image_Map_Observation:
         # 根据Rectangle_List_Reverse类进行填图，填色为block
         for rec in range(rectangle_list_reverse_rectanglelist.size):
             for x4 in range(int(rectangle_list_reverse_rectanglelist[0][rec].min_x),
-                            int(rectangle_list_reverse_rectanglelist[0][rec].max_x) + 1, 1):
+                            int(rectangle_list_reverse_rectanglelist[0][rec].max_x), 1):
                 for y4 in range(int(rectangle_list_reverse_rectanglelist[0][rec].min_y),
-                                int(rectangle_list_reverse_rectanglelist[0][rec].max_y + 1), 1):
+                                int(rectangle_list_reverse_rectanglelist[0][rec].max_y), 1):
                     self.whole_map[x4][y4] = d[block]
 
     # 对智能体的位置区域填色为agent
@@ -95,11 +107,11 @@ class Image_Map_Observation:
         int_vehicle_pre_min_vertex_x = int(round(vehicle_pre_min_vertex_x, 0))
         int_vehicle_pre_max_vertex_y = int(round(vehicle_pre_max_vertex_y, 0))
         int_vehicle_pre_min_vertex_y = int(round(vehicle_pre_min_vertex_y, 0))
-        for x55 in range(int_vehicle_pre_min_vertex_x, int_vehicle_pre_max_vertex_x + 1, 1):
-            for y55 in range(int_vehicle_pre_min_vertex_y, int_vehicle_pre_max_vertex_y + 1, 1):
+        for x55 in range(int_vehicle_pre_min_vertex_x, int_vehicle_pre_max_vertex_x, 1):
+            for y55 in range(int_vehicle_pre_min_vertex_y, int_vehicle_pre_max_vertex_y, 1):
                 self.whole_map[x55][y55] = d[road]
-        for x5 in range(int_vehicle_min_vertex_x, int_vehicle_max_vertex_x + 1, 1):
-            for y5 in range(int_vehicle_min_vertex_y, int_vehicle_max_vertex_y + 1, 1):
+        for x5 in range(int_vehicle_min_vertex_x, int_vehicle_max_vertex_x, 1):
+            for y5 in range(int_vehicle_min_vertex_y, int_vehicle_max_vertex_y, 1):
                 self.whole_map[x5][y5] = d[agent]
 
 
@@ -116,28 +128,34 @@ class Image_Map_Observation:
         int_remote_vehicle_pre_min_vertex_x = int(round(remote_vehicle_pre_min_vertex_x, 0))
         int_remote_vehicle_pre_max_vertex_y = int(round(remote_vehicle_pre_max_vertex_y, 0))
         int_remote_vehicle_pre_min_vertex_y = int(round(remote_vehicle_pre_min_vertex_y, 0))
-        for x66 in range(int_remote_vehicle_pre_min_vertex_x, int_remote_vehicle_pre_max_vertex_x + 1, 1):
-            for y66 in range(int_remote_vehicle_pre_min_vertex_y, int_remote_vehicle_pre_max_vertex_y + 1, 1):
+        for x66 in range(int_remote_vehicle_pre_min_vertex_x, int_remote_vehicle_pre_max_vertex_x, 1):
+            for y66 in range(int_remote_vehicle_pre_min_vertex_y, int_remote_vehicle_pre_max_vertex_y, 1):
                 self.whole_map[x66][y66] = d[road]
-        for x6 in range(int_remote_vehicle_min_vertex_x, int_remote_vehicle_max_vertex_x + 1, 1):
-            for y6 in range(int_remote_vehicle_min_vertex_y, int_remote_vehicle_max_vertex_y + 1, 1):
+        for x6 in range(int_remote_vehicle_min_vertex_x, int_remote_vehicle_max_vertex_x, 1):
+            for y6 in range(int_remote_vehicle_min_vertex_y, int_remote_vehicle_max_vertex_y, 1):
                 self.whole_map[x6][y6] = d[remote_vehicle]
 
-    def illustration(self, INT_SIZE):
-        for x7 in range(INT_SIZE):
-            for y7 in range(INT_SIZE):
-                self.illustration_whole_map[-y7][x7] = self.whole_map[x7-int(MAX_COORD)][y7-int(MAX_COORD)]
+    def illustration(self):
+        for x7 in range(int(SIZE) + int(SEPARATE_SIZE)):
+            for y7 in range(int(SIZE) + int(SEPARATE_SIZE)):
+                self.illustration_whole_map[-y7][x7] = self.whole_map[x7-int(MAX_COORD+SEPARATE_SIZE/2)][y7-int(MAX_COORD+SEPARATE_SIZE/2)]
+
+    def illustrationagent(self):
+        for x7 in range(int(SEPARATE_SIZE)):
+            for y7 in range(int(SEPARATE_SIZE)):
+                self.illustration_separate_map[-y7][x7] = self.separate_map[x7-int(SEPARATE_SIZE/2)][y7-int(SEPARATE_SIZE/2)]
 
     # focused area
-    def SeparateMap(self, vehicle_x, vehicle_y) -> ndarray:
-        for i in range(INT_SEPARATE):
-            for j in range(INT_SEPARATE):
-                separate_map[i][j] = whole_map[int(vehicle_x) - INT_SEPARATE/2 + i][int(vehicle_y)- INT_SEPARATE/2 + j]
-        return separate_map
+    def SeparateMap(self, vehicle_x, vehicle_y) -> np.ndarray:
+        for i in range(self.INT_SEPARATE):
+            for j in range(self.INT_SEPARATE):
+                self.separate_map[i-int(self.INT_SEPARATE/2)][j-int(self.INT_SEPARATE/2)] =\
+                    self.whole_map[int(vehicle_x) - int(self.INT_SEPARATE/2) + i][int(vehicle_y)- int(self.INT_SEPARATE/2) + j]
+        return self.separate_map
 
-    def SeparateMap(self, vehicle_max_vertex_x, vehicle_min_vertex_x, vehicle_max_vertex_y, vehicle_min_vertex_y) -> ndarray:
+    def Separate_Map(self, vehicle_max_vertex_x, vehicle_min_vertex_x, vehicle_max_vertex_y, vehicle_min_vertex_y) -> np.ndarray:
         vehicle_x = (int(round(vehicle_max_vertex_x, 0)) + int(round(vehicle_min_vertex_x, 0))) / 2
         vehicle_y = (int(round(vehicle_max_vertex_y, 0)) + int(round(vehicle_min_vertex_y, 0))) / 2
-        return SeparateMap(vehicle_x, vehicle_y)
+        return self.SeparateMap(vehicle_x, vehicle_y)
                 
         

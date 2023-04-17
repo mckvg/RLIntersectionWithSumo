@@ -6,7 +6,7 @@ from Track import Track
 from CONSTANTS import SCALE
 from CONSTANTS import SIZE
 from CONSTANTS import MIN_COORD
-from CONSTANTS import MAX_COORD
+from CONSTANTS import MAX_COORD, SEPARATE_SIZE
 from CONSTANTS import VEHICLE_LENGTH
 from CONSTANTS import VEHICLE_WIDTH
 from CONSTANTS import VEHICLE_ANGLE
@@ -71,5 +71,20 @@ class Rectangle_List_Crash_Area:
         # max_x, min_x, max_y, min_y
         self.RectangleList = np.ndarray(shape=(1, 1), dtype=Rectangle)
 
-        self.RectangleList[0][0] = Rectangle(SINGLE_LANE_WIDTH, 0, -SINGLE_LANE_WIDTH, -2*SINGLE_LANE_WIDTH)
+        self.RectangleList[0][0] = Rectangle(SINGLE_LANE_WIDTH, 0, -2*SINGLE_LANE_WIDTH, -3*SINGLE_LANE_WIDTH)
+
+class Rectangle_List_Expand_Area:
+
+    def __init__(self):
+        # max_x, min_x, max_y, min_y
+        self.RectangleList = np.ndarray(shape=(1, 4), dtype=Rectangle)
+        INT_SEPARATE_HALF_SIZE = int(round(SEPARATE_SIZE/2,0))
+        self.RectangleList[0][0] = Rectangle(int(MAX_COORD)+INT_SEPARATE_HALF_SIZE, int(MIN_COORD)-INT_SEPARATE_HALF_SIZE,
+                                             int(MAX_COORD)+INT_SEPARATE_HALF_SIZE, int(MAX_COORD))
+        self.RectangleList[0][1] = Rectangle(int(MAX_COORD)+INT_SEPARATE_HALF_SIZE, int(MAX_COORD),
+                                             int(MAX_COORD), int(MIN_COORD))
+        self.RectangleList[0][2] = Rectangle(int(MAX_COORD)+INT_SEPARATE_HALF_SIZE, int(MIN_COORD)-INT_SEPARATE_HALF_SIZE,
+                                             int(MIN_COORD), int(MIN_COORD)-INT_SEPARATE_HALF_SIZE)
+        self.RectangleList[0][3] = Rectangle(int(MIN_COORD), int(MIN_COORD)-INT_SEPARATE_HALF_SIZE,
+                                             int(MAX_COORD), int(MIN_COORD))
 

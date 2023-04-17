@@ -47,7 +47,7 @@ from Rectangle import Rectangle, Rectangle_List_Off_Road, Rectangle_List_Reverse
 from CONSTANTS import SCALE
 from CONSTANTS import SIZE
 from CONSTANTS import MIN_COORD 
-from CONSTANTS import MAX_COORD 
+from CONSTANTS import MAX_COORD, SEPARATE_SIZE, GRAY_SPACE
 from CONSTANTS import VEHICLE_LENGTH 
 from CONSTANTS import VEHICLE_WIDTH 
 from CONSTANTS import VEHICLE_ANGLE 
@@ -204,6 +204,7 @@ class envCube(gym.Env):
                 'distance_2_mid_lane_line': Box(2*MIN_COORD-1.0, 2*MAX_COORD+1.0, shape=(1,), dtype=np.float32),
                 # 'risk_off_road': Discrete(self.risk_space),
                 'distance_2_nearest_off_road': Box(2*MIN_COORD-1.0, 2*MAX_COORD+1.0, shape=(2,), dtype=np.float32),
+                'bird_eye_view_gray_image': Box(low=0, high=GRAY_SPACE, shape=(int(SEPARATE_SIZE), int(SEPARATE_SIZE), 1), dtype=np.uint8),
 
                 # 'distance_2_center_line': Discrete(MAX_COORD),
                 # 'stop_line_position': Box(MIN_COORD, MAX_COORD, shape=(2,), dtype=np.int32),
@@ -250,6 +251,9 @@ class envCube(gym.Env):
                                          self.second_other_vehicle.max_vertex_y, self.second_other_vehicle.min_vertex_y,
                                          self.second_other_vehicle.pre_max_vertex_x, self.second_other_vehicle.pre_min_vertex_x,
                                          self.second_other_vehicle.pre_max_vertex_y, self.second_other_vehicle.pre_min_vertex_y)
+        # observation画出以主车为中心的灰度图区域
+        self.image_map_observation.Separate_Map(self.vehicle.max_vertex_x, self.vehicle.min_vertex_x,
+                                               self.vehicle.max_vertex_y, self.vehicle.min_vertex_y)
 
         # 更新直道的之前动作的最大最小坐标值(intersection中之前动作不更新)
         self.vehicle.UpdatePreExtremeValue()
@@ -324,19 +328,19 @@ class envCube(gym.Env):
         #     if self.vehicle.next2_edge0 <= 0 or self.vehicle.next2_edge2 >= INTERSECTION_HALF_SIZE:
         #         self.NEXT_2_IN_ROAD = False
 
-        # # 主车进入到车祸区域，终止训练，并给予-500分惩罚
-        # if self.JUDGEMENT_IN_ROAD == True:
-        #     for rec in range(self.rectangle_list_crash_area.RectangleList.size):
-        #         if ((self.vehicle.max_vertex_x < self.rectangle_list_crash_area.RectangleList[0][rec].min_x) or
-        #                 (self.vehicle.min_vertex_x > self.rectangle_list_crash_area.RectangleList[0][rec].max_x) or
-        #                 (self.vehicle.max_vertex_y < self.rectangle_list_crash_area.RectangleList[0][rec].min_y) or
-        #                 (self.vehicle.min_vertex_y > self.rectangle_list_crash_area.RectangleList[0][rec].max_y)):
-        #             self.JUDGEMENT_IN_ROAD = True
-        #         else:
-        #             self.JUDGEMENT_IN_ROAD = False
-        #             break
-        # elif self.JUDGEMENT_IN_ROAD == False:
-        #     self.JUDGEMENT_IN_ROAD = False
+        # 主车进入到车祸区域，终止训练，并给予-500分惩罚
+        if self.JUDGEMENT_IN_ROAD == True:
+            for rec in range(self.rectangle_list_crash_area.RectangleList.size):
+                if ((self.vehicle.max_vertex_x < self.rectangle_list_crash_area.RectangleList[0][rec].min_x) or
+                        (self.vehicle.min_vertex_x > self.rectangle_list_crash_area.RectangleList[0][rec].max_x) or
+                        (self.vehicle.max_vertex_y < self.rectangle_list_crash_area.RectangleList[0][rec].min_y) or
+                        (self.vehicle.min_vertex_y > self.rectangle_list_crash_area.RectangleList[0][rec].max_y)):
+                    self.JUDGEMENT_IN_ROAD = True
+                else:
+                    self.JUDGEMENT_IN_ROAD = False
+                    break
+        elif self.JUDGEMENT_IN_ROAD == False:
+            self.JUDGEMENT_IN_ROAD = False
 
 
         # # 主车下一步进入到车祸区域
@@ -795,7 +799,7 @@ class envCube(gym.Env):
             break_out = True
 
         # 油门及刹车动作的惩罚
-        reward -= math.pow((real_action[0]+real_action[1]), 2) * 1
+        reward -= math.pow((real_action[0]+real_action[1]), 2) * 0.1
 
         #如果车辆压到中线，返回一个小惩罚
         if self.OCCUPIED_MID_LANE_LINE == True:
@@ -862,6 +866,7 @@ class envCube(gym.Env):
                 'distance_2_mid_lane_line': self.distance_to_mid_lane_line,
                 # 'risk_off_road': self.Time_to_off_road,
                 'distance_2_nearest_off_road': self.vehicle.distance_to_off_road,
+                'bird_eye_view_gray_image': self.image_map_observation.separate_map,
                 # 'stop_line_position': self.signal_stop_position,
                 # 'signal_light_phase_countdown': self.signal_stop_state
             }
@@ -939,6 +944,7 @@ class envCube(gym.Env):
                 'distance_2_mid_lane_line': self.distance_to_mid_lane_line,
                 # 'risk_off_road': self.Time_to_off_road,
                 'distance_2_nearest_off_road': self.vehicle.distance_to_off_road,
+                'bird_eye_view_gray_image': self.image_map_observation.separate_map,
                 # 'stop_line_position': self.signal_stop_position,
                 # 'signal_light_phase_countdown': self.signal_stop_state
             }
@@ -948,8 +954,10 @@ class envCube(gym.Env):
 
     # 多媒体演示
     def render(self, mode="human"):
-        img = self.get_image()
-        cv2.imshow('test', np.array(img))
+        img, img1, img2 = self.get_image()
+        cv2.imshow('0', np.array(img))
+        cv2.imshow('1', np.array(img1))
+        cv2.imshow('2', np.array(img2))
         if self.goal or self.EXCEED_MAX_STEP:
             cv2.waitKey(1500)
         else:
@@ -1065,8 +1073,12 @@ class envCube(gym.Env):
 
         # img = Image.fromarray(env, 'RGB')
         # return img
-        self.image_map_observation.illustration(int(SIZE))
+        self.image_map_observation.illustration()
         env1 = self.image_map_observation.illustration_whole_map
+        self.image_map_observation.illustrationagent()
+        env2 = self.image_map_observation.illustration_separate_map
 
-        img = Image.fromarray(env1, 'L')
-        return img
+        img = Image.fromarray(env, 'RGB')
+        img1 = Image.fromarray(env1, 'L')
+        img2 = Image.fromarray(env2, 'L')
+        return img, img1, img2,

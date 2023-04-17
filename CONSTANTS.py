@@ -24,6 +24,8 @@ STRAIGHT_LENGTH = float(((SIZE - 1.0) - 6 * SINGLE_LANE_WIDTH) / 2)
 # half intersection size(width or length) with 4 lanes with 2 lanes space
 INTERSECTION_HALF_SIZE = 3 * SINGLE_LANE_WIDTH
 REVERSE_DRIVING_LENGTH = 30.0
+SEPARATE_SIZE = 64.0
+GRAY_SPACE = 255
 
 min_positionx = MIN_COORD + VEHICLE_LENGTH / 2
 max_positionx = MAX_COORD - VEHICLE_LENGTH / 2
