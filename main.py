@@ -32,33 +32,33 @@ model = DQN(
     learning_rate=1e-4,
 )
 print(model.policy)
-
-# Callback
-eval_callback = EvalCallback(env, best_model_save_path="./logs/BestModel0417/",
-                             log_path="./logs/BestModel0417/", eval_freq=500,
-                             deterministic=True, render=False)
-
-# Train the agent and display a progress bar
-model.learn(
-    total_timesteps=int(1e7),
-    tb_log_name='Sumo_pattern1_straight_DQN_10M_call_1',
-    progress_bar=True,
-    callback=eval_callback
-)
-
-# Save the agent
-model.save("Sumo_pattern1_straight_DQN_10M_call_1")
-del model  # delete trained model to demonstrate loading
 #
-# Load the trained agent
-# NOTE: if you have loading issue, you can pass `print_system_info=True`
-# to compare the system on which the model was trained vs the current one
-model = DQN.load("Sumo_pattern1_straight_DQN_10M_call_1", env=env)
+# # Callback
+# eval_callback = EvalCallback(env, best_model_save_path="./logs/BestModel0417_03/",
+#                              log_path="./logs/BestModel0417_03/", eval_freq=500,
+#                              deterministic=True, render=False)
+#
+# # Train the agent and display a progress bar
+# model.learn(
+#     total_timesteps=int(7e5),
+#     tb_log_name='Sumo_pattern1_straight_DQN_700k_call_1',
+#     progress_bar=True,
+#     callback=eval_callback
+# )
+#
+# # Save the agent
+# model.save("Sumo_pattern1_straight_DQN_700k_call_1")
+# del model  # delete trained model to demonstrate loading
+# #
+# # Load the trained agent
+# # NOTE: if you have loading issue, you can pass `print_system_info=True`
+# # to compare the system on which the model was trained vs the current one
+# model = DQN.load("Sumo_pattern1_straight_DQN_700k_call_1", env=env)
+#
+# print(model.policy)
 
-print(model.policy)
 
-
-# model = DQN.load("./logs/BestModel2/best_model", env=env)
+model = DQN.load("./logs/BestModel0417_03/best_model", env=env)
 
 # # Evaluate the agent
 # # NOTE: If you use wrappers with your environment that modify rewards,
@@ -84,7 +84,7 @@ print(model.policy)
 # # )
 # # print(best_mean_reward, best_std_reward)
 
-eposides = 10
+eposides = 5
 for ep in range(eposides):
     obs = env.reset()
     done = False
@@ -107,3 +107,5 @@ for ep in range(eposides):
 
     print(rewards)
     # print(step)
+
+    # tensorboard --logdir ./logs
