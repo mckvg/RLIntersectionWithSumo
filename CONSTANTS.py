@@ -7,7 +7,7 @@ MIN_COORD = float(-(SIZE - 1.0) / 2)
 # noinspection PyTypeChecker
 MAX_COORD = float((SIZE - 1.0) / 2)
 VEHICLE_LENGTH = 5.0 * SCALE
-VEHICLE_WIDTH = 1.8 * SCALE
+VEHICLE_WIDTH = 2.0 * SCALE
 
 # 通过车辆质心的速度方向向量与质心与vertex0连线的夹角
 VEHICLE_ANGLE = math.atan(VEHICLE_WIDTH/VEHICLE_LENGTH)

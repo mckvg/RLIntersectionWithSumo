@@ -29,36 +29,36 @@ model = DQN(
     env,
     verbose=1,
     tensorboard_log='./logs',
-    learning_rate=1e-4,
+    learning_rate=1e-2,
 )
 print(model.policy)
-#
-# # Callback
-# eval_callback = EvalCallback(env, best_model_save_path="./logs/BestModel0417_03/",
-#                              log_path="./logs/BestModel0417_03/", eval_freq=500,
-#                              deterministic=True, render=False)
-#
-# # Train the agent and display a progress bar
-# model.learn(
-#     total_timesteps=int(7e5),
-#     tb_log_name='Sumo_pattern1_straight_DQN_700k_call_1',
-#     progress_bar=True,
-#     callback=eval_callback
-# )
-#
-# # Save the agent
-# model.save("Sumo_pattern1_straight_DQN_700k_call_1")
-# del model  # delete trained model to demonstrate loading
-# #
-# # Load the trained agent
-# # NOTE: if you have loading issue, you can pass `print_system_info=True`
-# # to compare the system on which the model was trained vs the current one
-# model = DQN.load("Sumo_pattern1_straight_DQN_700k_call_1", env=env)
-#
-# print(model.policy)
 
+# Callback
+eval_callback = EvalCallback(env, best_model_save_path="./logs/BestModel0418_01/",
+                             log_path="./logs/BestModel0418_01/", eval_freq=500,
+                             deterministic=True, render=False)
 
-model = DQN.load("./logs/BestModel0417_03/best_model", env=env)
+# Train the agent and display a progress bar
+model.learn(
+    total_timesteps=int(1e5),
+    tb_log_name='Sumo_pattern1_straight_DQN_alpha_1e-2_100k_call_1',
+    progress_bar=True,
+    callback=eval_callback
+)
+
+# Save the agent
+model.save("Sumo_pattern1_straight_DQN_alpha_1e-2_100k_call_1")
+del model  # delete trained model to demonstrate loading
+#
+# Load the trained agent
+# NOTE: if you have loading issue, you can pass `print_system_info=True`
+# to compare the system on which the model was trained vs the current one
+model = DQN.load("Sumo_pattern1_straight_DQN_alpha_1e-2_100k_call_1", env=env)
+
+print(model.policy)
+
+#
+# model = DQN.load("./logs/BestModel0417_03/best_model", env=env)
 
 # # Evaluate the agent
 # # NOTE: If you use wrappers with your environment that modify rewards,
@@ -89,14 +89,15 @@ for ep in range(eposides):
     obs = env.reset()
     done = False
     rewards = 0
-    # step = 0
+    step = 0
     while not done:
-        # step += 1
-        # # action = env.action_space.sample()
+        step += 1
+        # action = env.action_space.sample()
         # if 60 <= step <= 65:
         #     action = 3
         # else:
         #     action = 0
+        # action = 0
         action, _states = model.predict(obs, deterministic=True)
         obs, reward, done, info = env.step(action)
 

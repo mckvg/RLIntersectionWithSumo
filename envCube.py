@@ -413,7 +413,8 @@ class envCube(gym.Env):
                     if self.vehicle.y >= self.mid_goal_front_positiony[num] and \
                             self.ARRIVE_AT_MID_GOAL[num] == 0 and \
                                 0 <= self.vehicle.min_vertex_x and self.vehicle.max_vertex_x <= 2*SINGLE_LANE_WIDTH:
-                        reward += 200.0
+                        # reward与steps联系起来
+                        reward += (200.0 - self.episode_step) * math.sqrt(num + 1)
                         self.ARRIVE_AT_MID_GOAL[num] = 1
                         self.distance_2_goal = 0
             # 计算rear阶段目标的相对位置，并获得阶段reward和distance_2_goal
@@ -428,7 +429,8 @@ class envCube(gym.Env):
                     if self.vehicle.y >= self.mid_goal_rear_positiony[num] and \
                             self.ARRIVE_AT_MID_GOAL[num] == 0 and \
                                 0 <= self.vehicle.min_vertex_x and self.vehicle.max_vertex_x <= 2*SINGLE_LANE_WIDTH:
-                        reward += 200.0
+                        # reward与steps联系起来
+                        reward += (200.0 - self.episode_step) * math.sqrt(num + 1)
                         self.ARRIVE_AT_MID_GOAL[num] = 1
                         self.distance_2_goal = 0
                 if self.mid_goal_rear_positiony[self.mid_goal_rear_space_y - 1] <= self.vehicle.y <= self.goal_straight_positiony \
@@ -474,7 +476,8 @@ class envCube(gym.Env):
                 if self.vehicle.x >= self.mid_goal_front_positionx[num] and \
                         self.ARRIVE_AT_MID_GOAL[num] == 0 and \
                         0 >= self.vehicle.max_vertex_y and self.vehicle.min_vertex_y >= -2*SINGLE_LANE_WIDTH:
-                    reward += 200.0
+                    # reward与steps联系起来
+                    reward += (200.0 - self.episode_step) * math.sqrt(num + 1)
                     self.ARRIVE_AT_MID_GOAL[num] = 1
                     self.distance_2_goal = 0
             if self.mid_goal_front_positionx[self.mid_goal_front_space_x-1] <= self.vehicle.x <= self.goal_turn_right_positionx \
@@ -540,7 +543,8 @@ class envCube(gym.Env):
                 if self.vehicle.x <= self.mid_goal_rear_positionx[num] and \
                         self.ARRIVE_AT_MID_GOAL[num] == 0 and \
                         0 <= self.vehicle.min_vertex_y and self.vehicle.max_vertex_y <= 2*SINGLE_LANE_WIDTH:
-                    reward += 200.0
+                    # reward与steps联系起来
+                    reward += (200.0 - self.episode_step) * math.sqrt(num + 1)
                     self.ARRIVE_AT_MID_GOAL[num] = 1
                     self.distance_2_goal = 0
             if self.mid_goal_rear_positionx[self.mid_goal_rear_space_x-1] >= self.vehicle.x >= self.goal_turn_left_positionx \
@@ -599,7 +603,8 @@ class envCube(gym.Env):
                     if self.vehicle.y >= self.mid_goal_intersection_positiony[num] and \
                             self.ARRIVE_AT_MID_GOAL[num] == 0 and \
                             0 <= self.vehicle.min_vertex_x and self.vehicle.max_vertex_x <= 2*SINGLE_LANE_WIDTH:
-                        reward += 200.0
+                        # reward与steps联系起来
+                        reward += (200.0 - self.episode_step) * math.sqrt(num + 1)
                         self.ARRIVE_AT_MID_GOAL[num] = 1
                         self.distance_2_goal = 0
 
@@ -653,7 +658,8 @@ class envCube(gym.Env):
                         if self.vehicle.polar_angle >= self.mid_goal_turn_left_angle[num] and self.ARRIVE_AT_MID_GOAL[num] == 0 and \
                                 SINGLE_LANE_WIDTH <= self.vehicle.polar_radius_min_edge and \
                                 self.vehicle.polar_radius_max_edge <= 2 * INTERSECTION_HALF_SIZE / math.cos(self.vehicle.polar_angle):
-                            reward += 200.0
+                            # reward与steps联系起来
+                            reward += (200.0 - self.episode_step) * math.sqrt(num + 1)
                             self.ARRIVE_AT_MID_GOAL[num] = 1
                             self.distance_2_goal = 0
                 # 第2阶段：angle = (atan1/2, atan2), min_radius = SINGLE_LANE_WIDTH, max_radius = INTERSECTION_HALF_SIZE*sqrt(5.0)
@@ -688,7 +694,8 @@ class envCube(gym.Env):
                         if self.vehicle.polar_angle >= self.mid_goal_turn_left_angle[num] and self.ARRIVE_AT_MID_GOAL[num] == 0 and \
                                 SINGLE_LANE_WIDTH <= self.vehicle.polar_radius_min_edge and \
                                 self.vehicle.polar_radius_max_edge <= INTERSECTION_HALF_SIZE * math.sqrt ( 5.0 ):
-                            reward += 200.0
+                            # reward与steps联系起来
+                            reward += (200.0 - self.episode_step) * math.sqrt(num + 1)
                             self.ARRIVE_AT_MID_GOAL[num] = 1
                             self.distance_2_goal = 0
                 # 第3阶段：angle = (atan2, pi/2], min_radius = SINGLE_LANE_WIDTH, max_radius = 2*INTERSECTION_HALF_SIZE/sin(angle)
@@ -723,7 +730,8 @@ class envCube(gym.Env):
                         if self.vehicle.polar_angle >= self.mid_goal_turn_left_angle[num] and self.ARRIVE_AT_MID_GOAL[num] == 0 and \
                                 SINGLE_LANE_WIDTH <= self.vehicle.polar_radius_min_edge and \
                                 self.vehicle.polar_radius_max_edge <= 2 * INTERSECTION_HALF_SIZE / math.sin(self.vehicle.polar_angle):
-                            reward += 200.0
+                            # reward与steps联系起来
+                            reward += (200.0 - self.episode_step) * math.sqrt(num + 1)
                             self.ARRIVE_AT_MID_GOAL[num] = 1
                             self.distance_2_goal = 0
 
@@ -772,7 +780,8 @@ class envCube(gym.Env):
                         self.CIRCLE_COUNT = num + 1
                     if self.vehicle.polar_angle <= self.mid_goal_turn_right_angle[num] and self.ARRIVE_AT_MID_GOAL[num] == 0 and \
                             0 <= self.vehicle.polar_radius_min_edge and self.vehicle.polar_radius_max_edge <= INTERSECTION_HALF_SIZE:
-                            reward += 200.0
+                            # reward与steps联系起来
+                            reward += (200.0 - self.episode_step) * math.sqrt(num + 1)
                             self.ARRIVE_AT_MID_GOAL[num] = 1
                             self.distance_2_goal = 0
 
@@ -837,19 +846,19 @@ class envCube(gym.Env):
         # self.signal_stop_position = np.array([self.signal_stop.x, self.signal_stop.y], dtype=np.int32)
         # self.signal_stop_state = np.array([phase, countdown], dtype=np.int32)
 
-        print(self.episode_step, ':', 'Action:', action, ';',
-              'Position:', self.vehicle_position, ';', 'Speed_YawAngle:', self.vehicle_speed_yawangle, ';',
-              'Relative_distance_to_goal:', self.relative_distance_to_goal, ';',
-              'vehicle_state:', self.vehicle.state, ';',
-              # 'Judgement_in_road:', self.JUDGEMENT_IN_ROAD, ';',
-              # 'Distance_to_off_road:', self.vehicle.distance_to_off_road, ';',
-              # 'Distance_to_mid_lane_line', self.vehicle.distance_to_mid_lane_line, ';',
-              # 'Polar_radius:', self.vehicle.polar_radius, ';',
-              # 'Polar_angle:', self.vehicle.polar_angle, ';'
-              'reward:', reward
-              )
-        if reward < -100 or reward > 100:
-          print(reward)
+        # print(self.episode_step, ':', 'Action:', action, ';',
+        #       'Position:', self.vehicle_position, ';', 'Speed_YawAngle:', self.vehicle_speed_yawangle, ';',
+        #       'Relative_distance_to_goal:', self.relative_distance_to_goal, ';',
+        #       'vehicle_state:', self.vehicle.state, ';',
+        #       # 'Judgement_in_road:', self.JUDGEMENT_IN_ROAD, ';',
+        #       # 'Distance_to_off_road:', self.vehicle.distance_to_off_road, ';',
+        #       # 'Distance_to_mid_lane_line', self.vehicle.distance_to_mid_lane_line, ';',
+        #       # 'Polar_radius:', self.vehicle.polar_radius, ';',
+        #       # 'Polar_angle:', self.vehicle.polar_angle, ';'
+        #       'reward:', reward
+        #       )
+        # if reward < -100 or reward > 100:
+        #   print(reward)
 
         self.state: dict = (
             {
