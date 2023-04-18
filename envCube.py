@@ -1062,7 +1062,7 @@ class envCube(gym.Env):
             env[x][y] = self.d[self.RED_LIGHT_N]
 
         # 画出车祸区域
-        for x6 in range(INT_MAX_COORD + INT_SINGLE_LANE_WIDTH, INT_MAX_COORD + 2 * INT_SINGLE_LANE_WIDTH):
+        for x6 in range(INT_MAX_COORD + 3 * INT_SINGLE_LANE_WIDTH, INT_MAX_COORD + 5 * INT_SINGLE_LANE_WIDTH):
             for y6 in range(INT_MAX_COORD, INT_MAX_COORD + INT_SINGLE_LANE_WIDTH):
                 env[x6][y6] = self.d[self.RED_LIGHT_N]
 
