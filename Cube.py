@@ -45,7 +45,7 @@ class Cube:
         # self.next1_y = self.y
         # self.next2_x = self.x
         # self.next2_y = self.y
-        self.velocity = 2.0 * SCALE
+        self.velocity = 0.0 * SCALE
         self.acceleration = 0.0 * SCALE
         self.yaw_angle = 0.0
         self.pre_yaw_angle = 0.0

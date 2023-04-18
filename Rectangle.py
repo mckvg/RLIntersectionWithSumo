@@ -71,7 +71,7 @@ class Rectangle_List_Crash_Area:
         # max_x, min_x, max_y, min_y
         self.RectangleList = np.ndarray(shape=(1, 1), dtype=Rectangle)
 
-        self.RectangleList[0][0] = Rectangle(SINGLE_LANE_WIDTH, 0, -2*SINGLE_LANE_WIDTH, -3*SINGLE_LANE_WIDTH)
+        self.RectangleList[0][0] = Rectangle(SINGLE_LANE_WIDTH, 0, -3*SINGLE_LANE_WIDTH, -5*SINGLE_LANE_WIDTH)
 
 class Rectangle_List_Expand_Area:
 
