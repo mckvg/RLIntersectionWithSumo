@@ -236,11 +236,6 @@ class envCube(gym.Env):
 
         # observation里画出逆行区域
         self.image_map_observation.reverse(self.rectangle_list_reverse.RectangleList)
-        # observation里画出智能体范围
-        self.image_map_observation.agent(self.vehicle.max_vertex_x, self.vehicle.min_vertex_x,
-                                         self.vehicle.max_vertex_y, self.vehicle.min_vertex_y,
-                                         self.vehicle.pre_max_vertex_x, self.vehicle.pre_min_vertex_x,
-                                         self.vehicle.pre_max_vertex_y, self.vehicle.pre_min_vertex_y)
         # observation里画出远车范围
         self.image_map_observation.RemoteVehicle(self.first_other_vehicle.max_vertex_x, self.first_other_vehicle.min_vertex_x,
                                          self.first_other_vehicle.max_vertex_y, self.first_other_vehicle.min_vertex_y,
@@ -251,6 +246,11 @@ class envCube(gym.Env):
                                          self.second_other_vehicle.max_vertex_y, self.second_other_vehicle.min_vertex_y,
                                          self.second_other_vehicle.pre_max_vertex_x, self.second_other_vehicle.pre_min_vertex_x,
                                          self.second_other_vehicle.pre_max_vertex_y, self.second_other_vehicle.pre_min_vertex_y)
+        # observation里画出智能体范围
+        self.image_map_observation.agent(self.vehicle.max_vertex_x, self.vehicle.min_vertex_x,
+                                         self.vehicle.max_vertex_y, self.vehicle.min_vertex_y,
+                                         self.vehicle.pre_max_vertex_x, self.vehicle.pre_min_vertex_x,
+                                         self.vehicle.pre_max_vertex_y, self.vehicle.pre_min_vertex_y)
         # observation画出以主车为中心的灰度图区域
         self.image_map_observation.Separate_Map(self.vehicle.max_vertex_x, self.vehicle.min_vertex_x,
                                                self.vehicle.max_vertex_y, self.vehicle.min_vertex_y)
@@ -855,7 +855,7 @@ class envCube(gym.Env):
         #       # 'Distance_to_mid_lane_line', self.vehicle.distance_to_mid_lane_line, ';',
         #       # 'Polar_radius:', self.vehicle.polar_radius, ';',
         #       # 'Polar_angle:', self.vehicle.polar_angle, ';'
-        #       'reward:', reward
+        #       # 'reward:', reward
         #       )
         # if reward < -100 or reward > 100:
         #   print(reward)

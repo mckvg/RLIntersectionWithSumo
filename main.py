@@ -29,36 +29,36 @@ model = DQN(
     env,
     verbose=1,
     tensorboard_log='./logs',
-    learning_rate=1e-3,
+    learning_rate=7e-3,
 )
 print(model.policy)
 
 # # Callback
-# eval_callback = EvalCallback(env, best_model_save_path="./logs/BestModel0418_01/",
-#                              log_path="./logs/BestModel0418_01/", eval_freq=500,
+# eval_callback = EvalCallback(env, best_model_save_path="./logs/BestModel0419_02/",
+#                              log_path="./logs/BestModel0419_02/", eval_freq=500,
 #                              deterministic=True, render=False)
 #
 # # Train the agent and display a progress bar
 # model.learn(
-#     total_timesteps=int(1e5),
-#     tb_log_name='Sumo_pattern1_straight_DQN_alpha_1e-3_100k_call_1',
+#     total_timesteps=int(7e6),
+#     tb_log_name='Sumo_pattern1_straight_DQN_alpha_7e-3_7M_call_1',
 #     progress_bar=True,
 #     callback=eval_callback
 # )
 #
 # # Save the agent
-# model.save("Sumo_pattern1_straight_DQN_alpha_1e-3_100k_call_1")
+# model.save("Sumo_pattern1_straight_DQN_alpha_7e-3_7M_call_1")
 # del model  # delete trained model to demonstrate loading
-# #
-# # Load the trained agent
-# # NOTE: if you have loading issue, you can pass `print_system_info=True`
-# # to compare the system on which the model was trained vs the current one
-# model = DQN.load("Sumo_pattern1_straight_DQN_alpha_1e-3_100k_call_1", env=env)
+#
+# Load the trained agent
+# NOTE: if you have loading issue, you can pass `print_system_info=True`
+# to compare the system on which the model was trained vs the current one
+# model = DQN.load("Sumo_pattern1_straight_DQN_alpha_7e-3_7M_call_1", env=env)
 
 print(model.policy)
 
-
-model = DQN.load("./logs/BestModel0418_01/best_model", env=env)
+# #
+model = DQN.load("./logs/BestModel0419_02/best_model", env=env)
 
 # # Evaluate the agent
 # # NOTE: If you use wrappers with your environment that modify rewards,
