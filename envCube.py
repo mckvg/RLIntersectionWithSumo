@@ -236,11 +236,7 @@ class envCube(gym.Env):
 
         # observation里画出逆行区域
         self.image_map_observation.reverse(self.rectangle_list_reverse.RectangleList)
-        # observation里画出智能体范围
-        self.image_map_observation.agent(self.vehicle.max_vertex_x, self.vehicle.min_vertex_x,
-                                         self.vehicle.max_vertex_y, self.vehicle.min_vertex_y,
-                                         self.vehicle.pre_max_vertex_x, self.vehicle.pre_min_vertex_x,
-                                         self.vehicle.pre_max_vertex_y, self.vehicle.pre_min_vertex_y)
+
         # observation里画出远车范围
         self.image_map_observation.RemoteVehicle(self.first_other_vehicle.max_vertex_x, self.first_other_vehicle.min_vertex_x,
                                          self.first_other_vehicle.max_vertex_y, self.first_other_vehicle.min_vertex_y,
@@ -251,6 +247,11 @@ class envCube(gym.Env):
                                          self.second_other_vehicle.max_vertex_y, self.second_other_vehicle.min_vertex_y,
                                          self.second_other_vehicle.pre_max_vertex_x, self.second_other_vehicle.pre_min_vertex_x,
                                          self.second_other_vehicle.pre_max_vertex_y, self.second_other_vehicle.pre_min_vertex_y)
+        # observation里画出智能体范围
+        self.image_map_observation.agent(self.vehicle.max_vertex_x, self.vehicle.min_vertex_x,
+                                         self.vehicle.max_vertex_y, self.vehicle.min_vertex_y,
+                                         self.vehicle.pre_max_vertex_x, self.vehicle.pre_min_vertex_x,
+                                         self.vehicle.pre_max_vertex_y, self.vehicle.pre_min_vertex_y)
         # observation画出以主车为中心的灰度图区域
         self.image_map_observation.Separate_Map(self.vehicle.max_vertex_x, self.vehicle.min_vertex_x,
                                                self.vehicle.max_vertex_y, self.vehicle.min_vertex_y)
@@ -414,7 +415,7 @@ class envCube(gym.Env):
                             self.ARRIVE_AT_MID_GOAL[num] == 0 and \
                                 0 <= self.vehicle.min_vertex_x and self.vehicle.max_vertex_x <= 2*SINGLE_LANE_WIDTH:
                         # reward与steps联系起来
-                        reward += (200.0 - self.episode_step) * math.sqrt(num + 1)
+                        reward += (80.0 - self.episode_step) * math.sqrt(num + 1)
                         self.ARRIVE_AT_MID_GOAL[num] = 1
                         self.distance_2_goal = 0
             # 计算rear阶段目标的相对位置，并获得阶段reward和distance_2_goal
@@ -430,7 +431,7 @@ class envCube(gym.Env):
                             self.ARRIVE_AT_MID_GOAL[num] == 0 and \
                                 0 <= self.vehicle.min_vertex_x and self.vehicle.max_vertex_x <= 2*SINGLE_LANE_WIDTH:
                         # reward与steps联系起来
-                        reward += (200.0 - self.episode_step) * math.sqrt(num + 1)
+                        reward += (80.0 - self.episode_step) * math.sqrt(num + 1)
                         self.ARRIVE_AT_MID_GOAL[num] = 1
                         self.distance_2_goal = 0
                 if self.mid_goal_rear_positiony[self.mid_goal_rear_space_y - 1] <= self.vehicle.y <= self.goal_straight_positiony \
@@ -477,7 +478,7 @@ class envCube(gym.Env):
                         self.ARRIVE_AT_MID_GOAL[num] == 0 and \
                         0 >= self.vehicle.max_vertex_y and self.vehicle.min_vertex_y >= -2*SINGLE_LANE_WIDTH:
                     # reward与steps联系起来
-                    reward += (200.0 - self.episode_step) * math.sqrt(num + 1)
+                    reward += (80.0 - self.episode_step) * math.sqrt(num + 1)
                     self.ARRIVE_AT_MID_GOAL[num] = 1
                     self.distance_2_goal = 0
             if self.mid_goal_front_positionx[self.mid_goal_front_space_x-1] <= self.vehicle.x <= self.goal_turn_right_positionx \
@@ -544,7 +545,7 @@ class envCube(gym.Env):
                         self.ARRIVE_AT_MID_GOAL[num] == 0 and \
                         0 <= self.vehicle.min_vertex_y and self.vehicle.max_vertex_y <= 2*SINGLE_LANE_WIDTH:
                     # reward与steps联系起来
-                    reward += (200.0 - self.episode_step) * math.sqrt(num + 1)
+                    reward += (80.0 - self.episode_step) * math.sqrt(num + 1)
                     self.ARRIVE_AT_MID_GOAL[num] = 1
                     self.distance_2_goal = 0
             if self.mid_goal_rear_positionx[self.mid_goal_rear_space_x-1] >= self.vehicle.x >= self.goal_turn_left_positionx \
@@ -557,7 +558,7 @@ class envCube(gym.Env):
                 self.OCCUPIED_MID_LANE_LINE = True
 
         # 十字路口内选择
-        self.vehicle.intersection_steering_choice = 0  # 0: straight; -1: turn left;  1: turn right
+        self.vehicle.intersection_steering_choice = -1  # 0: straight; -1: turn left;  1: turn right
 
         # 进入十字路口范围内，根据intersection_steering_choice，绘制track路线图，带有rewards，转弯部分利用极坐标系绘制
         if self.vehicle.state == 'intersection':
@@ -604,7 +605,7 @@ class envCube(gym.Env):
                             self.ARRIVE_AT_MID_GOAL[num] == 0 and \
                             0 <= self.vehicle.min_vertex_x and self.vehicle.max_vertex_x <= 2*SINGLE_LANE_WIDTH:
                         # reward与steps联系起来
-                        reward += (200.0 - self.episode_step) * math.sqrt(num + 1)
+                        reward += (80.0 - self.episode_step) * math.sqrt(num + 1)
                         self.ARRIVE_AT_MID_GOAL[num] = 1
                         self.distance_2_goal = 0
 
@@ -659,7 +660,7 @@ class envCube(gym.Env):
                                 SINGLE_LANE_WIDTH <= self.vehicle.polar_radius_min_edge and \
                                 self.vehicle.polar_radius_max_edge <= 2 * INTERSECTION_HALF_SIZE / math.cos(self.vehicle.polar_angle):
                             # reward与steps联系起来
-                            reward += (200.0 - self.episode_step) * math.sqrt(num + 1)
+                            reward += (80.0 - self.episode_step) * math.sqrt(num + 1)
                             self.ARRIVE_AT_MID_GOAL[num] = 1
                             self.distance_2_goal = 0
                 # 第2阶段：angle = (atan1/2, atan2), min_radius = SINGLE_LANE_WIDTH, max_radius = INTERSECTION_HALF_SIZE*sqrt(5.0)
@@ -695,7 +696,7 @@ class envCube(gym.Env):
                                 SINGLE_LANE_WIDTH <= self.vehicle.polar_radius_min_edge and \
                                 self.vehicle.polar_radius_max_edge <= INTERSECTION_HALF_SIZE * math.sqrt ( 5.0 ):
                             # reward与steps联系起来
-                            reward += (200.0 - self.episode_step) * math.sqrt(num + 1)
+                            reward += (80.0 - self.episode_step) * math.sqrt(num + 1)
                             self.ARRIVE_AT_MID_GOAL[num] = 1
                             self.distance_2_goal = 0
                 # 第3阶段：angle = (atan2, pi/2], min_radius = SINGLE_LANE_WIDTH, max_radius = 2*INTERSECTION_HALF_SIZE/sin(angle)
@@ -731,7 +732,7 @@ class envCube(gym.Env):
                                 SINGLE_LANE_WIDTH <= self.vehicle.polar_radius_min_edge and \
                                 self.vehicle.polar_radius_max_edge <= 2 * INTERSECTION_HALF_SIZE / math.sin(self.vehicle.polar_angle):
                             # reward与steps联系起来
-                            reward += (200.0 - self.episode_step) * math.sqrt(num + 1)
+                            reward += (80.0 - self.episode_step) * math.sqrt(num + 1)
                             self.ARRIVE_AT_MID_GOAL[num] = 1
                             self.distance_2_goal = 0
 
@@ -781,7 +782,7 @@ class envCube(gym.Env):
                     if self.vehicle.polar_angle <= self.mid_goal_turn_right_angle[num] and self.ARRIVE_AT_MID_GOAL[num] == 0 and \
                             0 <= self.vehicle.polar_radius_min_edge and self.vehicle.polar_radius_max_edge <= INTERSECTION_HALF_SIZE:
                             # reward与steps联系起来
-                            reward += (200.0 - self.episode_step) * math.sqrt(num + 1)
+                            reward += (80.0 - self.episode_step) * math.sqrt(num + 1)
                             self.ARRIVE_AT_MID_GOAL[num] = 1
                             self.distance_2_goal = 0
 
