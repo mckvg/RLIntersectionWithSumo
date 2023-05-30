@@ -68,23 +68,23 @@ class Forward_Cube_First:
 
         self.move_step += 1
 
-        self.pre_x = self.x
-        self.pre_y = self.y
-        self.pre_yaw_angle = self.yaw_angle
+        # self.pre_x = self.x
+        # self.pre_y = self.y
+        # self.pre_yaw_angle = self.yaw_angle
 
         self.pre_max_vertex_x = self.max_vertex_x
         self.pre_min_vertex_x = self.min_vertex_x
         self.pre_max_vertex_y = self.max_vertex_y
         self.pre_min_vertex_y = self.min_vertex_y
 
-        self.velocity = mid_speed
+        # self.velocity = mid_speed
 
         if self.velocity < min_speed:
             self.velocity = min_speed
         if self.velocity > max_speed:
             self.velocity = max_speed
 
-        self.y += self.velocity
+        # self.y += self.velocity
 
         if self.y > max_positiony:
             self.y = max_positiony

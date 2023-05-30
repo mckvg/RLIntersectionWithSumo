@@ -220,8 +220,8 @@ class envCube(gym.Env):
         # agent_action1 = action[1] * self.min_action_acceleration   # break
         # agent_action2 = action[2] * self.max_action_steering
         real_action = self.vehicle.action(action)
-        # self.first_other_vehicle.move()
-        # self.second_other_vehicle.move()
+        self.first_other_vehicle.move()
+        self.second_other_vehicle.move()
         # phase = self.signal_stop.signalphase(self.episode_step)
         # countdown = self.signal_stop.signalcountdown(phase)
 
@@ -341,7 +341,6 @@ class envCube(gym.Env):
                     break
         elif self.JUDGEMENT_IN_ROAD == False:
             self.JUDGEMENT_IN_ROAD = False
-
 
         # # 主车下一步进入到车祸区域
         # if -VEHICLE_HALF_SIZE <= self.vehicle.next1_x <= SINGLE_LANE_WIDTH + VEHICLE_HALF_SIZE and \
