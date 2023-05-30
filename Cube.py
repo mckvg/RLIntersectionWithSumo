@@ -128,8 +128,8 @@ class Cube:
     def collision(self, other):
         flag = 0
         if ((self.max_vertex_x < other.min_vertex_x) or (self.min_vertex_x > other.max_vertex_x) or
-            (self.max_vertex_y < other.min_vertex_y) or (self.min_vertex_y > other.max_vertex_y) or
-            other.y == max_positiony or other.x == max_positionx or other.x == min_positionx):
+            (self.max_vertex_y < other.min_vertex_y) or (self.min_vertex_y > other.max_vertex_y)):
+            # other.y == max_positiony or other.x == max_positionx or other.x == min_positionx):
 
             flag = 0
         else:
