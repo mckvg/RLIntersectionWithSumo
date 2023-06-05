@@ -65,10 +65,7 @@ from CONSTANTS import max_positionx
 from CONSTANTS import min_positiony
 from CONSTANTS import max_positiony
 from Image_Map_Observation import Image_Map_Observation
-
-
-
-
+from readcsv import float_csv_data
 
 
 # 环境类
@@ -173,14 +170,8 @@ class envCube(gym.Env):
         #      ], dtype=np.float32
         # )
 
-        self.low_state = np.array(
-            [self.min_speed,
-             self.min_action_steering/self.max_action_steering], dtype=np.float32
-        )
-        self.high_state = np.array(
-            [self.max_speed,
-             self.max_action_steering/self.max_action_steering], dtype=np.float32
-        )
+        self.low_steering_state = np.array([self.min_action_steering/self.max_action_steering], dtype=np.float32)
+        self.high_steering_state = np.array([self.max_action_steering/self.max_action_steering], dtype=np.float32)
 
         super(envCube, self).__init__()
         # Define action and observation space
@@ -190,22 +181,23 @@ class envCube(gym.Env):
 
         self.observation_space = Dict(
             {
-                'agent_position':  Box(MIN_COORD, MAX_COORD, shape=(2,), dtype=np.float32),
-                'agent_speed_yawangle': Box(low=self.low_state, high=self.high_state, dtype=np.float32),
+                'agent_speed': Box(low=self.min_speed, high=self.max_speed, shape=(1,), dtype=np.float32),
+                'agent_yawangle': Box(low=self.low_steering_state, high=self.high_steering_state, dtype=np.float32),
                 'relative_position_2_danger': Box(2*MIN_COORD-1.0, 2*MAX_COORD+1.0, shape=(2,), dtype=np.float32),
-                'first_other_vehicle_position': Box(MIN_COORD, MAX_COORD, shape=(2,), dtype=np.float32),
                 'first_other_vehicle_relative_position': Box(2*MIN_COORD-1.0, 2*MAX_COORD+1.0, shape=(2,), dtype=np.float32),
                 'first_other_vehicle_speed': Box(self.min_speed, self.max_speed, shape=(1,), dtype=np.float32),
-                'second_other_vehicle_position': Box(MIN_COORD, MAX_COORD, shape=(2,), dtype=np.float32),
                 'second_other_vehicle_relative_position': Box(2*MIN_COORD-1, 2*MAX_COORD+1, shape=(2,), dtype=np.float32),
                 'second_other_vehicle_speed': Box(self.min_speed, self.max_speed, shape=(1,), dtype=np.float32),
                 'relative_distance_2_goal': Box(2*MIN_COORD-1.0, 2*MAX_COORD+1.0, shape=(1,), dtype=np.float32),
                 'judgement_in_road': Discrete(self.judgement_space),
-                # 'distance_2_mid_lane_line': Box(2*MIN_COORD-1.0, 2*MAX_COORD+1.0, shape=(1,), dtype=np.float32),
-                # 'risk_off_road': Discrete(self.risk_space),
+                'distance_2_mid_lane_line': Box(2*MIN_COORD-1.0, 2*MAX_COORD+1.0, shape=(1,), dtype=np.float32),
                 'distance_2_nearest_off_road': Box(2*MIN_COORD-1.0, 2*MAX_COORD+1.0, shape=(2,), dtype=np.float32),
                 'bird_eye_view_gray_image': Box(low=0, high=GRAY_SPACE, shape=(int(SEPARATE_SIZE), int(SEPARATE_SIZE), 1), dtype=np.uint8),
 
+                # 'second_other_vehicle_position': Box(MIN_COORD, MAX_COORD, shape=(2,), dtype=np.float32),
+                # 'first_other_vehicle_position': Box(MIN_COORD, MAX_COORD, shape=(2,), dtype=np.float32),
+                # 'agent_position':  Box(MIN_COORD, MAX_COORD, shape=(2,), dtype=np.float32),
+                # 'risk_off_road': Discrete(self.risk_space),
                 # 'distance_2_center_line': Discrete(MAX_COORD),
                 # 'stop_line_position': Box(MIN_COORD, MAX_COORD, shape=(2,), dtype=np.int32),
                 # 'signal_light_phase_countdown': MultiDiscrete(
@@ -220,6 +212,19 @@ class envCube(gym.Env):
         # agent_action1 = action[1] * self.min_action_acceleration   # break
         # agent_action2 = action[2] * self.max_action_steering
         real_action = self.vehicle.action(action)
+
+        # 从训练表格中更新远车状态
+        self.RV_data = float_csv_data[self.episode_step]
+        self.first_other_vehicle.x = self.RV_data[2] * SCALE
+        self.first_other_vehicle.y = self.RV_data[3] * SCALE
+        self.first_other_vehicle.yaw_angle = self.RV_data[4]
+        self.first_other_vehicle.velocity = self.RV_data[5] * SCALE
+
+        self.second_other_vehicle.x = self.RV_data[7] * SCALE
+        self.second_other_vehicle.y = self.RV_data[8] * SCALE
+        self.second_other_vehicle.yaw_angle = self.RV_data[9]
+        self.second_other_vehicle.velocity = self.RV_data[10] * SCALE
+
         self.first_other_vehicle.move()
         self.second_other_vehicle.move()
         # phase = self.signal_stop.signalphase(self.episode_step)
@@ -809,9 +814,9 @@ class envCube(gym.Env):
         # 油门及刹车动作的惩罚
         reward -= math.pow((real_action[0]+real_action[1]), 2) * 1
 
-        # #如果车辆压到中线，返回一个小惩罚
-        # if self.OCCUPIED_MID_LANE_LINE == True:
-        #     reward -= 10
+        #如果车辆压到中线，返回一个小惩罚
+        if self.OCCUPIED_MID_LANE_LINE == True:
+            reward -= 2
 
         if break_out:
             reward += -500.0
@@ -822,20 +827,21 @@ class envCube(gym.Env):
             terminated = True
 
 
-        self.vehicle_position = np.array(
-            [self.vehicle.x, self.vehicle.y], dtype=np.float32)
-        self.vehicle_speed_yawangle = np.array(
-            [self.vehicle.velocity,
-             self.vehicle.yaw_angle/math.pi], dtype=np.float32)
+        # self.vehicle_position = np.array(
+        #     [self.vehicle.x, self.vehicle.y], dtype=np.float32)
+        self.vehicle_speed = np.array(
+            [self.vehicle.velocity], dtype=np.float32)
+        self.vehicle_yawangle = np.array(
+            [self.vehicle.yaw_angle/math.pi], dtype=np.float32)
         self.relative_position_2_danger = np.array(
             [self.vehicle.x - self.signal_stop.danger_x, self.vehicle.y - self.signal_stop.danger_y], dtype=np.float32)
-        self.first_other_vehicle_position = np.array(
-            [self.first_other_vehicle.x, self.first_other_vehicle.y], dtype=np.float32)
+        # self.first_other_vehicle_position = np.array(
+        #     [self.first_other_vehicle.x, self.first_other_vehicle.y], dtype=np.float32)
         self.first_other_vehicle_relative_position = np.array(
             [self.vehicle.x-self.first_other_vehicle.x, self.vehicle.y-self.first_other_vehicle.y], dtype=np.float32)
         self.first_other_vehicle_speed = np.array([self.first_other_vehicle.velocity], dtype=np.float32)
-        self.second_other_vehicle_position = np.array(
-            [self.second_other_vehicle.x, self.second_other_vehicle.y], dtype=np.float32)
+        # self.second_other_vehicle_position = np.array(
+        #     [self.second_other_vehicle.x, self.second_other_vehicle.y], dtype=np.float32)
         self.second_other_vehicle_relative_position = np.array(
             [self.vehicle.x - self.second_other_vehicle.x, self.vehicle.y - self.second_other_vehicle.y], dtype=np.float32)
         self.second_other_vehicle_speed = np.array([self.second_other_vehicle.velocity], dtype=np.float32)
@@ -846,7 +852,8 @@ class envCube(gym.Env):
         # self.signal_stop_state = np.array([phase, countdown], dtype=np.int32)
 
         print(self.episode_step, ':', 'Action:', action, ';',
-              'Position:', self.vehicle_position, ';', 'Speed and YawAngle:', self.vehicle_speed_yawangle, ';',
+              'Position:', self.vehicle.x, self.vehicle.y, ';',
+              'Speed:', self.vehicle_speed, ';', 'YawAngle:', self.vehicle_yawangle, ';',
               # 'Relative_distance_to_goal:', self.relative_distance_to_goal, ';',
               # 'vehicle_state:', self.vehicle.state, ';',
               # 'Judgement_in_road:', self.JUDGEMENT_IN_ROAD, ';',
@@ -861,18 +868,19 @@ class envCube(gym.Env):
 
         self.state: dict = (
             {
-                'agent_position': self.vehicle_position,
-                'agent_speed_yawangle': self.vehicle_speed_yawangle,
+                # 'agent_position': self.vehicle_position,
+                'agent_speed': self.vehicle_speed,
+                'agent_yawangle': self.vehicle_yawangle,
                 'relative_position_2_danger': self.relative_position_2_danger,
-                'first_other_vehicle_position': self.first_other_vehicle_position,
+                # 'first_other_vehicle_position': self.first_other_vehicle_position,
                 'first_other_vehicle_relative_position': self.first_other_vehicle_relative_position,
                 'first_other_vehicle_speed': self.first_other_vehicle_speed,
-                'second_other_vehicle_position': self.second_other_vehicle_position,
+                # 'second_other_vehicle_position': self.second_other_vehicle_position,
                 'second_other_vehicle_relative_position': self.second_other_vehicle_relative_position,
                 'second_other_vehicle_speed': self.second_other_vehicle_speed,
                 'relative_distance_2_goal': self.relative_distance_to_goal,
                 'judgement_in_road': self.JUDGEMENT_IN_ROAD,
-                # 'distance_2_mid_lane_line': self.distance_to_mid_lane_line,
+                'distance_2_mid_lane_line': self.distance_to_mid_lane_line,
                 # 'risk_off_road': self.Time_to_off_road,
                 'distance_2_nearest_off_road': self.vehicle.distance_to_off_road,
                 'bird_eye_view_gray_image': self.image_map_observation.separate_map,
@@ -897,20 +905,32 @@ class envCube(gym.Env):
         self.rectangle_list_crash_area = Rectangle_List_Crash_Area()
         self.image_map_observation = Image_Map_Observation()
 
-        self.vehicle_position = np.array(
-            [self.vehicle.x, self.vehicle.y], dtype=np.float32)
-        self.vehicle_speed_yawangle = np.array(
-            [self.vehicle.velocity,
-             self.vehicle.yaw_angle/math.pi], dtype=np.float32)
+        self.RV_data = float_csv_data[0]
+        self.first_other_vehicle.x = self.RV_data[2] * SCALE
+        self.first_other_vehicle.y = self.RV_data[3] * SCALE
+        self.first_other_vehicle.yaw_angle = self.RV_data[4]
+        self.first_other_vehicle.velocity = self.RV_data[5] * SCALE
+
+        self.second_other_vehicle.x = self.RV_data[7] * SCALE
+        self.second_other_vehicle.y = self.RV_data[8] * SCALE
+        self.second_other_vehicle.yaw_angle = self.RV_data[9]
+        self.second_other_vehicle.velocity = self.RV_data[10] * SCALE
+
+        # self.vehicle_position = np.array(
+        #     [self.vehicle.x, self.vehicle.y], dtype=np.float32)
+        self.vehicle_speed = np.array(
+            [self.vehicle.velocity], dtype=np.float32)
+        self.vehicle_yawangle = np.array(
+            [self.vehicle.yaw_angle/math.pi], dtype=np.float32)
         self.relative_position_2_danger = np.array(
             [self.vehicle.x - self.signal_stop.danger_x, self.vehicle.y - self.signal_stop.danger_y], dtype=np.float32)
-        self.first_other_vehicle_position = np.array(
-            [self.first_other_vehicle.x, self.first_other_vehicle.y], dtype=np.float32)
+        # self.first_other_vehicle_position = np.array(
+        #     [self.first_other_vehicle.x, self.first_other_vehicle.y], dtype=np.float32)
         self.first_other_vehicle_relative_position = np.array(
             [self.vehicle.x - self.first_other_vehicle.x, self.vehicle.y - self.first_other_vehicle.y], dtype=np.float32)
         self.first_other_vehicle_speed = np.array([self.first_other_vehicle.velocity], dtype=np.float32)
-        self.second_other_vehicle_position = np.array(
-            [self.second_other_vehicle.x, self.second_other_vehicle.y], dtype=np.float32)
+        # self.second_other_vehicle_position = np.array(
+        #     [self.second_other_vehicle.x, self.second_other_vehicle.y], dtype=np.float32)
         self.second_other_vehicle_relative_position = np.array(
             [self.vehicle.x - self.second_other_vehicle.x, self.vehicle.y - self.second_other_vehicle.y], dtype=np.float32)
         self.second_other_vehicle_speed = np.array([self.second_other_vehicle.velocity], dtype=np.float32)
@@ -939,18 +959,19 @@ class envCube(gym.Env):
 
         self.state: dict = (
             {
-                'agent_position': self.vehicle_position,
-                'agent_speed_yawangle': self.vehicle_speed_yawangle,
+                # 'agent_position': self.vehicle_position,
+                'agent_speed': self.vehicle_speed,
+                'agent_yawangle': self.vehicle_yawangle,
                 'relative_position_2_danger': self.relative_position_2_danger,
-                'first_other_vehicle_position': self.first_other_vehicle_position,
+                # 'first_other_vehicle_position': self.first_other_vehicle_position,
                 'first_other_vehicle_relative_position': self.first_other_vehicle_relative_position,
                 'first_other_vehicle_speed': self.first_other_vehicle_speed,
-                'second_other_vehicle_position': self.second_other_vehicle_position,
+                # 'second_other_vehicle_position': self.second_other_vehicle_position,
                 'second_other_vehicle_relative_position': self.second_other_vehicle_relative_position,
                 'second_other_vehicle_speed': self.second_other_vehicle_speed,
                 'relative_distance_2_goal': self.relative_distance_to_goal,
                 'judgement_in_road': self.JUDGEMENT_IN_ROAD,
-                # 'distance_2_mid_lane_line': self.distance_to_mid_lane_line,
+                'distance_2_mid_lane_line': self.distance_to_mid_lane_line,
                 # 'risk_off_road': self.Time_to_off_road,
                 'distance_2_nearest_off_road': self.vehicle.distance_to_off_road,
                 'bird_eye_view_gray_image': self.image_map_observation.separate_map,
