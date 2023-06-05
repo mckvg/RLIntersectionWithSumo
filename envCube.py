@@ -851,18 +851,18 @@ class envCube(gym.Env):
         # self.signal_stop_position = np.array([self.signal_stop.x, self.signal_stop.y], dtype=np.int32)
         # self.signal_stop_state = np.array([phase, countdown], dtype=np.int32)
 
-        print(self.episode_step, ':', 'Action:', action, ';',
-              'Position:', self.vehicle.x, self.vehicle.y, ';',
-              'Speed:', self.vehicle_speed, ';', 'YawAngle:', self.vehicle_yawangle, ';',
-              # 'Relative_distance_to_goal:', self.relative_distance_to_goal, ';',
-              # 'vehicle_state:', self.vehicle.state, ';',
-              # 'Judgement_in_road:', self.JUDGEMENT_IN_ROAD, ';',
-              # 'Distance_to_off_road:', self.vehicle.distance_to_off_road, ';',
-              # 'Distance_to_mid_lane_line', self.vehicle.distance_to_mid_lane_line, ';',
-              # 'Polar_radius:', self.vehicle.polar_radius, ';',
-              # 'Polar_angle:', self.vehicle.polar_angle, ';'
-              # 'reward:', reward
-              )
+        # print(self.episode_step, ':', 'Action:', action, ';',
+        #       'Position:', self.vehicle.x, self.vehicle.y, ';',
+        #       'Speed:', self.vehicle_speed, ';', 'YawAngle:', self.vehicle_yawangle, ';',
+        #       # 'Relative_distance_to_goal:', self.relative_distance_to_goal, ';',
+        #       # 'vehicle_state:', self.vehicle.state, ';',
+        #       # 'Judgement_in_road:', self.JUDGEMENT_IN_ROAD, ';',
+        #       # 'Distance_to_off_road:', self.vehicle.distance_to_off_road, ';',
+        #       # 'Distance_to_mid_lane_line', self.vehicle.distance_to_mid_lane_line, ';',
+        #       # 'Polar_radius:', self.vehicle.polar_radius, ';',
+        #       # 'Polar_angle:', self.vehicle.polar_angle, ';'
+        #       # 'reward:', reward
+        #       )
         # if reward < -100 or reward > 100:
         #   print(reward)
 

@@ -39,36 +39,36 @@ model = DQN(
     env,
     verbose=1,
     tensorboard_log='./logs',
-    learning_rate=1e-2,
+    learning_rate=5e-3,
 )
 print(model.policy)
 
-# # Callback
-# eval_callback = EvalCallback(env, best_model_save_path="./logs/BestModel0418_01/",
-#                              log_path="./logs/BestModel0418_01/", eval_freq=500,
-#                              deterministic=True, render=False)
+# Callback
+eval_callback = EvalCallback(env, best_model_save_path="./logs/BestModel0605_01/",
+                             log_path="./logs/BestModel0605_01/", eval_freq=500,
+                             deterministic=True, render=False)
+
+# Train the agent and display a progress bar
+model.learn(
+    total_timesteps=int(3e6),
+    tb_log_name='Sumo_pattern2_turn_left_DQN_alpha_5e-3_3M_call_1',
+    progress_bar=True,
+    callback=eval_callback
+)
+
+# Save the agent
+model.save("Sumo_pattern2_turn_left_DQN_alpha_5e-3_3M_call_1")
+del model  # delete trained model to demonstrate loading
 #
-# # Train the agent and display a progress bar
-# model.learn(
-#     total_timesteps=int(1e5),
-#     tb_log_name='Sumo_pattern1_straight_DQN_alpha_1e-2_100k_call_1',
-#     progress_bar=True,
-#     callback=eval_callback
-# )
-#
-# # Save the agent
-# model.save("Sumo_pattern1_straight_DQN_alpha_1e-2_100k_call_1")
-# del model  # delete trained model to demonstrate loading
-# #
-# # Load the trained agent
-# # NOTE: if you have loading issue, you can pass `print_system_info=True`
-# # to compare the system on which the model was trained vs the current one
-# model = DQN.load("./turnleft/Sumo_pattern1_turn_left_DQN_alpha_8e-3_5M_call_1", env=env)
-#
-# print(model.policy)
+# Load the trained agent
+# NOTE: if you have loading issue, you can pass `print_system_info=True`
+# to compare the system on which the model was trained vs the current one
+model = DQN.load("Sumo_pattern2_turn_left_DQN_alpha_5e-3_3M_call_1", env=env)
+
+print(model.policy)
 
 
-# model = DQN.load("./turnleft/logs/BestModel0420_01/best_model", env=env)
+# model = DQN.load("./logs/BestModel0605_01/best_model", env=env)
 
 # # Evaluate the agent
 # # NOTE: If you use wrappers with your environment that modify rewards,
@@ -104,12 +104,12 @@ for ep in range(eposides):
     while not done:
         # print(env.episode_step)
         # action = env.action_space.sample()
-        if 60 <= env.episode_step <= 65:
-            action = 3
-        else:
-            action = 0
+        # if 60 <= env.episode_step <= 65:
+        #     action = 3
+        # else:
+        #     action = 0
 
-        # action, _states = model.predict(obs, deterministic=True)
+        action, _states = model.predict(obs, deterministic=True)
         obs, reward, done, info = env.step(action)
         env.render()
         rewards += reward
