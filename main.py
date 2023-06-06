@@ -64,7 +64,7 @@ del model  # delete trained model to demonstrate loading
 # to compare the system on which the model was trained vs the current one
 model = DQN.load("Sumo_pattern2_turn_left_DQN_alpha_5e-3_3M_call_0606_01", env=env)
 
-print(model.policy)
+# print(model.policy)
 
 
 # model = DQN.load("./logs/BestModel0605_02/best_model", env=env)
@@ -107,7 +107,7 @@ for ep in range(eposides):
         #     action = 3
         # else:
         #     action = 0
-
+        # action = 1
         action, _states = model.predict(obs, deterministic=True)
         obs, reward, done, info = env.step(action)
         env.render()
