@@ -289,19 +289,19 @@ class envCube(gym.Env):
         elif self.JUDGEMENT_IN_ROAD == False:
             self.JUDGEMENT_IN_ROAD = False
 
-        # # 主车进入到车祸区域，终止训练，并给予-500分惩罚
-        # if self.JUDGEMENT_IN_ROAD == True:
-        #     for rec in range(self.rectangle_list_crash_area.RectangleList.size):
-        #         if ((self.vehicle.max_vertex_x < self.rectangle_list_crash_area.RectangleList[0][rec].min_x) or
-        #                 (self.vehicle.min_vertex_x > self.rectangle_list_crash_area.RectangleList[0][rec].max_x) or
-        #                 (self.vehicle.max_vertex_y < self.rectangle_list_crash_area.RectangleList[0][rec].min_y) or
-        #                 (self.vehicle.min_vertex_y > self.rectangle_list_crash_area.RectangleList[0][rec].max_y)):
-        #             self.JUDGEMENT_IN_ROAD = True
-        #         else:
-        #             self.JUDGEMENT_IN_ROAD = False
-        #             break
-        # elif self.JUDGEMENT_IN_ROAD == False:
-        #     self.JUDGEMENT_IN_ROAD = False
+        # 主车进入到车祸区域，终止训练，并给予-500分惩罚
+        if self.JUDGEMENT_IN_ROAD == True:
+            for rec in range(self.rectangle_list_crash_area.RectangleList.size):
+                if ((self.vehicle.max_vertex_x < self.rectangle_list_crash_area.RectangleList[0][rec].min_x) or
+                        (self.vehicle.min_vertex_x > self.rectangle_list_crash_area.RectangleList[0][rec].max_x) or
+                        (self.vehicle.max_vertex_y < self.rectangle_list_crash_area.RectangleList[0][rec].min_y) or
+                        (self.vehicle.min_vertex_y > self.rectangle_list_crash_area.RectangleList[0][rec].max_y)):
+                    self.JUDGEMENT_IN_ROAD = True
+                else:
+                    self.JUDGEMENT_IN_ROAD = False
+                    break
+        elif self.JUDGEMENT_IN_ROAD == False:
+            self.JUDGEMENT_IN_ROAD = False
 
         # 两车相撞，终止训练，并给予-500分惩罚
         if self.vehicle.collision(self.first_other_vehicle) == 0 and self.vehicle.collision(self.second_other_vehicle) == 0:
