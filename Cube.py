@@ -41,10 +41,6 @@ class Cube:
         self.y = MIN_COORD + 1 * VEHICLE_LENGTH
         self.pre_x = self.x
         self.pre_y = self.y
-        # self.next1_x = self.x
-        # self.next1_y = self.y
-        # self.next2_x = self.x
-        # self.next2_y = self.y
         self.velocity = 2.0 * SCALE
         self.acceleration = 0.0 * SCALE
         self.yaw_angle = 0.0
@@ -58,16 +54,6 @@ class Cube:
 
         self.pre_polar_radius = 0.0
         self.pre_polar_angle = 0.0
-
-        # self.next1_polar_radius = 0.0
-        # self.next1_polar_angle = 0.0
-        # self.next1_polar_radius_min_edge = 0.0
-        # self.next1_polar_radius_max_edge = 0.0
-        #
-        # self.next2_polar_radius = 0.0
-        # self.next2_polar_angle = 0.0
-        # self.next2_polar_radius_min_edge = 0.0
-        # self.next2_polar_radius_max_edge = 0.0
 
         # 车头朝向正北(yaw_angle = 0),vertex0为左前点，1为右前点，2为右后点，3为左后点，按顺时针方向。
         self.vertex0x = self.x + VEHICLE_DIAGONAL/2 * math.sin(self.yaw_angle-VEHICLE_ANGLE)
@@ -88,21 +74,6 @@ class Cube:
         self.pre_min_vertex_x = self.min_vertex_x
         self.pre_max_vertex_y = self.max_vertex_y
         self.pre_min_vertex_y = self.min_vertex_y
-
-        # self.edge0 = self.x - VEHICLE_HALF_SIZE
-        # self.edge1 = self.y + VEHICLE_HALF_SIZE
-        # self.edge2 = self.x + VEHICLE_HALF_SIZE
-        # self.edge3 = self.y - VEHICLE_HALF_SIZE
-        #
-        # self.next1_edge0 = self.next1_x - VEHICLE_HALF_SIZE
-        # self.next1_edge1 = self.next1_y + VEHICLE_HALF_SIZE
-        # self.next1_edge2 = self.next1_x + VEHICLE_HALF_SIZE
-        # self.next1_edge3 = self.next1_y - VEHICLE_HALF_SIZE
-        #
-        # self.next2_edge0 = self.next2_x - VEHICLE_HALF_SIZE
-        # self.next2_edge1 = self.next2_y + VEHICLE_HALF_SIZE
-        # self.next2_edge2 = self.next2_x + VEHICLE_HALF_SIZE
-        # self.next2_edge3 = self.next2_y - VEHICLE_HALF_SIZE
 
         self.move_step = 0
         self.max_pre_x = min_positionx
