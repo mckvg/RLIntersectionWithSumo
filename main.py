@@ -29,10 +29,10 @@ from stable_baselines3.common.callbacks import EvalCallback
 
 
 env = envCube()
-check_env(env)
+# check_env(env)
 
-TCPClient = client()
-
+# # TCPClient = client()
+#
 # Instantiate the agent
 model = DQN(
     "MultiInputPolicy",
@@ -68,7 +68,7 @@ print(model.policy)
 # print(model.policy)
 
 
-model = DQN.load("./turnleft/logs/BestModel0420_01/best_model", env=env)
+model = DQN.load("StraightBestModel0606_02/best_model", env=env)
 
 # # Evaluate the agent
 # # NOTE: If you use wrappers with your environment that modify rewards,
@@ -96,73 +96,46 @@ model = DQN.load("./turnleft/logs/BestModel0420_01/best_model", env=env)
 
 eposides = 1
 for ep in range(eposides):
+
+
     obs = env.reset()
     done = False
     rewards = 0
     # step = 0
-    data = {
-        'TickId': env.episode_step,
-        'X': env.vehicle.x/SCALE,
-        'Y': env.vehicle.y/SCALE,
-        'YawAngle': env.vehicle.yaw_angle
-    }
-    TCPClient.tcp_client()
-    TCPClient.send_data(TCPClient.client_socket, data)
+    # TCPClient.tcp_client()
+    # data = {
+    #     'TickId': env.episode_step,
+    #     'X': env.vehicle.x/SCALE,
+    #     'Y': env.vehicle.y/SCALE,
+    #     'YawAngle': env.vehicle.yaw_angle
+    # }
+    # TCPClient.send_data(TCPClient.client_socket, data)
+    # TCPClient.receive_data(TCPClient.client_socket)
     while not done:
         # print(env.episode_step)
-        TCPClient.receive_data(TCPClient.client_socket)
-        if TCPClient.RV1:
-            # print(TCPClient.RV1['X'])
-            env.first_other_vehicle.x = TCPClient.RV1['X'] * SCALE
-            env.first_other_vehicle.y = TCPClient.RV1['Y'] * SCALE
-            env.first_other_vehicle.yaw_angle = TCPClient.RV1['YawAngle']
-            env.first_other_vehicle.velocity = TCPClient.RV1['Speed'] * SCALE
-
-            env.second_other_vehicle.x = TCPClient.RV2['X'] * SCALE
-            env.second_other_vehicle.y = TCPClient.RV2['Y'] * SCALE
-            env.second_other_vehicle.yaw_angle = TCPClient.RV2['YawAngle']
-            env.second_other_vehicle.velocity = TCPClient.RV2['Speed'] * SCALE
-
-            # action = env.action_space.sample()
-            # if 60 <= env.episode_step <= 65:
-            #     action = 3
-            # else:
-            #     action = 0
-
-            action, _states = model.predict(obs, deterministic=True)
-            obs, reward, done, info = env.step(action)
-            env.render()
-            rewards += reward
-
-            env.first_other_vehicle.pre_x = TCPClient.RV1['X'] * SCALE
-            env.first_other_vehicle.pre_y = TCPClient.RV1['Y'] * SCALE
-            env.first_other_vehicle.pre_yaw_angle = TCPClient.RV1['YawAngle']
-
-            env.second_other_vehicle.pre_x = TCPClient.RV2['X'] * SCALE
-            env.second_other_vehicle.pre_y = TCPClient.RV2['Y'] * SCALE
-            env.second_other_vehicle.pre_yaw_angle = TCPClient.RV2['YawAngle']
-
-            data = {
-                'TickId': env.episode_step,
-                'X': env.vehicle.x/2,
-                'Y': env.vehicle.y/2,
-                'YawAngle': env.vehicle.yaw_angle
-            }
-            print(data)
-            TCPClient.send_data(TCPClient.client_socket, data)
-
-        # step += 1
+        action, _states = model.predict(obs, deterministic=True)
         # action = env.action_space.sample()
-        # if 60 <= step <= 65:
+        # if 60 <= env.episode_step <= 65:
         #     action = 3
         # else:
         #     action = 0
-        # action = 0
+        obs, reward, done, info = env.step(action)
+        env.render()
+        rewards += reward
+
+        # env.first_other_vehicle.pre_x = TCPClient.Remotes[0]['X'] * SCALE
+        # env.first_other_vehicle.pre_y = TCPClient.Remotes[0]['Y'] * SCALE
+        # env.first_other_vehicle.pre_yaw_angle = TCPClient.Remotes[0]['YawAngle']
+        #
+        # env.second_other_vehicle.pre_x = TCPClient.Remotes[1]['X'] * SCALE
+        # env.second_other_vehicle.pre_y = TCPClient.Remotes[1]['Y'] * SCALE
+        # env.second_other_vehicle.pre_yaw_angle = TCPClient.Remotes[1]['YawAngle']
+
 
         # if reward < -100 or reward > 100:
         #   print(reward)
 
-    TCPClient.client_socket.close()
+    # TCPClient.client_socket.close()
     print(rewards)
     # print(step)
 

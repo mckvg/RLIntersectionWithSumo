@@ -65,14 +65,15 @@ from CONSTANTS import max_positionx
 from CONSTANTS import min_positiony
 from CONSTANTS import max_positiony
 from Image_Map_Observation import Image_Map_Observation
-
-
-
-
+# from readcsv import float_csv_data
+from client import *
 
 
 # 环境类
 class envCube(gym.Env):
+
+    TCPClient = client()
+    TCPClient.tcp_client()
     RETURN_IMAGE = False
     RED_VIOLATION = False
     COLLISION = False
@@ -173,14 +174,8 @@ class envCube(gym.Env):
         #      ], dtype=np.float32
         # )
 
-        self.low_state = np.array(
-            [self.min_speed,
-             self.min_action_steering/self.max_action_steering], dtype=np.float32
-        )
-        self.high_state = np.array(
-            [self.max_speed,
-             self.max_action_steering/self.max_action_steering], dtype=np.float32
-        )
+        self.low_steering_state = np.array([self.min_action_steering/self.max_action_steering], dtype=np.float32)
+        self.high_steering_state = np.array([self.max_action_steering/self.max_action_steering], dtype=np.float32)
 
         super(envCube, self).__init__()
         # Define action and observation space
@@ -190,19 +185,16 @@ class envCube(gym.Env):
 
         self.observation_space = Dict(
             {
-                'agent_position':  Box(MIN_COORD, MAX_COORD, shape=(2,), dtype=np.float32),
-                'agent_speed_yawangle': Box(low=self.low_state, high=self.high_state, dtype=np.float32),
+                'agent_speed': Box(low=self.min_speed, high=self.max_speed, shape=(1,), dtype=np.float32),
+                'agent_yawangle': Box(low=self.low_steering_state, high=self.high_steering_state, dtype=np.float32),
                 'relative_position_2_danger': Box(2*MIN_COORD-1.0, 2*MAX_COORD+1.0, shape=(2,), dtype=np.float32),
-                'first_other_vehicle_position': Box(MIN_COORD, MAX_COORD, shape=(2,), dtype=np.float32),
                 'first_other_vehicle_relative_position': Box(2*MIN_COORD-1.0, 2*MAX_COORD+1.0, shape=(2,), dtype=np.float32),
                 'first_other_vehicle_speed': Box(self.min_speed, self.max_speed, shape=(1,), dtype=np.float32),
-                'second_other_vehicle_position': Box(MIN_COORD, MAX_COORD, shape=(2,), dtype=np.float32),
                 'second_other_vehicle_relative_position': Box(2*MIN_COORD-1, 2*MAX_COORD+1, shape=(2,), dtype=np.float32),
                 'second_other_vehicle_speed': Box(self.min_speed, self.max_speed, shape=(1,), dtype=np.float32),
                 'relative_distance_2_goal': Box(2*MIN_COORD-1.0, 2*MAX_COORD+1.0, shape=(1,), dtype=np.float32),
                 'judgement_in_road': Discrete(self.judgement_space),
-                # 'distance_2_mid_lane_line': Box(2*MIN_COORD-1.0, 2*MAX_COORD+1.0, shape=(1,), dtype=np.float32),
-                # 'risk_off_road': Discrete(self.risk_space),
+                'distance_2_mid_lane_line': Box(2*MIN_COORD-1.0, 2*MAX_COORD+1.0, shape=(1,), dtype=np.float32),
                 'distance_2_nearest_off_road': Box(2*MIN_COORD-1.0, 2*MAX_COORD+1.0, shape=(2,), dtype=np.float32),
                 'bird_eye_view_gray_image': Box(low=0, high=GRAY_SPACE, shape=(int(SEPARATE_SIZE), int(SEPARATE_SIZE), 1), dtype=np.uint8),
 
@@ -215,11 +207,46 @@ class envCube(gym.Env):
 
     # 玩家做动作
     def step(self, action):
+
         self.episode_step += 1
         # agent_action0 = action[0] * self.max_action_acceleration   # gas
         # agent_action1 = action[1] * self.min_action_acceleration   # break
         # agent_action2 = action[2] * self.max_action_steering
         real_action = self.vehicle.action(action)
+
+        data = {
+            'TickId': self.episode_step,
+            'X': self.vehicle.x / SCALE,
+            'Y': self.vehicle.y / SCALE,
+            'YawAngle': self.vehicle.yaw_angle
+        }
+        self.TCPClient.send_data(self.TCPClient.client_socket, data)
+
+        self.TCPClient.receive_data(self.TCPClient.client_socket)
+        if self.TCPClient.Remotes:
+            # print(TCPClient.RV1['X'])
+            self.first_other_vehicle.x = self.TCPClient.Remotes[0]['X'] * SCALE
+            self.first_other_vehicle.y = self.TCPClient.Remotes[0]['Y'] * SCALE
+            self.first_other_vehicle.yaw_angle = self.TCPClient.Remotes[0]['YawAngle']
+            self.first_other_vehicle.velocity = self.TCPClient.Remotes[0]['Speed'] * SCALE
+
+            self.second_other_vehicle.x = self.TCPClient.Remotes[1]['X'] * SCALE
+            self.second_other_vehicle.y = self.TCPClient.Remotes[1]['Y'] * SCALE
+            self.second_other_vehicle.yaw_angle = self.TCPClient.Remotes[1]['YawAngle']
+            self.second_other_vehicle.velocity = self.TCPClient.Remotes[1]['Speed'] * SCALE
+
+        # # 从训练表格中更新远车状态
+        # self.RV_data = float_csv_data[self.episode_step]
+        # self.first_other_vehicle.x = self.RV_data[2] * SCALE
+        # self.first_other_vehicle.y = self.RV_data[3] * SCALE
+        # self.first_other_vehicle.yaw_angle = self.RV_data[4]
+        # self.first_other_vehicle.velocity = self.RV_data[5] * SCALE
+        #
+        # self.second_other_vehicle.x = self.RV_data[7] * SCALE
+        # self.second_other_vehicle.y = self.RV_data[8] * SCALE
+        # self.second_other_vehicle.yaw_angle = self.RV_data[9]
+        # self.second_other_vehicle.velocity = self.RV_data[10] * SCALE
+
         self.first_other_vehicle.move()
         self.second_other_vehicle.move()
         # phase = self.signal_stop.signalphase(self.episode_step)
@@ -236,11 +263,7 @@ class envCube(gym.Env):
 
         # observation里画出逆行区域
         self.image_map_observation.reverse(self.rectangle_list_reverse.RectangleList)
-        # observation里画出智能体范围
-        self.image_map_observation.agent(self.vehicle.max_vertex_x, self.vehicle.min_vertex_x,
-                                         self.vehicle.max_vertex_y, self.vehicle.min_vertex_y,
-                                         self.vehicle.pre_max_vertex_x, self.vehicle.pre_min_vertex_x,
-                                         self.vehicle.pre_max_vertex_y, self.vehicle.pre_min_vertex_y)
+
         # observation里画出远车范围
         self.image_map_observation.RemoteVehicle(self.first_other_vehicle.max_vertex_x, self.first_other_vehicle.min_vertex_x,
                                          self.first_other_vehicle.max_vertex_y, self.first_other_vehicle.min_vertex_y,
@@ -251,6 +274,13 @@ class envCube(gym.Env):
                                          self.second_other_vehicle.max_vertex_y, self.second_other_vehicle.min_vertex_y,
                                          self.second_other_vehicle.pre_max_vertex_x, self.second_other_vehicle.pre_min_vertex_x,
                                          self.second_other_vehicle.pre_max_vertex_y, self.second_other_vehicle.pre_min_vertex_y)
+
+        # observation里画出智能体范围
+        self.image_map_observation.agent(self.vehicle.max_vertex_x, self.vehicle.min_vertex_x,
+                                         self.vehicle.max_vertex_y, self.vehicle.min_vertex_y,
+                                         self.vehicle.pre_max_vertex_x, self.vehicle.pre_min_vertex_x,
+                                         self.vehicle.pre_max_vertex_y, self.vehicle.pre_min_vertex_y)
+
         # observation画出以主车为中心的灰度图区域
         self.image_map_observation.Separate_Map(self.vehicle.max_vertex_x, self.vehicle.min_vertex_x,
                                                self.vehicle.max_vertex_y, self.vehicle.min_vertex_y)
@@ -258,16 +288,11 @@ class envCube(gym.Env):
         # 更新直道的之前动作的最大最小坐标值(intersection中之前动作不更新)
         self.vehicle.UpdatePreExtremeValue()
 
-
         reward = 0.0
 
         terminated = False
         break_out = False
         self.OCCUPIED_MID_LANE_LINE = False
-
-        # self.NEXT_1_IN_ROAD = True
-        # self.NEXT_2_IN_ROAD = True
-        # self.Time_to_off_road = 3
 
         # 进入道路外，终止训练，并给予-500分惩罚
         for rec in range(self.rectangle_list_off_road.RectangleList.size):
@@ -293,41 +318,6 @@ class envCube(gym.Env):
         elif self.JUDGEMENT_IN_ROAD == False:
             self.JUDGEMENT_IN_ROAD = False
 
-
-        # # 按当前路径下一步进入逆行车道或者道路外
-        # if self.vehicle.next1_edge3 <= MIN_COORD + STRAIGHT_LENGTH:
-        #     if self.vehicle.next1_edge0 <= 0 or self.vehicle.next1_edge2 >= INTERSECTION_HALF_SIZE:
-        #         self.NEXT_1_IN_ROAD = False
-        # elif -INTERSECTION_HALF_SIZE < self.vehicle.next1_edge3 and self.vehicle.next1_edge1 < 0:
-        #     if self.vehicle.next1_edge0 <= -INTERSECTION_HALF_SIZE:
-        #         self.NEXT_1_IN_ROAD = False
-        # elif self.vehicle.next1_edge1 >= 0 and self.vehicle.next1_edge3 <= 0:
-        #     if self.vehicle.next1_edge0 <= -INTERSECTION_HALF_SIZE or self.vehicle.next1_edge2 >= INTERSECTION_HALF_SIZE:
-        #         self.NEXT_1_IN_ROAD = False
-        # elif self.vehicle.next1_edge3 > 0 and self.vehicle.next1_edge1 < INTERSECTION_HALF_SIZE:
-        #     if self.vehicle.next1_edge2 >= INTERSECTION_HALF_SIZE:
-        #         self.NEXT_1_IN_ROAD = False
-        # elif self.vehicle.next1_edge1 >= MAX_COORD - STRAIGHT_LENGTH:
-        #     if self.vehicle.next1_edge0 <= 0 or self.vehicle.next1_edge2 >= INTERSECTION_HALF_SIZE:
-        #         self.NEXT_1_IN_ROAD = False
-        #
-        # # 按当前路径下两步进入逆行车道或者道路外
-        # if self.vehicle.next2_edge3 <= MIN_COORD + STRAIGHT_LENGTH:
-        #     if self.vehicle.next2_edge0 <= 0 or self.vehicle.next2_edge2 >= INTERSECTION_HALF_SIZE:
-        #         self.NEXT_2_IN_ROAD = False
-        # elif -INTERSECTION_HALF_SIZE < self.vehicle.next2_edge3 and self.vehicle.next2_edge1 < 0:
-        #     if self.vehicle.next2_edge0 <= -INTERSECTION_HALF_SIZE:
-        #         self.NEXT_2_IN_ROAD = False
-        # elif self.vehicle.next2_edge1 >= 0 and self.vehicle.next2_edge3 <= 0:
-        #     if self.vehicle.next2_edge0 <= -INTERSECTION_HALF_SIZE or self.vehicle.next2_edge2 >= INTERSECTION_HALF_SIZE:
-        #         self.NEXT_2_IN_ROAD = False
-        # elif self.vehicle.next2_edge3 > 0 and self.vehicle.next2_edge1 < INTERSECTION_HALF_SIZE:
-        #     if self.vehicle.next2_edge2 >= INTERSECTION_HALF_SIZE:
-        #         self.NEXT_2_IN_ROAD = False
-        # elif self.vehicle.next2_edge1 >= MAX_COORD - STRAIGHT_LENGTH:
-        #     if self.vehicle.next2_edge0 <= 0 or self.vehicle.next2_edge2 >= INTERSECTION_HALF_SIZE:
-        #         self.NEXT_2_IN_ROAD = False
-
         # 主车进入到车祸区域，终止训练，并给予-500分惩罚
         if self.JUDGEMENT_IN_ROAD == True:
             for rec in range(self.rectangle_list_crash_area.RectangleList.size):
@@ -341,15 +331,6 @@ class envCube(gym.Env):
                     break
         elif self.JUDGEMENT_IN_ROAD == False:
             self.JUDGEMENT_IN_ROAD = False
-
-        # # 主车下一步进入到车祸区域
-        # if -VEHICLE_HALF_SIZE <= self.vehicle.next1_x <= SINGLE_LANE_WIDTH + VEHICLE_HALF_SIZE and \
-        #         -VEHICLE_HALF_SIZE - INTERSECTION_HALF_SIZE <= self.vehicle.next1_y <= VEHICLE_HALF_SIZE - SINGLE_LANE_WIDTH:
-        #     self.NEXT_1_IN_ROAD = False
-        # # 主车下两步进入到车祸区域
-        # if -VEHICLE_HALF_SIZE <= self.vehicle.next2_x <= SINGLE_LANE_WIDTH + VEHICLE_HALF_SIZE and \
-        #         -VEHICLE_HALF_SIZE - INTERSECTION_HALF_SIZE <= self.vehicle.next2_y <= VEHICLE_HALF_SIZE - SINGLE_LANE_WIDTH:
-        #     self.NEXT_2_IN_ROAD = False
 
         # 两车相撞，终止训练，并给予-500分惩罚
         if self.vehicle.collision(self.first_other_vehicle) == 0 and self.vehicle.collision(self.second_other_vehicle) == 0:
@@ -373,6 +354,19 @@ class envCube(gym.Env):
         #     self.GREEN_PASSING = True
         #     reward += 500
 
+        # 选择目的地 = intersection_steering_choice：
+        self.vehicle.intersection_steering_choice = 0  # 0: straight; -1: turn left;  1: turn right
+        # 根据目的地，限定车辆的行驶范围
+        if self.vehicle.intersection_steering_choice == -1:
+            if self.vehicle.y > INTERSECTION_HALF_SIZE or self.vehicle.x > INTERSECTION_HALF_SIZE:
+                break_out = True
+        elif self.vehicle.intersection_steering_choice == 0:
+            if self.vehicle.x > INTERSECTION_HALF_SIZE or self.vehicle.x < -INTERSECTION_HALF_SIZE:
+                break_out = True
+        elif self.vehicle.intersection_steering_choice == 1:
+            if self.vehicle.y > INTERSECTION_HALF_SIZE or self.vehicle.x < -INTERSECTION_HALF_SIZE:
+                break_out = True
+
         # 如果车在直行,找到track前沿坐标，在智能体前方生成与车道方向平行的track，track覆盖所有车道，并且track带有奖赏，每直行1米获得1分奖赏
         if self.vehicle.state == 'straight_y+':
             # 更新智能体当前track的直道前沿坐标值
@@ -389,10 +383,6 @@ class envCube(gym.Env):
             # 制定出发时车辆不能逆行回到出生点的边界
             if self.vehicle.min_vertex_y <= MIN_COORD:
                 self.JUDGEMENT_IN_ROAD = False
-            # if self.vehicle.next1_edge3 <= MIN_COORD:
-            #     self.NEXT_1_IN_ROAD = False
-            # if self.vehicle.next2_edge3 <= MIN_COORD:
-            #     self.NEXT_2_IN_ROAD = False
             # 如果第一次或再次进入直行道，更新阶段目标空间和计数器
             if self.episode_step == 1 and self.vehicle.y < 0:
                 self.CIRCLE_COUNT = 0
@@ -456,10 +446,6 @@ class envCube(gym.Env):
             # 制定出发时车辆不能逆行回到出生点的边界
             if self.vehicle.min_vertex_x <= MIN_COORD:
                 self.JUDGEMENT_IN_ROAD = False
-            # if self.vehicle.next1_edge0 <= MIN_COORD:
-            #     self.NEXT_1_IN_ROAD = False
-            # if self.vehicle.next2_edge0 <= MIN_COORD:
-            #     self.NEXT_2_IN_ROAD = False
             # 如果再次进入直行道，更新阶段目标空间和计数器
             if self.vehicle.pre_state != 'straight_x+' and self.vehicle.x > 0:
                 self.CIRCLE_COUNT = 0
@@ -523,10 +509,6 @@ class envCube(gym.Env):
             # 制定出发时车辆不能逆行回到出生点的边界
             if self.vehicle.max_vertex_x >= MAX_COORD:
                 self.JUDGEMENT_IN_ROAD = False
-            # if self.vehicle.next1_edge2 >= MAX_COORD:
-            #     self.NEXT_1_IN_ROAD = False
-            # if self.vehicle.next2_edge2 >= MAX_COORD:
-            #     self.NEXT_2_IN_ROAD = False
             # 如果再次进入直行道，更新阶段目标空间和计数器
             if self.vehicle.pre_state != 'straight_x-' and self.vehicle.x < 0:
                 self.CIRCLE_COUNT = 0
@@ -556,8 +538,6 @@ class envCube(gym.Env):
                 self.OCCUPIED_MID_LANE_LINE = True
 
         # 十字路口内选择
-        self.vehicle.intersection_steering_choice = -1  # 0: straight; -1: turn left;  1: turn right
-
         # 进入十字路口范围内，根据intersection_steering_choice，绘制track路线图，带有rewards，转弯部分利用极坐标系绘制
         if self.vehicle.state == 'intersection':
             # 更新车辆在十字路口内的track的细分阶段
@@ -583,10 +563,6 @@ class envCube(gym.Env):
                 # 制定道路范围内边界
                 if self.vehicle.min_vertex_x < 0 or self.vehicle.max_vertex_x > 2*SINGLE_LANE_WIDTH:
                     self.JUDGEMENT_IN_ROAD = False
-                # if self.vehicle.next1_edge0 < 0 or self.vehicle.next1_edge2 > INTERSECTION_HALF_SIZE:
-                #     self.NEXT_1_IN_ROAD = False
-                # if self.vehicle.next2_edge0 < 0 or self.vehicle.next2_edge2 > INTERSECTION_HALF_SIZE:
-                #     self.NEXT_2_IN_ROAD = False
                 # 如果第一次进入交叉口，更新阶段目标空间和计数器
                 if self.vehicle.pre_state != 'intersection':
                     self.CIRCLE_COUNT = 0
@@ -640,12 +616,7 @@ class envCube(gym.Env):
                     if self.vehicle.polar_radius_min_edge < SINGLE_LANE_WIDTH or \
                             self.vehicle.polar_radius_max_edge > 2*INTERSECTION_HALF_SIZE/math.cos(self.vehicle.polar_angle):
                         self.JUDGEMENT_IN_ROAD = False
-                    # if self.vehicle.next1_polar_radius_min_edge < INTERSECTION_HALF_SIZE or \
-                    #         self.vehicle.next1_polar_radius_max_edge > 2 * INTERSECTION_HALF_SIZE/math.cos(self.vehicle.next1_polar_angle):
-                    #     self.NEXT_1_IN_ROAD = False
-                    # if self.vehicle.next2_polar_radius_min_edge < INTERSECTION_HALF_SIZE or \
-                    #         self.vehicle.next2_polar_radius_max_edge > 2 * INTERSECTION_HALF_SIZE/math.cos(self.vehicle.next2_polar_angle):
-                    #     self.NEXT_2_IN_ROAD = False
+
                     # 计算与阶段目标的相对位置，并获得阶段reward和distance_2_goal
                     num = self.CIRCLE_COUNT
                     if num < self.mid_goal_turn_left_space_angle:
@@ -676,12 +647,7 @@ class envCube(gym.Env):
                     if self.vehicle.polar_radius_min_edge < SINGLE_LANE_WIDTH or \
                             self.vehicle.polar_radius_max_edge > INTERSECTION_HALF_SIZE * math.sqrt(5.0):
                         self.JUDGEMENT_IN_ROAD = False
-                    # if self.vehicle.next1_polar_radius_min_edge < INTERSECTION_HALF_SIZE or \
-                    #         self.vehicle.next1_polar_radius_max_edge > INTERSECTION_HALF_SIZE * math.sqrt(5.0):
-                    #     self.NEXT_1_IN_ROAD = False
-                    # if self.vehicle.next2_polar_radius_min_edge < INTERSECTION_HALF_SIZE or \
-                    #         self.vehicle.next2_polar_radius_max_edge > INTERSECTION_HALF_SIZE * math.sqrt(5.0):
-                    #     self.NEXT_2_IN_ROAD = False
+
                     # 计算与阶段目标的相对位置，并获得阶段reward和distance_2_goal
                     num = self.CIRCLE_COUNT
                     if num < self.mid_goal_turn_left_space_angle:
@@ -712,12 +678,7 @@ class envCube(gym.Env):
                     if self.vehicle.polar_radius_min_edge < SINGLE_LANE_WIDTH or \
                             self.vehicle.polar_radius_max_edge > 2*INTERSECTION_HALF_SIZE/math.sin(self.vehicle.polar_angle):
                         self.JUDGEMENT_IN_ROAD = False
-                    # if self.vehicle.next1_polar_radius_min_edge < INTERSECTION_HALF_SIZE or \
-                    #         self.vehicle.next1_polar_radius_max_edge > 2*INTERSECTION_HALF_SIZE/math.sin(self.vehicle.next1_polar_angle):
-                    #     self.NEXT_1_IN_ROAD = False
-                    # if self.vehicle.next2_polar_radius_min_edge < INTERSECTION_HALF_SIZE or \
-                    #         self.vehicle.next2_polar_radius_max_edge > 2*INTERSECTION_HALF_SIZE/math.sin(self.vehicle.next2_polar_angle):
-                    #     self.NEXT_2_IN_ROAD = False
+
                     # 计算与阶段目标的相对位置，并获得阶段reward和distance_2_goal
                     num = self.CIRCLE_COUNT
                     if num < self.mid_goal_turn_left_space_angle:
@@ -759,12 +720,6 @@ class envCube(gym.Env):
                 if self.vehicle.polar_radius_min_edge < 0 or \
                         self.vehicle.polar_radius_max_edge > INTERSECTION_HALF_SIZE:
                     self.JUDGEMENT_IN_ROAD = False
-                # if self.vehicle.next1_polar_radius_min_edge < 0 or \
-                #         self.vehicle.next1_polar_radius_max_edge > INTERSECTION_HALF_SIZE:
-                #     self.NEXT_1_IN_ROAD = False
-                # if self.vehicle.next2_polar_radius_min_edge < 0 or \
-                #         self.vehicle.next2_polar_radius_max_edge > INTERSECTION_HALF_SIZE:
-                #     self.NEXT_2_IN_ROAD = False
                 # 如果第一次进入交叉口，更新阶段目标空间和计数器
                 if self.vehicle.pre_state != 'intersection':
                     self.CIRCLE_COUNT = 0
@@ -784,11 +739,7 @@ class envCube(gym.Env):
                             self.ARRIVE_AT_MID_GOAL[num] = 1
                             self.distance_2_goal = 0
 
-        # 如果主车进入到禁止进入区域，break-out.并根据主车下两步的路径更新Time_to_off_road
-        # if self.NEXT_2_IN_ROAD == False:
-        #     self.Time_to_off_road = 2
-        # if self.NEXT_1_IN_ROAD == False:
-        #     self.Time_to_off_road = 1
+        # 如果主车进入到禁止进入区域，break-out.
         if self.JUDGEMENT_IN_ROAD == False:
             # self.Time_to_off_road = 0
             break_out = True
@@ -809,33 +760,31 @@ class envCube(gym.Env):
         # 油门及刹车动作的惩罚
         reward -= math.pow((real_action[0]+real_action[1]), 2) * 1
 
-        # #如果车辆压到中线，返回一个小惩罚
-        # if self.OCCUPIED_MID_LANE_LINE == True:
-        #     reward -= 10
+        #如果车辆压到中线，返回一个小惩罚
+        if self.OCCUPIED_MID_LANE_LINE == True:
+            reward += -2.0
 
         if break_out:
-            reward += -500.0
+            reward += -1000.0
             terminated = True
 
         if self.goal:
             reward += 1000.0
             terminated = True
 
+        if terminated == True:
+            self.TCPClient.client_socket.close()
 
-        self.vehicle_position = np.array(
-            [self.vehicle.x, self.vehicle.y], dtype=np.float32)
-        self.vehicle_speed_yawangle = np.array(
-            [self.vehicle.velocity,
-             self.vehicle.yaw_angle/math.pi], dtype=np.float32)
+
+        self.vehicle_speed = np.array(
+            [self.vehicle.velocity], dtype=np.float32)
+        self.vehicle_yawangle = np.array(
+            [self.vehicle.yaw_angle/math.pi], dtype=np.float32)
         self.relative_position_2_danger = np.array(
             [self.vehicle.x - self.signal_stop.danger_x, self.vehicle.y - self.signal_stop.danger_y], dtype=np.float32)
-        self.first_other_vehicle_position = np.array(
-            [self.first_other_vehicle.x, self.first_other_vehicle.y], dtype=np.float32)
         self.first_other_vehicle_relative_position = np.array(
             [self.vehicle.x-self.first_other_vehicle.x, self.vehicle.y-self.first_other_vehicle.y], dtype=np.float32)
         self.first_other_vehicle_speed = np.array([self.first_other_vehicle.velocity], dtype=np.float32)
-        self.second_other_vehicle_position = np.array(
-            [self.second_other_vehicle.x, self.second_other_vehicle.y], dtype=np.float32)
         self.second_other_vehicle_relative_position = np.array(
             [self.vehicle.x - self.second_other_vehicle.x, self.vehicle.y - self.second_other_vehicle.y], dtype=np.float32)
         self.second_other_vehicle_speed = np.array([self.second_other_vehicle.velocity], dtype=np.float32)
@@ -845,35 +794,37 @@ class envCube(gym.Env):
         # self.signal_stop_position = np.array([self.signal_stop.x, self.signal_stop.y], dtype=np.int32)
         # self.signal_stop_state = np.array([phase, countdown], dtype=np.int32)
 
-        print(self.episode_step, ':', 'Action:', action, ';',
-              'Position:', self.vehicle_position, ';', 'Speed and YawAngle:', self.vehicle_speed_yawangle, ';',
+        print('episode_step:', self.episode_step, ':', 'Action:', action, ';',
+              'Position:', self.vehicle.x, self.vehicle.y, ';',
+              'first_other_vehicle:', self.first_other_vehicle.x, self.first_other_vehicle.y, ';'
+              'second_other_vehicle:', self.second_other_vehicle.x, self.second_other_vehicle.y, ';'
+              # 'Speed:', self.vehicle_speed, ';', 'YawAngle:', self.vehicle_yawangle, ';',
               # 'Relative_distance_to_goal:', self.relative_distance_to_goal, ';',
               # 'vehicle_state:', self.vehicle.state, ';',
+              # 'intersection_steering_choice:', self.vehicle.intersection_steering_choice,
+              # 'track_judgment:', self.vehicle_track.judgment_str,
               # 'Judgement_in_road:', self.JUDGEMENT_IN_ROAD, ';',
               # 'Distance_to_off_road:', self.vehicle.distance_to_off_road, ';',
               # 'Distance_to_mid_lane_line', self.vehicle.distance_to_mid_lane_line, ';',
               # 'Polar_radius:', self.vehicle.polar_radius, ';',
               # 'Polar_angle:', self.vehicle.polar_angle, ';'
-              # 'reward:', reward
+              'reward:', reward
               )
         # if reward < -100 or reward > 100:
         #   print(reward)
 
         self.state: dict = (
             {
-                'agent_position': self.vehicle_position,
-                'agent_speed_yawangle': self.vehicle_speed_yawangle,
+                'agent_speed': self.vehicle_speed,
+                'agent_yawangle': self.vehicle_yawangle,
                 'relative_position_2_danger': self.relative_position_2_danger,
-                'first_other_vehicle_position': self.first_other_vehicle_position,
                 'first_other_vehicle_relative_position': self.first_other_vehicle_relative_position,
                 'first_other_vehicle_speed': self.first_other_vehicle_speed,
-                'second_other_vehicle_position': self.second_other_vehicle_position,
                 'second_other_vehicle_relative_position': self.second_other_vehicle_relative_position,
                 'second_other_vehicle_speed': self.second_other_vehicle_speed,
                 'relative_distance_2_goal': self.relative_distance_to_goal,
                 'judgement_in_road': self.JUDGEMENT_IN_ROAD,
-                # 'distance_2_mid_lane_line': self.distance_to_mid_lane_line,
-                # 'risk_off_road': self.Time_to_off_road,
+                'distance_2_mid_lane_line': self.distance_to_mid_lane_line,
                 'distance_2_nearest_off_road': self.vehicle.distance_to_off_road,
                 'bird_eye_view_gray_image': self.image_map_observation.separate_map,
                 # 'stop_line_position': self.signal_stop_position,
@@ -897,20 +848,36 @@ class envCube(gym.Env):
         self.rectangle_list_crash_area = Rectangle_List_Crash_Area()
         self.image_map_observation = Image_Map_Observation()
 
-        self.vehicle_position = np.array(
-            [self.vehicle.x, self.vehicle.y], dtype=np.float32)
-        self.vehicle_speed_yawangle = np.array(
-            [self.vehicle.velocity,
-             self.vehicle.yaw_angle/math.pi], dtype=np.float32)
+        data = {
+            'TickId': 0,
+            'X': self.vehicle.x/SCALE,
+            'Y': self.vehicle.y/SCALE,
+            'YawAngle': self.vehicle.yaw_angle
+        }
+        self.TCPClient.send_data(self.TCPClient.client_socket, data)
+        self.TCPClient.receive_data(self.TCPClient.client_socket)
+
+        if self.TCPClient.Remotes:
+            # print(TCPClient.RV1['X'])
+            self.first_other_vehicle.x = self.TCPClient.Remotes[0]['X'] * SCALE
+            self.first_other_vehicle.y = self.TCPClient.Remotes[0]['Y'] * SCALE
+            self.first_other_vehicle.yaw_angle = self.TCPClient.Remotes[0]['YawAngle']
+            self.first_other_vehicle.velocity = self.TCPClient.Remotes[0]['Speed'] * SCALE
+
+            self.second_other_vehicle.x = self.TCPClient.Remotes[1]['X'] * SCALE
+            self.second_other_vehicle.y = self.TCPClient.Remotes[1]['Y'] * SCALE
+            self.second_other_vehicle.yaw_angle = self.TCPClient.Remotes[1]['YawAngle']
+            self.second_other_vehicle.velocity = self.TCPClient.Remotes[1]['Speed'] * SCALE
+
+        self.vehicle_speed = np.array(
+            [self.vehicle.velocity], dtype=np.float32)
+        self.vehicle_yawangle = np.array(
+            [self.vehicle.yaw_angle/math.pi], dtype=np.float32)
         self.relative_position_2_danger = np.array(
             [self.vehicle.x - self.signal_stop.danger_x, self.vehicle.y - self.signal_stop.danger_y], dtype=np.float32)
-        self.first_other_vehicle_position = np.array(
-            [self.first_other_vehicle.x, self.first_other_vehicle.y], dtype=np.float32)
         self.first_other_vehicle_relative_position = np.array(
             [self.vehicle.x - self.first_other_vehicle.x, self.vehicle.y - self.first_other_vehicle.y], dtype=np.float32)
         self.first_other_vehicle_speed = np.array([self.first_other_vehicle.velocity], dtype=np.float32)
-        self.second_other_vehicle_position = np.array(
-            [self.second_other_vehicle.x, self.second_other_vehicle.y], dtype=np.float32)
         self.second_other_vehicle_relative_position = np.array(
             [self.vehicle.x - self.second_other_vehicle.x, self.vehicle.y - self.second_other_vehicle.y], dtype=np.float32)
         self.second_other_vehicle_speed = np.array([self.second_other_vehicle.velocity], dtype=np.float32)
@@ -930,28 +897,30 @@ class envCube(gym.Env):
         self.NEXT_2_IN_ROAD = True
         self.EXCEED_MAX_STEP = False
         self.OCCUPIED_MID_LANE_LINE = False
-        # self.Time_to_off_road = 3
         self.CIRCLE_COUNT = 0
         self.ARRIVE_AT_MID_GOAL = np.zeros((self.mid_goal_front_space_y), dtype=np.int32)
 
         # print(self.episode_step, ':', self.vehicle_position, self.vehicle_state, self.relative_distance_to_goal,
         #       self.JUDGEMENT_IN_ROAD, self.Time_to_off_road, self.vehicle.distance_to_off_road)
 
+        print('episode_step:', self.episode_step, ':',
+              'Position:', self.vehicle.x, self.vehicle.y, ';',
+              'first_other_vehicle:', self.first_other_vehicle.x, self.first_other_vehicle.y, ';',
+              'second_other_vehicle:', self.second_other_vehicle.x, self.second_other_vehicle.y, ';'
+              )
+
         self.state: dict = (
             {
-                'agent_position': self.vehicle_position,
-                'agent_speed_yawangle': self.vehicle_speed_yawangle,
+                'agent_speed': self.vehicle_speed,
+                'agent_yawangle': self.vehicle_yawangle,
                 'relative_position_2_danger': self.relative_position_2_danger,
-                'first_other_vehicle_position': self.first_other_vehicle_position,
                 'first_other_vehicle_relative_position': self.first_other_vehicle_relative_position,
                 'first_other_vehicle_speed': self.first_other_vehicle_speed,
-                'second_other_vehicle_position': self.second_other_vehicle_position,
                 'second_other_vehicle_relative_position': self.second_other_vehicle_relative_position,
                 'second_other_vehicle_speed': self.second_other_vehicle_speed,
                 'relative_distance_2_goal': self.relative_distance_to_goal,
                 'judgement_in_road': self.JUDGEMENT_IN_ROAD,
-                # 'distance_2_mid_lane_line': self.distance_to_mid_lane_line,
-                # 'risk_off_road': self.Time_to_off_road,
+                'distance_2_mid_lane_line': self.distance_to_mid_lane_line,
                 'distance_2_nearest_off_road': self.vehicle.distance_to_off_road,
                 'bird_eye_view_gray_image': self.image_map_observation.separate_map,
                 # 'stop_line_position': self.signal_stop_position,
@@ -970,7 +939,7 @@ class envCube(gym.Env):
         if self.goal or self.EXCEED_MAX_STEP:
             cv2.waitKey(1500)
         else:
-            cv2.waitKey(100)
+            cv2.waitKey(1000)
 
     def get_image(self):
         INT_SIZE = int(round(SIZE, 0))

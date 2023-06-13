@@ -5,12 +5,10 @@ import time
 import ctypes
 import json
 
-# Remotes = []
 class client():
 
+    Remotes = []
     client_socket = None
-    RV1 = None
-    RV2 = None
     # 定义结构体
     class FordRLModelHeader(ctypes.Structure):
         _pack_ = 1
@@ -31,50 +29,49 @@ class client():
         recv_buf_data_len = 0
 
         # while True:
-        l_fdset = select.select([socket_num], [], [], 0)[0]
-        if socket_num in l_fdset:
-            temp_buf = bytearray(1024)
-            recv_count = socket_num.recv_into(temp_buf)
-            print("recv_count:", recv_count)
-            if recv_count > 0:
-                recv_buf[recv_buf_data_len:recv_buf_data_len + recv_count] = temp_buf[:recv_count]
-                recv_buf_data_len += recv_count
+        # l_fdset = select.select([socket_num], [], [], 0)[0]
+        # if socket_num in l_fdset:
+        temp_buf = bytearray(1024)
+        recv_count = socket_num.recv_into(temp_buf)
+        print("recv_count:", recv_count)
+        if recv_count > 0:
+            recv_buf[recv_buf_data_len:recv_buf_data_len + recv_count] = temp_buf[:recv_count]
+            recv_buf_data_len += recv_count
+            header = client.FordRLModelHeader.from_buffer(recv_buf)
+            payload_size = 0
+            if header.type != 3:
+                payload_size = header.payload_size
+
+            while recv_buf_data_len >= (ctypes.sizeof(client.FordRLModelHeader) + payload_size):
                 header = client.FordRLModelHeader.from_buffer(recv_buf)
-                payload_size = 0
                 if header.type != 3:
                     payload_size = header.payload_size
+                else:
+                    payload_size = 0
+                print("cmd:", header.cmd)
+                if header.cmd == 0x10:
+                    print("recv data")
+                    payload_data = recv_buf[
+                                   ctypes.sizeof(client.FordRLModelHeader):ctypes.sizeof(
+                                       client.FordRLModelHeader) + payload_size]
+                    payload_dict = json.loads(payload_data)
+                    # Process the payload data here
+                    print("Received Payload dict:", payload_dict)
+                    for item in payload_dict['RemoteVehicles']:
+                        existing_item = next((r for r in client.Remotes if r['Id'] == item['Id']), None)
+                        if existing_item:
+                            existing_item.update(item)
+                        else:
+                            client.Remotes.append(item)
+                    # print('Remotes:', client.Remotes)
 
-                while recv_buf_data_len >= (ctypes.sizeof(client.FordRLModelHeader) + payload_size):
-                    header = client.FordRLModelHeader.from_buffer(recv_buf)
-                    if header.type != 3:
-                        payload_size = header.payload_size
-                    else:
-                        payload_size = 0
-                    print("cmd:", header.cmd)
-                    if header.cmd == 0x10:
-                        print("recv data")
-                        payload_data = recv_buf[
-                                       ctypes.sizeof(client.FordRLModelHeader):ctypes.sizeof(
-                                           client.FordRLModelHeader) + payload_size]
-                        payload_dict = json.loads(payload_data)
-                        # Process the payload data here
-                        print("Payload dict:", payload_dict)
-                        for item in payload_dict['RemoteVehicles']:
-                            if item['Id'] == 139:
-                                client.RV1 = item
-                            if item['Id'] == 140:
-                                client.RV2 = item
-
-                        print('RV1:', client.RV1)
-                        print('RV2:', client.RV2)
-
-                    recv_buf_data_len -= (ctypes.sizeof(client.FordRLModelHeader) + payload_size)
-                    temp_buf = bytearray(1024)
-                    temp_buf[:recv_buf_data_len] = recv_buf[ctypes.sizeof(client.FordRLModelHeader) +
-                                                            payload_size:recv_buf_data_len +
-                                                                         ctypes.sizeof(
-                                                                             client.FordRLModelHeader) + payload_size]
-                    recv_buf = temp_buf
+                recv_buf_data_len -= (ctypes.sizeof(client.FordRLModelHeader) + payload_size)
+                temp_buf = bytearray(1024)
+                temp_buf[:recv_buf_data_len] = recv_buf[ctypes.sizeof(client.FordRLModelHeader) +
+                                                        payload_size:recv_buf_data_len +
+                                                                     ctypes.sizeof(
+                                                                         client.FordRLModelHeader) + payload_size]
+                recv_buf = temp_buf
 
             # time.sleep(0.5)
 
@@ -120,7 +117,8 @@ class client():
 
         # 发送数据包头部
         socket_num.sendall(header)
-
+        # print
+        print("send data:", payload_json)
         # 发送 payload 数据
         socket_num.sendall(payload_json.encode('utf-8'))
 
