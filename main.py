@@ -68,7 +68,7 @@ print(model.policy)
 # print(model.policy)
 
 
-model = DQN.load("StraightBestModel0606_02/best_model", env=env)
+model = DQN.load("TurnLeftBestModel0609_01/best_model", env=env)
 
 # # Evaluate the agent
 # # NOTE: If you use wrappers with your environment that modify rewards,

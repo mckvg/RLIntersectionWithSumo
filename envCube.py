@@ -355,7 +355,7 @@ class envCube(gym.Env):
         #     reward += 500
 
         # 选择目的地 = intersection_steering_choice：
-        self.vehicle.intersection_steering_choice = 0  # 0: straight; -1: turn left;  1: turn right
+        self.vehicle.intersection_steering_choice = -1  # 0: straight; -1: turn left;  1: turn right
         # 根据目的地，限定车辆的行驶范围
         if self.vehicle.intersection_steering_choice == -1:
             if self.vehicle.y > INTERSECTION_HALF_SIZE or self.vehicle.x > INTERSECTION_HALF_SIZE:
@@ -939,7 +939,7 @@ class envCube(gym.Env):
         if self.goal or self.EXCEED_MAX_STEP:
             cv2.waitKey(1500)
         else:
-            cv2.waitKey(1000)
+            cv2.waitKey(100)
 
     def get_image(self):
         INT_SIZE = int(round(SIZE, 0))
