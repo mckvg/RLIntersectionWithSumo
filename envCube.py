@@ -237,11 +237,7 @@ class envCube(gym.Env):
 
         # observation里画出逆行区域
         self.image_map_observation.reverse(self.rectangle_list_reverse.RectangleList)
-        # observation里画出智能体范围
-        self.image_map_observation.agent(self.vehicle.max_vertex_x, self.vehicle.min_vertex_x,
-                                         self.vehicle.max_vertex_y, self.vehicle.min_vertex_y,
-                                         self.vehicle.pre_max_vertex_x, self.vehicle.pre_min_vertex_x,
-                                         self.vehicle.pre_max_vertex_y, self.vehicle.pre_min_vertex_y)
+
         # observation里画出远车范围
         self.image_map_observation.RemoteVehicle(self.first_other_vehicle.max_vertex_x, self.first_other_vehicle.min_vertex_x,
                                          self.first_other_vehicle.max_vertex_y, self.first_other_vehicle.min_vertex_y,
@@ -252,6 +248,13 @@ class envCube(gym.Env):
                                          self.second_other_vehicle.max_vertex_y, self.second_other_vehicle.min_vertex_y,
                                          self.second_other_vehicle.pre_max_vertex_x, self.second_other_vehicle.pre_min_vertex_x,
                                          self.second_other_vehicle.pre_max_vertex_y, self.second_other_vehicle.pre_min_vertex_y)
+
+        # observation里画出智能体范围
+        self.image_map_observation.agent(self.vehicle.max_vertex_x, self.vehicle.min_vertex_x,
+                                         self.vehicle.max_vertex_y, self.vehicle.min_vertex_y,
+                                         self.vehicle.pre_max_vertex_x, self.vehicle.pre_min_vertex_x,
+                                         self.vehicle.pre_max_vertex_y, self.vehicle.pre_min_vertex_y)
+
         # observation画出以主车为中心的灰度图区域
         self.image_map_observation.Separate_Map(self.vehicle.max_vertex_x, self.vehicle.min_vertex_x,
                                                self.vehicle.max_vertex_y, self.vehicle.min_vertex_y)
@@ -326,7 +329,7 @@ class envCube(gym.Env):
         #     reward += 500
 
         # 选择目的地 = intersection_steering_choice：
-        self.vehicle.intersection_steering_choice = 0  # 0: straight; -1: turn left;  1: turn right
+        self.vehicle.intersection_steering_choice = -1  # 0: straight; -1: turn left;  1: turn right
         # 根据目的地，限定车辆的行驶范围
         if self.vehicle.intersection_steering_choice == -1:
             if self.vehicle.y > INTERSECTION_HALF_SIZE or self.vehicle.x > INTERSECTION_HALF_SIZE:
@@ -762,13 +765,15 @@ class envCube(gym.Env):
         # self.signal_stop_position = np.array([self.signal_stop.x, self.signal_stop.y], dtype=np.int32)
         # self.signal_stop_state = np.array([phase, countdown], dtype=np.int32)
 
-        # print(self.episode_step, ':', 'Action:', action, ';',
+        # print('episode_step:', self.episode_step, ':', 'Action:', action, ';',
         #       'Position:', self.vehicle.x, self.vehicle.y, ';',
-        #       'Speed:', self.vehicle_speed, ';', 'YawAngle:', self.vehicle_yawangle, ';',
-        #       'Relative_distance_to_goal:', self.relative_distance_to_goal, ';',
-        #       'vehicle_state:', self.vehicle.state, ';',
-        #       'intersection_steering_choice:', self.vehicle.intersection_steering_choice,
-        #       'track_judgment:', self.vehicle_track.judgment_str,
+        #       'first_other_vehicle:', self.first_other_vehicle.x, self.first_other_vehicle.y, ';',
+        #       'second_other_vehicle:', self.second_other_vehicle.x, self.second_other_vehicle.y, ';'
+        #       # 'Speed:', self.vehicle_speed, ';', 'YawAngle:', self.vehicle_yawangle, ';',
+        #       # 'Relative_distance_to_goal:', self.relative_distance_to_goal, ';',
+        #       # 'vehicle_state:', self.vehicle.state, ';',
+        #       # 'intersection_steering_choice:', self.vehicle.intersection_steering_choice,
+        #       # 'track_judgment:', self.vehicle_track.judgment_str,
         #       # 'Judgement_in_road:', self.JUDGEMENT_IN_ROAD, ';',
         #       # 'Distance_to_off_road:', self.vehicle.distance_to_off_road, ';',
         #       # 'Distance_to_mid_lane_line', self.vehicle.distance_to_mid_lane_line, ';',
@@ -776,8 +781,8 @@ class envCube(gym.Env):
         #       # 'Polar_angle:', self.vehicle.polar_angle, ';'
         #       'reward:', reward
         #       )
-        if reward < -100 or reward > 100:
-          print(reward)
+        # if reward < -100 or reward > 100:
+        #   print(reward)
 
         self.state: dict = (
             {
@@ -858,6 +863,12 @@ class envCube(gym.Env):
 
         # print(self.episode_step, ':', self.vehicle_position, self.vehicle_state, self.relative_distance_to_goal,
         #       self.JUDGEMENT_IN_ROAD, self.Time_to_off_road, self.vehicle.distance_to_off_road)
+
+        # print('episode_step:', self.episode_step, ':',
+        #       'Position:', self.vehicle.x, self.vehicle.y, ';',
+        #       'first_other_vehicle:', self.first_other_vehicle.x, self.first_other_vehicle.y, ';',
+        #       'second_other_vehicle:', self.second_other_vehicle.x, self.second_other_vehicle.y, ';'
+        #       )
 
         self.state: dict = (
             {

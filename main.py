@@ -43,31 +43,31 @@ model = DQN(
 )
 print(model.policy)
 
-# Callback
-eval_callback = EvalCallback(env, best_model_save_path="./logs/BestModel0606_01/",
-                             log_path="./logs/BestModel0606_01/", eval_freq=500,
-                             deterministic=True, render=False)
-
-# Train the agent and display a progress bar
-model.learn(
-    total_timesteps=int(3e6),
-    tb_log_name='Sumo_pattern2_turn_left_DQN_alpha_5e-3_3M_call_0606_01',
-    callback=eval_callback
-)
-
-# Save the agent
-model.save("Sumo_pattern2_turn_left_DQN_alpha_5e-3_3M_call_0606_01")
-del model  # delete trained model to demonstrate loading
+# # Callback
+# eval_callback = EvalCallback(env, best_model_save_path="./logs/BestModel0609_01/",
+#                              log_path="./logs/BestModel0609_01/", eval_freq=500,
+#                              deterministic=True, render=False)
 #
+# # Train the agent and display a progress bar
+# model.learn(
+#     total_timesteps=int(6e6),
+#     tb_log_name='Sumo_pattern2_turn_left_DQN_alpha_5e-3_6M_call_0609_01',
+#     callback=eval_callback
+# )
+#
+# # Save the agent
+# model.save("Sumo_pattern2_turn_left_DQN_alpha_5e-3_6M_call_0609_01")
+# del model  # delete trained model to demonstrate loading
+
 # Load the trained agent
 # NOTE: if you have loading issue, you can pass `print_system_info=True`
 # to compare the system on which the model was trained vs the current one
-model = DQN.load("Sumo_pattern2_turn_left_DQN_alpha_5e-3_3M_call_0606_01", env=env)
-
+# model = DQN.load("Sumo_pattern2_turn_left_DQN_alpha_5e-3_6M_call_0609_01", env=env)
+#
 # print(model.policy)
 
 
-# model = DQN.load("./logs/BestModel0605_02/best_model", env=env)
+model = DQN.load("./logs/BestModel0609_01/best_model", env=env)
 
 # # Evaluate the agent
 # # NOTE: If you use wrappers with your environment that modify rewards,
