@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on 2023-06-19 15:30:21 by Eclipse SUMO GUI Version 1.17.0
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+
+    <input>
+        <net-file value="D:/pythonSumoRL/SumoRL/RLmapsumo.net.xml"/>
+        <route-files value="D:/pythonSumoRL/SumoRL/map.rou.xml"/>
+        <additional-files value="D:/pythonSumoRL/SumoRL/RLmapsumo.poly.add.xml"/>
+    </input>
+
+    <output>
+        <tripinfo-output value="D:/pythonSumoRL/SumoRL/tripinfo2_TEST.xml"/>
+    </output>
+
+    <time>
+        <step-length value="1.0"/>
+    </time>
+
+    <processing>
+        <default.speeddev value="100"/>
+    </processing>
+
+    <report>
+        <duration-log.disable value="true"/>
+        <duration-log.statistics value="true"/>
+        <no-step-log value="true"/>
+    </report>
+
+    <traci_server>
+        <remote-port value="52982"/>
+    </traci_server>
+
+    <gui_only>
+        <gui-settings-file value="D:/pythonSumoRL/SumoRL/gui-settings.cfg"/>
+    </gui_only>
+
+</configuration>
+-->
+
+<tripinfos xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/tripinfo_file.xsd">
+    <tripinfo id="2" depart="0.00" departLane="-E3_0" departPos="25.00" departSpeed="0.00" departDelay="0.00" arrival="29.00" arrivalLane="E1_0" arrivalPos="113.00" arrivalSpeed="8.00" duration="29.00" routeLength="225.00" waitingTime="0.00" waitingCount="0" stopTime="0.00" timeLoss="2.21" rerouteNo="0" devices="tripinfo_2" vType="CAR" speedFactor="0.62" vaporized=""/>

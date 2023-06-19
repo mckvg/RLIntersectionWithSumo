@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Tue Jun 18 15:40:52 2019 by Eclipse SUMO duarouter Version 1.2.0
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/duarouterConfiguration.xsd">
+
+    <input>
+        <net-file value="map.net.xml"/>
+        <route-files value="trips.trips.xml"/>
+    </input>
+
+    <output>
+        <output-file value="map.rou.xml"/>
+        <alternatives-output value="map.rou.alt.xml"/>
+    </output>
+
+    <time>
+        <begin value="0"/>
+        <end value="2.0"/>
+    </time>
+
+    <report>
+        <no-warnings value="true"/>
+        <ignore-errors value="true"/>
+        <no-step-log value="true"/>
+    </report>
+
+</configuration>
+-->
+
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+    <vType id="CAR" guiShape="passenger" accel="8" decel="8" sigma="0" length="4" minGap="0" maxSpeed="30" speedFactor="1.0"/>
+    
+    <vehicle id="0" type="CAR" depart="0" color="0,1,0">
+        <route edges="-E3"/>
+    </vehicle>
+    <vehicle id="1" type="CAR" depart="0" color="0,0,1">
+        <route edges="-E3 E1"/>
+    </vehicle>
+    <vehicle id="2" type="CAR" depart="0" color="0,0,1">
+        <route edges="-E3 E1"/>
+    </vehicle>
+    
+
+
+</routes>
