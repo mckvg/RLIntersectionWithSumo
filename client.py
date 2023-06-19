@@ -33,7 +33,7 @@ class client():
         # if socket_num in l_fdset:
         temp_buf = bytearray(1024)
         recv_count = socket_num.recv_into(temp_buf)
-        print("recv_count:", recv_count)
+        print("client_recv_count:", recv_count)
         if recv_count > 0:
             recv_buf[recv_buf_data_len:recv_buf_data_len + recv_count] = temp_buf[:recv_count]
             recv_buf_data_len += recv_count
@@ -48,15 +48,14 @@ class client():
                     payload_size = header.payload_size
                 else:
                     payload_size = 0
-                print("cmd:", header.cmd)
+                print("client_recv_cmd:", header.cmd)
                 if header.cmd == 0x10:
-                    print("recv data")
                     payload_data = recv_buf[
                                    ctypes.sizeof(client.FordRLModelHeader):ctypes.sizeof(
                                        client.FordRLModelHeader) + payload_size]
                     payload_dict = json.loads(payload_data)
                     # Process the payload data here
-                    print("Received Payload dict:", payload_dict)
+                    print("Client Received Payload dict:", payload_dict)
                     for item in payload_dict['RemoteVehicles']:
                         existing_item = next((r for r in client.Remotes if r['Id'] == item['Id']), None)
                         if existing_item:
@@ -73,26 +72,10 @@ class client():
                                                                          client.FordRLModelHeader) + payload_size]
                 recv_buf = temp_buf
 
-            # time.sleep(0.5)
 
     # 发送数据函数
     @staticmethod
     def send_data(socket_num, data):
-        # while True:
-        # data = {
-        #     'TickId': CubeData.episode_step,
-        #     'X': CubeData.vehicle.x,
-        #     'Y': CubeData.vehicle.y,
-        #     'YawAngle': CubeData.vehicle.yaw_angle
-        # }
-
-        # # 实例数据
-        # data = {
-        #     'TickId': 0,
-        #     'X': 102.0,
-        #     'Y': 190.9,
-        #     'YawAngle': 30
-        # }
 
         # 将数据转换为JSON格式
         payload = {
@@ -115,14 +98,15 @@ class client():
             payload_size=len(payload_json)
         )
 
-        # 发送数据包头部
-        socket_num.sendall(header)
-        # print
-        print("send data:", payload_json)
-        # 发送 payload 数据
-        socket_num.sendall(payload_json.encode('utf-8'))
+        header_bytes = ctypes.string_at ( ctypes.addressof ( header ), ctypes.sizeof ( header ) )
+        payload_send = payload_json.encode('utf-8')
+        total_data = header_bytes + payload_send
 
-        # time.sleep(1)  # 暂停1秒后再次发送数据
+        # 发送数据
+        socket_num.sendall(total_data)
+
+        # print
+        print("client send data:", payload_json)
 
     # TCP客户端
     @staticmethod
@@ -133,20 +117,3 @@ class client():
         client.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.client_socket.connect(server_address)
         print("Connected to server")
-
-            # while True:
-            #     # 接收数据
-            #     client.receive_data(client_socket)
-            #
-            #     # 发送数据
-            #     client.send_data(client_socket)
-        #
-        # except Exception as e:
-        #     print("Error:", e)
-
-        # finally:
-        #     client_socket.close()
-
-
-# a = client()
-# a.tcp_client()

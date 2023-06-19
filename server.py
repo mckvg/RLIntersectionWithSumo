@@ -2,114 +2,164 @@ import socket
 import struct
 import select
 import time
-import json
 import ctypes
+import json
+from readcsv import *
 
+class Server:
 
-# 定义结构体
-class FordRLModelHeader(ctypes.Structure):
-    _pack_ = 1
-    _fields_ = [
-        ("tag", ctypes.c_uint16),
-        ("type", ctypes.c_uint16),
-        ("cmd", ctypes.c_uint16),
-        ("from_id", ctypes.c_uint16),
-        ("callback_id", ctypes.c_uint32),
-        ("payload_size", ctypes.c_uint32)
-    ]
+    Remotes = []
+    server_socket = None
+    client_sockets = []
+    Step = 0
 
+    # 定义结构体
+    class FordRLModelHeader(ctypes.Structure):
+        _pack_ = 1
+        _fields_ = [
+            ("tag", ctypes.c_uint16),
+            ("type", ctypes.c_uint16),
+            ("cmd", ctypes.c_uint16),
+            ("from_id", ctypes.c_uint16),
+            ("callback_id", ctypes.c_uint32),
+            ("payload_size", ctypes.c_uint32)
+        ]
 
-def recv_message(client_socket):
-    recv_buf = bytearray(2048)
-    temp_buf = bytearray(1024)
-    recv_buf_data_len = 0
-
-    while True:
-        l_fdset = select.select([client_socket], [], [], 0)[0]
-        if client_socket in l_fdset:
-            temp_buf = bytearray(1024)
-            recv_count = client_socket.recv_into(temp_buf)
-            if recv_count > 0:
-                recv_buf[recv_buf_data_len:recv_buf_data_len + recv_count] = temp_buf[:recv_count]
-                recv_buf_data_len += recv_count
-
-                # Process complete messages
-                while True:
-                    # Find the start index of a message
-                    start_index = recv_buf.find(b'\xba\xab')
-                    if start_index == -1:
-                        break
-
-                    # Find the end index of the message
-                    if recv_buf_data_len - start_index < ctypes.sizeof(FordRLModelHeader):
-                        break
-
-                    header_data = recv_buf[start_index:start_index + ctypes.sizeof(FordRLModelHeader)]
-                    header = FordRLModelHeader.from_buffer_copy(header_data)
-                    payload_size = header.payload_size
-
-                    if recv_buf_data_len - start_index < ctypes.sizeof(FordRLModelHeader) + payload_size:
-                        break
-
-                    end_index = start_index + ctypes.sizeof(FordRLModelHeader) + payload_size
-                    message = recv_buf[start_index:end_index]
-                    print("Received message:", message)
-
-                    # Process the received message here
-                    payload_data = recv_buf[start_index + ctypes.sizeof(FordRLModelHeader):end_index]
-                    payload_json = payload_data.decode('utf-8')
-                    payload_dict = json.loads(payload_json)
-                    print("Payload dict:", payload_dict)
-
-                    # Clear the processed message from the buffer
-                    temp_buf = bytearray(1024)
-                    temp_buf[:recv_buf_data_len - end_index] = recv_buf[end_index:recv_buf_data_len]
-                    recv_buf = temp_buf
-                    recv_buf_data_len -= end_index
-
-        time.sleep(0.5)
-
-
-def send_message(client_socket, message):
-    sent_count = client_socket.send(message)
-    print("Sent:", sent_count, "bytes")
-
-
-# TCP server
-def tcp_server():
-    server_address = ('127.0.0.1', 8080)  # Server address and port
-    try:
-        # Create TCP socket
+    @staticmethod
+    def start_server():
+        server_address = ('', 9030)  # 监听所有可用的接口
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_socket.bind(server_address)
-        server_socket.listen(1)  # Listen for client connections
+        server_socket.listen(5)
 
-        print("Waiting for client to connect...")
-        client_socket, client_address = server_socket.accept()
-        print("Client connected:", client_address)
+        print("Server started. Waiting for connections...")
 
         while True:
-            # Receive messages from the client
-            recv_message(client_socket)
+            # 监听可读事件
+            readable, _, _ = select.select([server_socket] + Server.client_sockets, [], [])
 
-            # Send a message to the client
-            message = bytearray.fromhex(
-                "ba ab 00 00 10 00 00 00 00 00 00 00 bd 00 00 00 7b 0a 09 22 52 65 6d 6f 74 65 56 65 68 69 63 6c 65 73 22 3a 09 5b 7b 0a 09 09 09 22 49 64 22 3a 09 31 2c 0a 09 09 09 22 58 22 3a 09 32 2c 0a 09 09 09 22 59 22 3a 09 2d 31 32 30 2c 0a 09 09 09 22 59 61 77 41 6e 67 6c 65 22 3a 09 30 2c 0a 09 09 09 22 53 70 65 65 64 22 3a 09 32 0a 09 09 7d 2c 20 7b 0a 09 09 09 22 49 64 22 3a 09 32 2c 0a 09 09 09 22 58 22 3a 09 31 30 2c 0a 09 09 09 22 59 22 3a 09 31 38 2c 0a 09 09 09 22 59 61 77 41 6e 67 6c 65 22 3a 09 35 30 2c 0a 09 09 09 22 53 70 65 65 64 22 3a 09 34 0a 09 09 7d 5d 2c 0a 09 22 54 69 63 6b 49 64 22 3a 09 32 0a 7d ")
+            for sock in readable:
+                if sock is server_socket:
+                    # 接受新连接
+                    client_socket, client_address = sock.accept()
+                    Server.client_sockets.append(client_socket)
+                    Server.Step = 0
+                    Server.empty_data_count = 0  # 初始化空数据计数器
+                    print("New client connected:", client_address)
+                else:
+                    # 处理已连接客户端发送的数据
+                    received_data = Server.receive_data(sock)
+                    if received_data:
+                        Server.send_data(sock, Server.Step)
+                        Server.Step += 1
+                        Server.empty_data_count = 0  # 重置空数据计数器
+                    else:
+                        #空数据计数器增加
+                        Server.empty_data_count += 1
 
-            if client_socket is not None:
-                send_message(client_socket, message)
+                        if Server.empty_data_count >= 10:
+                            # 容忍达到 10 个连续空数据，断开连接
+                            print ( "Client closed the connection:", sock.getpeername () )
+                            sock.close ()
+                            Server.client_sockets.remove ( sock )
+                            server_socket.close ()
+                            print ( "Server closed" )
 
-            time.sleep(1)  # Control the sending frequency, here it sends once per second
+    @staticmethod
+    def receive_data(client_socket):
+        recv_buf = bytearray(2048)
+        recv_buf_data_len = 0
+        temp_buf = bytearray(1024)
+        recv_count = client_socket.recv_into(temp_buf)
+        print("server_recv_count:", recv_count)
+        if recv_count > 0:
+            recv_buf[recv_buf_data_len:recv_buf_data_len + recv_count] = temp_buf[:recv_count]
+            recv_buf_data_len += recv_count
+            header = Server.FordRLModelHeader.from_buffer(recv_buf)
+            payload_size = 0
+            if header.type != 3:
+                payload_size = header.payload_size
+            print('header.type:',header.type)
+            print('payload_size:',payload_size)
 
-    except Exception as e:
-        print("Error:", e)
+            while recv_buf_data_len >= (ctypes.sizeof(Server.FordRLModelHeader) + payload_size):
+                header = Server.FordRLModelHeader.from_buffer(recv_buf)
+                if header.type != 3:
+                    payload_size = header.payload_size
+                else:
+                    payload_size = 0
+                print("server_recv_cmd:", header.cmd)
+                if header.cmd == 0x20:
+                    payload_data = recv_buf[
+                                   ctypes.sizeof(Server.FordRLModelHeader):ctypes.sizeof(
+                                       Server.FordRLModelHeader) + payload_size]
+                    payload_dict = json.loads(payload_data)
+                    # Process the payload data here
+                    print("Server Received Payload dict:", payload_dict)
+                    print(int(payload_dict['TickId']))
 
-    finally:
-        if client_socket is not None:
-            client_socket.close()
-        server_socket.close()
+                recv_buf_data_len -= (ctypes.sizeof(Server.FordRLModelHeader) + payload_size)
+                temp_buf = bytearray(1024)
+                temp_buf[:recv_buf_data_len] = recv_buf[ctypes.sizeof(Server.FordRLModelHeader) +
+                                                        payload_size:recv_buf_data_len +
+                                                        ctypes.sizeof(Server.FordRLModelHeader) + payload_size]
+                recv_buf = temp_buf
+
+                print("recv_buf_data_len:", recv_buf_data_len)
+                return True
 
 
-# Run TCP server
-tcp_server()
+    @staticmethod
+    def send_data(client_socket, TickId):
+
+        RV_data = float_csv_data[TickId]
+
+        data = {
+                    "TickId": int(RV_data[0]),
+                    "RemoteVehicles": [{
+                            "Id": int(RV_data[1]),
+                            "X": RV_data[2],
+                            "Y": RV_data[3],
+                            "YawAngle": RV_data[4],
+                            "Speed": RV_data[5]
+                        },
+                        {
+                            "Id": int(RV_data[6]),
+                            "X": RV_data[7],
+                            "Y": RV_data[8],
+                            "YawAngle": RV_data[9],
+                            "Speed": RV_data[10]
+                        }
+                    ]
+                }
+
+        payload_json = json.dumps(data)
+
+        header = Server.FordRLModelHeader(
+            tag=0xabba,
+            type=0,
+            cmd=0x10,
+            from_id=0,
+            callback_id=0,
+            payload_size=len(payload_json)
+        )
+
+        header_bytes = ctypes.string_at ( ctypes.addressof ( header ), ctypes.sizeof ( header ) )
+        payload_send = payload_json.encode('utf-8')
+        total_data = header_bytes + payload_send
+
+        # 发送数据
+        client_socket.sendall(total_data)
+
+        # print
+        print("server send data:", payload_json)
+
+
+# 启动服务器
+Server.start_server()
+
+
+
+
+
 

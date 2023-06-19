@@ -220,8 +220,16 @@ class envCube(gym.Env):
             'Y': self.vehicle.y / SCALE,
             'YawAngle': self.vehicle.yaw_angle
         }
+        # while True:
+        #     step = 0
+        #     self.TCPClient.send_data (self.TCPClient.client_socket,data)
+        #     self.TCPClient.receive_data ( self.TCPClient.client_socket )
+        #     if step >= 3:
+        #         break
+        #     # 等待一段时间后继续循环
+        #     step += 1
+        #     time.sleep(1)
         self.TCPClient.send_data(self.TCPClient.client_socket, data)
-
         self.TCPClient.receive_data(self.TCPClient.client_socket)
         if self.TCPClient.Remotes:
             # print(TCPClient.RV1['X'])
@@ -774,6 +782,7 @@ class envCube(gym.Env):
 
         if terminated == True:
             self.TCPClient.client_socket.close()
+            print("client closed")
 
 
         self.vehicle_speed = np.array(
@@ -848,15 +857,26 @@ class envCube(gym.Env):
         self.rectangle_list_crash_area = Rectangle_List_Crash_Area()
         self.image_map_observation = Image_Map_Observation()
 
+        print('reset')
+
         data = {
             'TickId': 0,
             'X': self.vehicle.x/SCALE,
             'Y': self.vehicle.y/SCALE,
             'YawAngle': self.vehicle.yaw_angle
         }
-        self.TCPClient.send_data(self.TCPClient.client_socket, data)
-        self.TCPClient.receive_data(self.TCPClient.client_socket)
+        # while True:
+        #     step = 0
+        #     self.TCPClient.send_data ( self.TCPClient.client_socket, data )
+        #     self.TCPClient.receive_data ( self.TCPClient.client_socket )
+        #     if step >= 3:
+        #         break
+        #     # 等待一段时间后继续循环
+        #     step += 1
+        #     time.sleep(1)
 
+        self.TCPClient.send_data(self.TCPClient.client_socket, data)
+        self.TCPClient.receive_data ( self.TCPClient.client_socket)
         if self.TCPClient.Remotes:
             # print(TCPClient.RV1['X'])
             self.first_other_vehicle.x = self.TCPClient.Remotes[0]['X'] * SCALE

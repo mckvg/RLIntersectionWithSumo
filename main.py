@@ -101,7 +101,6 @@ for ep in range(eposides):
     obs = env.reset()
     done = False
     rewards = 0
-    # step = 0
     # TCPClient.tcp_client()
     # data = {
     #     'TickId': env.episode_step,
@@ -123,20 +122,10 @@ for ep in range(eposides):
         env.render()
         rewards += reward
 
-        # env.first_other_vehicle.pre_x = TCPClient.Remotes[0]['X'] * SCALE
-        # env.first_other_vehicle.pre_y = TCPClient.Remotes[0]['Y'] * SCALE
-        # env.first_other_vehicle.pre_yaw_angle = TCPClient.Remotes[0]['YawAngle']
-        #
-        # env.second_other_vehicle.pre_x = TCPClient.Remotes[1]['X'] * SCALE
-        # env.second_other_vehicle.pre_y = TCPClient.Remotes[1]['Y'] * SCALE
-        # env.second_other_vehicle.pre_yaw_angle = TCPClient.Remotes[1]['YawAngle']
-
-
         # if reward < -100 or reward > 100:
         #   print(reward)
 
     # TCPClient.client_socket.close()
     print(rewards)
-    # print(step)
 
     # tensorboard --logdir ./logs
