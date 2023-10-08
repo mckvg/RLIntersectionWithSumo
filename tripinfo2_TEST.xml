@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on 2023-06-19 15:30:21 by Eclipse SUMO GUI Version 1.17.0
+<!-- generated on 2023-10-08 15:23:29 by Eclipse SUMO GUI Version 1.16.0
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
 
     <input>
-        <net-file value="D:/pythonSumoRL/SumoRL/RLmapsumo.net.xml"/>
-        <route-files value="D:/pythonSumoRL/SumoRL/map.rou.xml"/>
-        <additional-files value="D:/pythonSumoRL/SumoRL/RLmapsumo.poly.add.xml"/>
+        <net-file value="C:/Users/T470/PycharmProjects/pythonSumoRL/RLIntersectionWithSumo/RLmapsumoTL.net.xml"/>
+        <route-files value="C:/Users/T470/PycharmProjects/pythonSumoRL/RLIntersectionWithSumo/map.rou.xml"/>
+        <additional-files value="C:/Users/T470/PycharmProjects/pythonSumoRL/RLIntersectionWithSumo/RLmapsumo.poly.add.xml"/>
     </input>
 
     <output>
-        <tripinfo-output value="D:/pythonSumoRL/SumoRL/tripinfo2_TEST.xml"/>
+        <tripinfo-output value="C:/Users/T470/PycharmProjects/pythonSumoRL/RLIntersectionWithSumo/tripinfo2_TEST.xml"/>
     </output>
 
     <time>
@@ -28,15 +28,19 @@
     </report>
 
     <traci_server>
-        <remote-port value="52982"/>
+        <remote-port value="59025"/>
     </traci_server>
 
     <gui_only>
-        <gui-settings-file value="D:/pythonSumoRL/SumoRL/gui-settings.cfg"/>
+        <gui-settings-file value="C:/Users/T470/PycharmProjects/pythonSumoRL/RLIntersectionWithSumo/gui-settings.cfg"/>
     </gui_only>
 
 </configuration>
 -->
 
 <tripinfos xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/tripinfo_file.xsd">
+    <tripinfo id="4" depart="0.00" departLane="-E2_1" departPos="71.00" departSpeed="0.00" departDelay="0.00" arrival="23.00" arrivalLane="E0_1" arrivalPos="113.00" arrivalSpeed="8.00" duration="23.00" routeLength="179.00" waitingTime="0.00" waitingCount="0" stopTime="0.00" timeLoss="12.88" rerouteNo="0" devices="tripinfo_4" vType="CAR" speedFactor="1.31" vaporized=""/>
+    <tripinfo id="7" depart="0.00" departLane="-E1_1" departPos="95.00" departSpeed="0.00" departDelay="0.00" arrival="26.00" arrivalLane="E3_1" arrivalPos="113.00" arrivalSpeed="8.00" duration="26.00" routeLength="155.00" waitingTime="5.00" waitingCount="1" stopTime="0.00" timeLoss="20.00" rerouteNo="0" devices="tripinfo_7" vType="CAR" speedFactor="1.93" vaporized=""/>
+    <tripinfo id="3" depart="0.00" departLane="-E0_1" departPos="85.00" departSpeed="0.00" departDelay="0.00" arrival="28.00" arrivalLane="E2_0" arrivalPos="113.00" arrivalSpeed="6.00" duration="28.00" routeLength="165.00" waitingTime="0.00" waitingCount="0" stopTime="0.00" timeLoss="15.49" rerouteNo="0" devices="tripinfo_3" vType="CAR" speedFactor="0.97" vaporized=""/>
     <tripinfo id="2" depart="0.00" departLane="-E3_0" departPos="25.00" departSpeed="0.00" departDelay="0.00" arrival="29.00" arrivalLane="E1_0" arrivalPos="113.00" arrivalSpeed="8.00" duration="29.00" routeLength="225.00" waitingTime="0.00" waitingCount="0" stopTime="0.00" timeLoss="2.21" rerouteNo="0" devices="tripinfo_2" vType="CAR" speedFactor="0.62" vaporized=""/>
+    <tripinfo id="8" depart="0.00" departLane="-E1_0" departPos="65.00" departSpeed="0.00" departDelay="0.00" arrival="37.00" arrivalLane="E3_0" arrivalPos="113.00" arrivalSpeed="5.04" duration="37.00" routeLength="185.00" waitingTime="0.00" waitingCount="0" stopTime="0.00" timeLoss="0.00" rerouteNo="0" devices="tripinfo_8" vType="CAR" speedFactor="0.36" vaporized=""/>

@@ -18,8 +18,8 @@ import json
 
 # -----引入地址------
 sumo_path = "D:/Sumo"
-project_path = "D:/pythonSumoRL/SumoRL"
-cfg_path = "D:/pythonSumoRL/SumoRL/sumo.cfg"
+project_path = "C:/Users/T470/PycharmProjects/pythonSumoRL/RLIntersectionWithSumo"
+cfg_path = "C:/Users/T470/PycharmProjects/pythonSumoRL/RLIntersectionWithSumo/sumo.cfg"
 # ----------------------------------------#
 
 # ---------------------#
@@ -154,6 +154,15 @@ def run(step):
     vehicle_id0 = '0'
     vehicle_id1 = '1'
     vehicle_id2 = '2'
+    vehicle_id3 = '3'
+    vehicle_id4 = '4'
+    vehicle_id5 = '5'
+    vehicle_id6 = '6'
+    vehicle_id7 = '7'
+    vehicle_id8 = '8'
+    vehicle_id9 = '9'
+    vehicle_id10 = '10'
+
     # 匹配RL与SUMO的主车的航向角
     Server.Remotes[0]['YawAngle'] = 180/math.pi*Server.Remotes[0]['YawAngle']
     if Server.Remotes[0]['YawAngle'] < 0:
@@ -162,11 +171,33 @@ def run(step):
     traci.vehicle.moveToXY('0', '-E3', '1', x=Server.Remotes[0]['X'], y=Server.Remotes[0]['Y'],
                            angle=Server.Remotes[0]['YawAngle'], keepRoute=2)
     # SUMO中远车的初始位置及状态的设置
+    traci.vehicle.moveToXY('10', '-E3', 1, 2, -24, 0)  # 停止的车辆与主车同道
     if step == 0:
+        # 运动车辆与主车同方向
         traci.vehicle.moveToXY('1', '-E3', 0, 6, -115, 0)
         traci.vehicle.moveToXY('2', '-E3', 0, 6, -100, 0)
-        traci.vehicle.setSpeed ( vehicle_id1, 2 )
-        traci.vehicle.setSpeed ( vehicle_id2, 8 )
+        # 运动车辆与主车方向垂直
+        traci.vehicle.moveToXY('3', '-E0', 1, 40, 2, -90)
+        traci.vehicle.moveToXY('4', '-E2', 1, -54, -2, 90)
+        traci.vehicle.moveToXY('5', '-E0', 0, 80, 6, -90)
+        traci.vehicle.moveToXY('6', '-E2', 0, -100, -6, 90)
+        # 运动车辆与主车方向相反
+        traci.vehicle.moveToXY('7', '-E1', 1, -2, 30, 180)
+        traci.vehicle.moveToXY('8', '-E1', 0, -6, 60, 180)
+        traci.vehicle.moveToXY('9', '-E1', 0, -6, 106, 180)
+        # 设置速度：运动车辆与主车同方向
+        traci.vehicle.setSpeed(vehicle_id1, 2)
+        traci.vehicle.setSpeed(vehicle_id2, 8)
+        # 设置速度：运动车辆与主车方向垂直
+        traci.vehicle.setSpeed(vehicle_id3, 6)
+        traci.vehicle.setSpeed(vehicle_id4, 8)
+        traci.vehicle.setSpeed(vehicle_id5, 6)
+        traci.vehicle.setSpeed(vehicle_id6, 8)
+        # 设置速度：运动车辆与主车方向相反
+        traci.vehicle.setSpeed(vehicle_id7, 8)
+        traci.vehicle.setSpeed(vehicle_id8, 8)
+        traci.vehicle.setSpeed(vehicle_id9, 4)
+
     # SUMO中模拟一步
     traci.simulationStep()
     # SUMO中更新远车位置
