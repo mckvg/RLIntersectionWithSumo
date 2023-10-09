@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on 2023-10-08 15:23:29 by Eclipse SUMO GUI Version 1.16.0
+<!-- generated on 2023-10-09 13:16:16 by Eclipse SUMO GUI Version 1.18.0
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
 
     <input>
-        <net-file value="C:/Users/T470/PycharmProjects/pythonSumoRL/RLIntersectionWithSumo/RLmapsumoTL.net.xml"/>
-        <route-files value="C:/Users/T470/PycharmProjects/pythonSumoRL/RLIntersectionWithSumo/map.rou.xml"/>
-        <additional-files value="C:/Users/T470/PycharmProjects/pythonSumoRL/RLIntersectionWithSumo/RLmapsumo.poly.add.xml"/>
+        <net-file value="E:/SumoRLTL/RLIntersectionWithSumo/RLmapsumoTL.net.xml"/>
+        <route-files value="E:/SumoRLTL/RLIntersectionWithSumo/map.rou.xml"/>
+        <additional-files value="E:/SumoRLTL/RLIntersectionWithSumo/RLmapsumo.poly.add.xml"/>
     </input>
 
     <output>
-        <tripinfo-output value="C:/Users/T470/PycharmProjects/pythonSumoRL/RLIntersectionWithSumo/tripinfo2_TEST.xml"/>
+        <tripinfo-output value="E:/SumoRLTL/RLIntersectionWithSumo/tripinfo2_TEST.xml"/>
     </output>
 
     <time>
@@ -28,11 +28,11 @@
     </report>
 
     <traci_server>
-        <remote-port value="59025"/>
+        <remote-port value="58247"/>
     </traci_server>
 
     <gui_only>
-        <gui-settings-file value="C:/Users/T470/PycharmProjects/pythonSumoRL/RLIntersectionWithSumo/gui-settings.cfg"/>
+        <gui-settings-file value="E:/SumoRLTL/RLIntersectionWithSumo/gui-settings.cfg"/>
     </gui_only>
 
 </configuration>

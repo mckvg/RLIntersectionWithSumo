@@ -18,8 +18,8 @@ import json
 
 # -----引入地址------
 sumo_path = "D:/Sumo"
-project_path = "C:/Users/T470/PycharmProjects/pythonSumoRL/RLIntersectionWithSumo"
-cfg_path = "C:/Users/T470/PycharmProjects/pythonSumoRL/RLIntersectionWithSumo/sumo.cfg"
+project_path = "E:/SumoRLTL/RLIntersectionWithSumo"
+cfg_path = "E:/SumoRLTL/RLIntersectionWithSumo/sumo.cfg"
 # ----------------------------------------#
 
 # ---------------------#
