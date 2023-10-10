@@ -1,0 +1,62 @@
+{
+  "MessageFrame": {
+    "present": 1,
+    "bsmFrame": {
+      "msgCnt": 2,
+      "id": "octet_string:7630303030303837",
+      "secMark": 48738,
+      "timeConfidence": 6,
+      "pos": {
+        "lat": 609,
+        "long": 10328,
+        "elevation": 0
+      },
+      "posAccuracy": {
+        "semiMajor": 0,
+        "semiMinor": 0,
+        "orientation": 0
+      },
+      "posConfidence": {
+        "pos": 10,
+        "elevation": 6
+      },
+      "transmission": 7,
+      "speed": 0,
+      "heading": 22054,
+      "angle": 0,
+      "motionCfd": {
+        "speedCfd": 0,
+        "headingCfd": 0,
+        "steerCfd": 0
+      },
+      "accelSet": {
+        "long": 0,
+        "lat": 0,
+        "vert": 0,
+        "yaw": 0
+      },
+      "brakes": {
+        "brakePadel": 0,
+        "wheelBrakes": "bit_string:00000",
+        "traction": 0,
+        "abs": 0,
+        "scs": 0,
+        "brakeBoost": 0,
+        "auxBrakes": 0
+      },
+      "size": {
+        "width": 183,
+        "length": 489,
+        "height": 29
+      },
+      "vehicleClass": {
+        "classification": 10,
+        "fuelType": 0
+      },
+      "safetyExt": {
+        "events": "bit_string:0000000000000",
+        "lights": "bit_string:000000000"
+      }
+    }
+  }
+}

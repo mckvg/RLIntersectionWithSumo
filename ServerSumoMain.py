@@ -18,8 +18,10 @@ import json
 
 # -----引入地址------
 sumo_path = "D:/Sumo"
-project_path = "E:/SumoRLTL/RLIntersectionWithSumo"
-cfg_path = "E:/SumoRLTL/RLIntersectionWithSumo/sumo.cfg"
+# project_path = "E:/SumoRLTL/RLIntersectionWithSumo"
+# cfg_path = "E:/SumoRLTL/RLIntersectionWithSumo/sumo.cfg"
+project_path = "D:\ISO及智能车连文件\V2X复杂路口多车轨迹预测及主车驾驶规控利用HIL+RL+Sumo\SumoShowRLTL\RLIntersectionWithSumo"
+cfg_path = "D:\ISO及智能车连文件\V2X复杂路口多车轨迹预测及主车驾驶规控利用HIL+RL+Sumo\SumoShowRLTL\RLIntersectionWithSumo\sumo.cfg"
 # ----------------------------------------#
 
 # ---------------------#

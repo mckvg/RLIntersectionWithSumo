@@ -1,0 +1,41 @@
+{
+  "MessageFrame": {
+    "present": 5,
+    "rsiFrame": {
+      "msgCnt": 1,
+      "moy": 406620,
+      "id": "octet_string:7273692d30303031",
+      "refPos": {
+        "lat": 312836660,
+        "long": 1216307520,
+        "elevation": 0
+      },
+      "rtes": [
+        {
+          "rteId": 1,
+          "eventType": 202,
+          "eventSource": 5,
+          "eventPos": {
+            "offsetLL": {
+              "present": 1,
+              "position-LL1": {
+                "lon": 0,
+                "lat": 0
+              }
+            },
+            "offsetV": {
+              "present": 7,
+              "elevation": 0
+            }
+          },
+          "eventRadius": 300,
+          "description": {
+            "present": 1,
+            "textString": "ia5_string:536c6f77547261666669634168656164"
+          },
+          "priority": "octet_string:30"
+        }
+      ]
+    }
+  }
+}

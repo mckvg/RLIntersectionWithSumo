@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on 2023-10-09 13:16:16 by Eclipse SUMO GUI Version 1.18.0
+<!-- generated on 2023-10-10 13:32:21 by Eclipse SUMO GUI Version 1.16.0
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
 
     <input>
-        <net-file value="E:/SumoRLTL/RLIntersectionWithSumo/RLmapsumoTL.net.xml"/>
-        <route-files value="E:/SumoRLTL/RLIntersectionWithSumo/map.rou.xml"/>
-        <additional-files value="E:/SumoRLTL/RLIntersectionWithSumo/RLmapsumo.poly.add.xml"/>
+        <net-file value="D:\ISO及智能车连文件\V2X复杂路口多车轨迹预测及主车驾驶规控利用HIL+RL+Sumo\SumoShowRLTL\RLIntersectionWithSumo\RLmapsumoTL.net.xml"/>
+        <route-files value="D:\ISO及智能车连文件\V2X复杂路口多车轨迹预测及主车驾驶规控利用HIL+RL+Sumo\SumoShowRLTL\RLIntersectionWithSumo\map.rou.xml"/>
+        <additional-files value="D:\ISO及智能车连文件\V2X复杂路口多车轨迹预测及主车驾驶规控利用HIL+RL+Sumo\SumoShowRLTL\RLIntersectionWithSumo\RLmapsumo.poly.add.xml"/>
     </input>
 
     <output>
-        <tripinfo-output value="E:/SumoRLTL/RLIntersectionWithSumo/tripinfo2_TEST.xml"/>
+        <tripinfo-output value="D:\ISO及智能车连文件\V2X复杂路口多车轨迹预测及主车驾驶规控利用HIL+RL+Sumo\SumoShowRLTL\RLIntersectionWithSumo/tripinfo2_TEST.xml"/>
     </output>
 
     <time>
@@ -28,11 +28,11 @@
     </report>
 
     <traci_server>
-        <remote-port value="58247"/>
+        <remote-port value="42475"/>
     </traci_server>
 
     <gui_only>
-        <gui-settings-file value="E:/SumoRLTL/RLIntersectionWithSumo/gui-settings.cfg"/>
+        <gui-settings-file value="D:\ISO及智能车连文件\V2X复杂路口多车轨迹预测及主车驾驶规控利用HIL+RL+Sumo\SumoShowRLTL\RLIntersectionWithSumo\gui-settings.cfg"/>
     </gui_only>
 
 </configuration>
