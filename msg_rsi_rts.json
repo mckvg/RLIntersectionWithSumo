@@ -1,51 +1,85 @@
 {
-  "MessageFrame": {
-    "present": 5,
-    "rsiFrame": {
-      "msgCnt": 2,
-      "moy": 406619,
-      "id": "octet_string:7273692d30303031",
-      "refPos": {
-        "lat": 312836660,
-        "long": 1216307520,
-        "elevation": 0
-      },
-      "rtss": [
-        {
-          "rtsId": 1,
-          "signType": 38,
-          "signPos": {
-            "offsetLL": {
-              "present": 1,
-              "position-LL1": {
-                "lon": 0,
-                "lat": 0
-              }
+    "MessageFrame":{
+        "present" : 5,
+        "rsiFrame" : {
+            "msgCnt" : 2,
+            "moy" : 406990,
+            "id" : "octet_string:7273692d30303031",
+            "refPos" : {
+                "lat" : -4375,
+                "long" : 19053,
+                "elevation" : 0
             },
-            "offsetV": {
-              "present": 7,
-              "elevation": 0
-            }
-          },
-          "description": {
-            "present": 1,
-            "textString": "ia5_string:526f616420776f726b206168656164"
-          },
-          "priority": "octet_string:30",
-          "referencePaths": [
-            {
-              "activePath": [
+            "rtss" : [
                 {
-                  "offsetLL": {
-                    "present": 3,
-                    "position-LL3": {
-                      "lon": -20,
-                      "lat": -11380
-                    }
-                  },
-                  "offsetV": {
-                    "present": 7,
-                    "elevation": 0
-                  }
-                },
-                {
+                    "rtsId" : 0,
+                    "signType" : 27,
+                    "signPos" : {
+                        "offsetLL" : {
+                            "present" : 1,
+                            "position-LL1" : {
+                                "lon" : 0,
+                                "lat" : 0
+                            }
+                        },
+                        "offsetV" : {
+                            "present" : 7,
+                            "elevation" : 50
+                        }
+                    },
+                    "description" : {
+                        "present" : 1,
+                        "textString" : "ia5_string:537461676e616e74207761746572"
+                    },
+                    "priority" : "octet_string:31",
+                    "referencePaths" : [
+                        {
+                            "activePath" : [
+                                {
+                                    "offsetLL" : {
+                                        "present" : 3,
+                                        "position-LL3" : {
+                                            "lon" : -8869,
+                                            "lat" : 29
+                                        }
+                                    },
+                                    "offsetV" : {
+                                        "present" : 7,
+                                        "elevation" : 0
+                                    }
+                                },
+                                {
+                                    "offsetLL" : {
+                                        "present" : 2,
+                                        "position-LL2" : {
+                                            "lon" : -4595,
+                                            "lat" : 0
+                                        }
+                                    },
+                                    "offsetV" : {
+                                        "present" : 7,
+                                        "elevation" : 0
+                                    }
+                                },
+                                {
+                                    "offsetLL" : {
+                                        "present" : 1,
+                                        "position-LL1" : {
+                                            "lon" : 0,
+                                            "lat" : 0
+                                        }
+                                    },
+                                    "offsetV" : {
+                                        "present" : 7,
+                                        "elevation" : 0
+                                    }
+                                }
+                            ],
+                            "pathRadius" : 20
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+}
