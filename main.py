@@ -101,6 +101,7 @@ for ep in range(eposides):
     obs = env.reset()
     done = False
     rewards = 0
+
     # TCPClient.tcp_client()
     # data = {
     #     'TickId': env.episode_step,

@@ -243,17 +243,6 @@ class envCube(gym.Env):
                     self.TCPClient.Remotes[i]['YawAngle'] = self.TCPClient.Remotes[i]['YawAngle'] - 360
                 self.remote_vehicles[i].yaw_angle = self.TCPClient.Remotes[i]['YawAngle']/180*PI
                 self.remote_vehicles[i].velocity = self.TCPClient.Remotes[i]['Speed'] * SCALE
-        # if self.TCPClient.Remotes:
-        #     # print(TCPClient.RV1['X'])
-        #     self.first_other_vehicle.x = self.TCPClient.Remotes[0]['X'] * SCALE
-        #     self.first_other_vehicle.y = self.TCPClient.Remotes[0]['Y'] * SCALE
-        #     self.first_other_vehicle.yaw_angle = self.TCPClient.Remotes[0]['YawAngle']
-        #     self.first_other_vehicle.velocity = self.TCPClient.Remotes[0]['Speed'] * SCALE
-        #
-        #     self.second_other_vehicle.x = self.TCPClient.Remotes[1]['X'] * SCALE
-        #     self.second_other_vehicle.y = self.TCPClient.Remotes[1]['Y'] * SCALE
-        #     self.second_other_vehicle.yaw_angle = self.TCPClient.Remotes[1]['YawAngle']
-        #     self.second_other_vehicle.velocity = self.TCPClient.Remotes[1]['Speed'] * SCALE
 
 
 
