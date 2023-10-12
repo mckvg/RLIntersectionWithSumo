@@ -108,25 +108,20 @@ class Server:
 
     @staticmethod
     def send_data(client_socket):
-
         data = {
-                    "TickId": int(SimulationStep),
-                    "RemoteVehicles": [{
-                            "Id": int('1'),
-                            "X": RemoteVehiclePosition['1'][0],
-                            "Y": RemoteVehiclePosition['1'][1],
-                            "YawAngle": RemoteVehicleYawAngle['1'],
-                            "Speed": RemoteVehicleSpeed['1']
-                        },
-                        {
-                            "Id": int('2'),
-                            "X": RemoteVehiclePosition['2'][0],
-                            "Y": RemoteVehiclePosition['2'][1],
-                            "YawAngle": RemoteVehicleYawAngle['2'],
-                            "Speed": RemoteVehicleSpeed['2']
-                        }
-                    ]
-                }
+            "TickId": int(SimulationStep),
+            "RemoteVehicles": []
+        }
+
+        for vehicle_id in range(1, 11):
+            vehicle_info = {
+                "Id": vehicle_id,
+                "X": RemoteVehiclePosition[str(vehicle_id)][0],
+                "Y": RemoteVehiclePosition[str(vehicle_id)][1],
+                "YawAngle": RemoteVehicleYawAngle[str(vehicle_id)],
+                "Speed": RemoteVehicleSpeed[str(vehicle_id)]
+            }
+            data["RemoteVehicles"].append(vehicle_info)
 
         payload_json = json.dumps(data)
 
@@ -203,14 +198,17 @@ def run(step):
     # SUMO中模拟一步
     traci.simulationStep()
     # SUMO中更新远车位置
-    if vehicle_id1 in traci.vehicle.getIDList():
-        RVData(vehicle_id1)
-        print('Step：', step, "X:", RemoteVehiclePosition['1'][0],
-                            "Y:", RemoteVehiclePosition['1'][1],
-                            "YawAngle:", RemoteVehicleYawAngle['1'],
-                            "Speed:", RemoteVehicleSpeed['1'])
-    if vehicle_id2 in traci.vehicle.getIDList():
-        RVData(vehicle_id2)
+
+    for vehicle_id in range(11):  # 假设车辆ID从0到10
+        vehicle_id_str = str(vehicle_id)
+
+        if vehicle_id_str in traci.vehicle.getIDList():
+            RVData(vehicle_id_str)
+            # print(
+            #     f'vehicle_id: {vehicle_id_str}, Step: {step}, X: {RemoteVehiclePosition[vehicle_id_str][0]}, '
+            #     f'Y: {RemoteVehiclePosition[vehicle_id_str][1]}, YawAngle: {RemoteVehicleYawAngle[vehicle_id_str]}, '
+            #     f'Speed: {RemoteVehicleSpeed[vehicle_id_str]}')
+
 
 if __name__ == "__main__":
 
