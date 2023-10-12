@@ -128,7 +128,8 @@ class Image_Map_Observation_Show:
         int_remote_vehicle_pre_min_vertex_y = int(round(remote_vehicle_pre_min_vertex_y, 0))
         for x66 in range(int_remote_vehicle_pre_min_vertex_x, int_remote_vehicle_pre_max_vertex_x, 1):
             for y66 in range(int_remote_vehicle_pre_min_vertex_y, int_remote_vehicle_pre_max_vertex_y, 1):
-                self.whole_map[x66][y66] = d[road]
+                if self.whole_map[x66][y66] == d[remote_vehicle]:
+                    self.whole_map[x66][y66] = d[road]
         for x6 in range(int_remote_vehicle_min_vertex_x, int_remote_vehicle_max_vertex_x, 1):
             for y6 in range(int_remote_vehicle_min_vertex_y, int_remote_vehicle_max_vertex_y, 1):
                 self.whole_map[x6][y6] = d[remote_vehicle]
