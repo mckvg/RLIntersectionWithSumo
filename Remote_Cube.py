@@ -5,12 +5,11 @@
 #   @author olin322
 #
 ###########################
-
 import math
 from CONSTANTS import SCALE
 from CONSTANTS import SIZE
-from CONSTANTS import MIN_COORD
-from CONSTANTS import MAX_COORD
+from CONSTANTS import MIN_COORD 
+from CONSTANTS import MAX_COORD 
 # from CONSTANTS import VEHICLE_HALF_SIZE
 from CONSTANTS import SINGLE_LANE_WIDTH
 from CONSTANTS import min_positionx
@@ -20,13 +19,15 @@ from CONSTANTS import max_positiony
 from CONSTANTS import VEHICLE_LENGTH
 from CONSTANTS import VEHICLE_DIAGONAL, VEHICLE_ANGLE
 
+
+
 # 前车的类 有其 状态信息 和 行动
-class Forward_Cube_Second:
+class Remote_Cube:
 
     def __init__(self, size):  # 初始化状态
         self.size = size
         self.x = float(SINGLE_LANE_WIDTH / 2 + SINGLE_LANE_WIDTH)
-        self.y = MIN_COORD + 5 * VEHICLE_LENGTH
+        self.y = MIN_COORD + 2 * VEHICLE_LENGTH
         self.pre_x = self.x
         self.pre_y = self.y
         self.velocity = 0.0 * SCALE
@@ -63,7 +64,7 @@ class Forward_Cube_Second:
         max_acceleration = 2.6 * SCALE
         min_speed = 0.0 * SCALE
         max_speed = 12.00 * SCALE
-        mid_speed = 8.0 * SCALE
+        mid_speed = 2.0 * SCALE
 
         self.move_step += 1
 
@@ -77,12 +78,12 @@ class Forward_Cube_Second:
         self.pre_min_vertex_y = self.min_vertex_y
 
         # self.velocity = mid_speed
-        #
+
         if self.velocity < min_speed:
             self.velocity = min_speed
         if self.velocity > max_speed:
             self.velocity = max_speed
-        #
+
         # self.y += self.velocity
 
         if self.y > max_positiony:

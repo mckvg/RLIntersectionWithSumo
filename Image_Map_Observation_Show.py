@@ -40,12 +40,12 @@ remote_vehicle = 4
 
 
 
-class Image_Map_Observation:
+class Image_Map_Observation_Show:
 
     def __init__(self):
         INT_SIZE = int(round(SIZE, 0))
-        INT_EXPAND_SIZE = int(565)
-        self.INT_SEPARATE = int(64)
+        INT_EXPAND_SIZE = int(701)
+        self.INT_SEPARATE = int(200)
         self.whole_map = np.zeros((INT_EXPAND_SIZE, INT_EXPAND_SIZE, 1), dtype=np.uint8)
         self.illustration_whole_map = np.zeros((INT_EXPAND_SIZE, INT_EXPAND_SIZE), dtype=np.uint8)
         self.separate_map = np.zeros((self.INT_SEPARATE, self.INT_SEPARATE, 1), dtype=np.uint8)

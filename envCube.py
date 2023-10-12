@@ -37,8 +37,7 @@ import os
 os.environ['KMP_DUPLICATE_LIB_DK'] = 'True'
 
 from Cube import Cube
-from Forward_Cube_First import Forward_Cube_First
-from Forward_Cube_Second import Forward_Cube_Second
+from Remote_Cube import Remote_Cube
 from Signal_Light_Stop_Line import Signal_Light_Stop_Line
 from Track import Track
 import Rectangle
@@ -64,7 +63,9 @@ from CONSTANTS import min_positionx
 from CONSTANTS import max_positionx
 from CONSTANTS import min_positiony
 from CONSTANTS import max_positiony
+from CONSTANTS import NUMBER_REMOTE_VEHICLES
 from Image_Map_Observation import Image_Map_Observation
+from Image_Map_Observation_Show import Image_Map_Observation_Show
 # from readcsv import float_csv_data
 from client import *
 
@@ -231,17 +232,26 @@ class envCube(gym.Env):
         #     time.sleep(1)
         self.TCPClient.send_data(self.TCPClient.client_socket, data)
         self.TCPClient.receive_data(self.TCPClient.client_socket)
-        if self.TCPClient.Remotes:
-            # print(TCPClient.RV1['X'])
-            self.first_other_vehicle.x = self.TCPClient.Remotes[0]['X'] * SCALE
-            self.first_other_vehicle.y = self.TCPClient.Remotes[0]['Y'] * SCALE
-            self.first_other_vehicle.yaw_angle = self.TCPClient.Remotes[0]['YawAngle']
-            self.first_other_vehicle.velocity = self.TCPClient.Remotes[0]['Speed'] * SCALE
 
-            self.second_other_vehicle.x = self.TCPClient.Remotes[1]['X'] * SCALE
-            self.second_other_vehicle.y = self.TCPClient.Remotes[1]['Y'] * SCALE
-            self.second_other_vehicle.yaw_angle = self.TCPClient.Remotes[1]['YawAngle']
-            self.second_other_vehicle.velocity = self.TCPClient.Remotes[1]['Speed'] * SCALE
+        if self.TCPClient.Remotes:
+            for i in range(NUMBER_REMOTE_VEHICLES):
+                self.remote_vehicles[i].x = self.TCPClient.Remotes[i]['X'] * SCALE
+                self.remote_vehicles[i].y = self.TCPClient.Remotes[i]['Y'] * SCALE
+                self.remote_vehicles[i].yaw_angle = self.TCPClient.Remotes[i]['YawAngle']
+                self.remote_vehicles[i].velocity = self.TCPClient.Remotes[i]['Speed'] * SCALE
+        # if self.TCPClient.Remotes:
+        #     # print(TCPClient.RV1['X'])
+        #     self.first_other_vehicle.x = self.TCPClient.Remotes[0]['X'] * SCALE
+        #     self.first_other_vehicle.y = self.TCPClient.Remotes[0]['Y'] * SCALE
+        #     self.first_other_vehicle.yaw_angle = self.TCPClient.Remotes[0]['YawAngle']
+        #     self.first_other_vehicle.velocity = self.TCPClient.Remotes[0]['Speed'] * SCALE
+        #
+        #     self.second_other_vehicle.x = self.TCPClient.Remotes[1]['X'] * SCALE
+        #     self.second_other_vehicle.y = self.TCPClient.Remotes[1]['Y'] * SCALE
+        #     self.second_other_vehicle.yaw_angle = self.TCPClient.Remotes[1]['YawAngle']
+        #     self.second_other_vehicle.velocity = self.TCPClient.Remotes[1]['Speed'] * SCALE
+
+
 
         # # 从训练表格中更新远车状态
         # self.RV_data = float_csv_data[self.episode_step]
@@ -254,9 +264,9 @@ class envCube(gym.Env):
         # self.second_other_vehicle.y = self.RV_data[8] * SCALE
         # self.second_other_vehicle.yaw_angle = self.RV_data[9]
         # self.second_other_vehicle.velocity = self.RV_data[10] * SCALE
+        for i in range(NUMBER_REMOTE_VEHICLES):
+            self.remote_vehicles[i].move()
 
-        self.first_other_vehicle.move()
-        self.second_other_vehicle.move()
         # phase = self.signal_stop.signalphase(self.episode_step)
         # countdown = self.signal_stop.signalcountdown(phase)
 
@@ -273,15 +283,23 @@ class envCube(gym.Env):
         self.image_map_observation.reverse(self.rectangle_list_reverse.RectangleList)
 
         # observation里画出远车范围
-        self.image_map_observation.RemoteVehicle(self.first_other_vehicle.max_vertex_x, self.first_other_vehicle.min_vertex_x,
-                                         self.first_other_vehicle.max_vertex_y, self.first_other_vehicle.min_vertex_y,
-                                         self.first_other_vehicle.pre_max_vertex_x, self.first_other_vehicle.pre_min_vertex_x,
-                                         self.first_other_vehicle.pre_max_vertex_y, self.first_other_vehicle.pre_min_vertex_y)
 
-        self.image_map_observation.RemoteVehicle(self.second_other_vehicle.max_vertex_x, self.second_other_vehicle.min_vertex_x,
-                                         self.second_other_vehicle.max_vertex_y, self.second_other_vehicle.min_vertex_y,
-                                         self.second_other_vehicle.pre_max_vertex_x, self.second_other_vehicle.pre_min_vertex_x,
-                                         self.second_other_vehicle.pre_max_vertex_y, self.second_other_vehicle.pre_min_vertex_y)
+        for i in range(2):  # 处理前两辆车辆
+            self.image_map_observation.RemoteVehicle(
+                self.remote_vehicles[i].max_vertex_x, self.remote_vehicles[i].min_vertex_x,
+                self.remote_vehicles[i].max_vertex_y, self.remote_vehicles[i].min_vertex_y,
+                self.remote_vehicles[i].pre_max_vertex_x, self.remote_vehicles[i].pre_min_vertex_x,
+                self.remote_vehicles[i].pre_max_vertex_y, self.remote_vehicles[i].pre_min_vertex_y
+            )
+
+        # observation show 里画出远车范围
+        for i in range(NUMBER_REMOTE_VEHICLES):
+            self.image_map_observation_show.RemoteVehicle(
+                self.remote_vehicles[i].max_vertex_x, self.remote_vehicles[i].min_vertex_x,
+                self.remote_vehicles[i].max_vertex_y, self.remote_vehicles[i].min_vertex_y,
+                self.remote_vehicles[i].pre_max_vertex_x, self.remote_vehicles[i].pre_min_vertex_x,
+                self.remote_vehicles[i].pre_max_vertex_y, self.remote_vehicles[i].pre_min_vertex_y
+            )
 
         # observation里画出智能体范围
         self.image_map_observation.agent(self.vehicle.max_vertex_x, self.vehicle.min_vertex_x,
@@ -341,10 +359,10 @@ class envCube(gym.Env):
             self.JUDGEMENT_IN_ROAD = False
 
         # 两车相撞，终止训练，并给予-500分惩罚
-        if self.vehicle.collision(self.first_other_vehicle) == 0 and self.vehicle.collision(self.second_other_vehicle) == 0:
+        if self.vehicle.collision(self.remote_vehicles[0]) == 0 and self.vehicle.collision(self.remote_vehicles[1]) == 0:
             self.COLLISION = False
-        if (self.vehicle.collision(self.first_other_vehicle) == 1 and self.COLLISION == False) or \
-                (self.vehicle.collision(self.second_other_vehicle) == 1 and self.COLLISION == False):
+        if (self.vehicle.collision(self.remote_vehicles[0]) == 1 and self.COLLISION == False) or \
+                (self.vehicle.collision(self.remote_vehicles[1]) == 1 and self.COLLISION == False):
             self.COLLISION = True
             break_out = True
 
@@ -792,11 +810,11 @@ class envCube(gym.Env):
         self.relative_position_2_danger = np.array(
             [self.vehicle.x - self.signal_stop.danger_x, self.vehicle.y - self.signal_stop.danger_y], dtype=np.float32)
         self.first_other_vehicle_relative_position = np.array(
-            [self.vehicle.x-self.first_other_vehicle.x, self.vehicle.y-self.first_other_vehicle.y], dtype=np.float32)
-        self.first_other_vehicle_speed = np.array([self.first_other_vehicle.velocity], dtype=np.float32)
+            [self.vehicle.x-self.remote_vehicles[0].x, self.vehicle.y-self.remote_vehicles[0].y], dtype=np.float32)
+        self.first_other_vehicle_speed = np.array([self.remote_vehicles[0].velocity], dtype=np.float32)
         self.second_other_vehicle_relative_position = np.array(
-            [self.vehicle.x - self.second_other_vehicle.x, self.vehicle.y - self.second_other_vehicle.y], dtype=np.float32)
-        self.second_other_vehicle_speed = np.array([self.second_other_vehicle.velocity], dtype=np.float32)
+            [self.vehicle.x - self.remote_vehicles[1].x, self.vehicle.y - self.remote_vehicles[1].y], dtype=np.float32)
+        self.second_other_vehicle_speed = np.array([self.remote_vehicles[1].velocity], dtype=np.float32)
         self.relative_distance_to_goal = np.array([self.distance_2_goal], dtype=np.float32)
         self.distance_to_mid_lane_line = np.array([self.vehicle.distance_to_mid_lane_line], dtype=np.float32)
 
@@ -805,8 +823,8 @@ class envCube(gym.Env):
 
         print('episode_step:', self.episode_step, ':', 'Action:', action, ';',
               'Position:', self.vehicle.x, self.vehicle.y, ';',
-              'first_other_vehicle:', self.first_other_vehicle.x, self.first_other_vehicle.y, ';'
-              'second_other_vehicle:', self.second_other_vehicle.x, self.second_other_vehicle.y, ';'
+              'first_other_vehicle:', self.remote_vehicles[0].x, self.remote_vehicles[0].y, ';'
+              'second_other_vehicle:', self.remote_vehicles[1].x, self.remote_vehicles[1].y, ';'
               # 'Speed:', self.vehicle_speed, ';', 'YawAngle:', self.vehicle_yawangle, ';',
               # 'Relative_distance_to_goal:', self.relative_distance_to_goal, ';',
               # 'vehicle_state:', self.vehicle.state, ';',
@@ -848,14 +866,16 @@ class envCube(gym.Env):
     # 重置环境-整局游戏结束之后。可做初始化函数，智能体和观测
     def reset(self):
         self.vehicle = Cube(SIZE)
-        self.first_other_vehicle = Forward_Cube_First(SIZE)
-        self.second_other_vehicle = Forward_Cube_Second(SIZE)
+        # self.first_other_vehicle = Remote_Cube(SIZE)
+        # self.second_other_vehicle = Remote_Cube(SIZE)
+        self.remote_vehicles = [Remote_Cube(SIZE) for _ in range(NUMBER_REMOTE_VEHICLES)]
         self.signal_stop = Signal_Light_Stop_Line(SIZE)
         self.vehicle_track = Track(SIZE)
         self.rectangle_list_off_road = Rectangle_List_Off_Road()
         self.rectangle_list_reverse = Rectangle_List_Reverse()
         self.rectangle_list_crash_area = Rectangle_List_Crash_Area()
         self.image_map_observation = Image_Map_Observation()
+        self.image_map_observation_show = Image_Map_Observation_Show()
 
         print('reset')
 
@@ -877,17 +897,25 @@ class envCube(gym.Env):
 
         self.TCPClient.send_data(self.TCPClient.client_socket, data)
         self.TCPClient.receive_data ( self.TCPClient.client_socket)
-        if self.TCPClient.Remotes:
-            # print(TCPClient.RV1['X'])
-            self.first_other_vehicle.x = self.TCPClient.Remotes[0]['X'] * SCALE
-            self.first_other_vehicle.y = self.TCPClient.Remotes[0]['Y'] * SCALE
-            self.first_other_vehicle.yaw_angle = self.TCPClient.Remotes[0]['YawAngle']
-            self.first_other_vehicle.velocity = self.TCPClient.Remotes[0]['Speed'] * SCALE
+        # if self.TCPClient.Remotes:
+        #
+        #     self.remote_vehicles[0].x = self.TCPClient.Remotes[0]['X'] * SCALE
+        #     self.remote_vehicles[0].y = self.TCPClient.Remotes[0]['Y'] * SCALE
+        #     self.remote_vehicles[0].yaw_angle = self.TCPClient.Remotes[0]['YawAngle']
+        #     self.remote_vehicles[0].velocity = self.TCPClient.Remotes[0]['Speed'] * SCALE
+        #
+        #     self.remote_vehicles[1].x = self.TCPClient.Remotes[1]['X'] * SCALE
+        #     self.remote_vehicles[1].y = self.TCPClient.Remotes[1]['Y'] * SCALE
+        #     self.remote_vehicles[1].yaw_angle = self.TCPClient.Remotes[1]['YawAngle']
+        #     self.remote_vehicles[1].velocity = self.TCPClient.Remotes[1]['Speed'] * SCALE
 
-            self.second_other_vehicle.x = self.TCPClient.Remotes[1]['X'] * SCALE
-            self.second_other_vehicle.y = self.TCPClient.Remotes[1]['Y'] * SCALE
-            self.second_other_vehicle.yaw_angle = self.TCPClient.Remotes[1]['YawAngle']
-            self.second_other_vehicle.velocity = self.TCPClient.Remotes[1]['Speed'] * SCALE
+        if self.TCPClient.Remotes:
+            for i in range(NUMBER_REMOTE_VEHICLES):
+                self.remote_vehicles[i].x = self.TCPClient.Remotes[i]['X'] * SCALE
+                self.remote_vehicles[i].y = self.TCPClient.Remotes[i]['Y'] * SCALE
+                self.remote_vehicles[i].yaw_angle = self.TCPClient.Remotes[i]['YawAngle']
+                self.remote_vehicles[i].velocity = self.TCPClient.Remotes[i]['Speed'] * SCALE
+
 
         self.vehicle_speed = np.array(
             [self.vehicle.velocity], dtype=np.float32)
@@ -896,11 +924,11 @@ class envCube(gym.Env):
         self.relative_position_2_danger = np.array(
             [self.vehicle.x - self.signal_stop.danger_x, self.vehicle.y - self.signal_stop.danger_y], dtype=np.float32)
         self.first_other_vehicle_relative_position = np.array(
-            [self.vehicle.x - self.first_other_vehicle.x, self.vehicle.y - self.first_other_vehicle.y], dtype=np.float32)
-        self.first_other_vehicle_speed = np.array([self.first_other_vehicle.velocity], dtype=np.float32)
+            [self.vehicle.x - self.remote_vehicles[0].x, self.vehicle.y - self.remote_vehicles[0].y], dtype=np.float32)
+        self.first_other_vehicle_speed = np.array([self.remote_vehicles[0].velocity], dtype=np.float32)
         self.second_other_vehicle_relative_position = np.array(
-            [self.vehicle.x - self.second_other_vehicle.x, self.vehicle.y - self.second_other_vehicle.y], dtype=np.float32)
-        self.second_other_vehicle_speed = np.array([self.second_other_vehicle.velocity], dtype=np.float32)
+            [self.vehicle.x - self.remote_vehicles[1].x, self.vehicle.y - self.remote_vehicles[1].y], dtype=np.float32)
+        self.second_other_vehicle_speed = np.array([self.remote_vehicles[1].velocity], dtype=np.float32)
         self.relative_distance_to_goal = np.array([abs(self.vehicle.y - self.mid_goal_front_positiony[0])], dtype=np.float32)
         self.distance_to_mid_lane_line = np.array([self.vehicle.distance_to_mid_lane_line], dtype=np.float32)
 
@@ -925,8 +953,8 @@ class envCube(gym.Env):
 
         print('episode_step:', self.episode_step, ':',
               'Position:', self.vehicle.x, self.vehicle.y, ';',
-              'first_other_vehicle:', self.first_other_vehicle.x, self.first_other_vehicle.y, ';',
-              'second_other_vehicle:', self.second_other_vehicle.x, self.second_other_vehicle.y, ';'
+              'first_other_vehicle:', self.remote_vehicles[0].x, self.remote_vehicles[0].y, ';',
+              'second_other_vehicle:', self.remote_vehicles[1].x, self.remote_vehicles[1].y, ';'
               )
 
         self.state: dict = (
@@ -953,7 +981,7 @@ class envCube(gym.Env):
     # 多媒体演示
     def render(self, mode="human"):
         img, img1, img2 = self.get_image()
-        cv2.imshow('0', np.array(img))
+        # cv2.imshow('0', np.array(img))
         cv2.imshow('1', np.array(img1))
         cv2.imshow('2', np.array(img2))
         if self.goal or self.EXCEED_MAX_STEP:
@@ -1014,19 +1042,19 @@ class envCube(gym.Env):
         INT_VEHICLE_MIN_VERTEX_Y = int(round(self.vehicle.min_vertex_y, 0))
 
 
-        INT_FIRST_OTHER_VEHICLE_Y = int(round(self.first_other_vehicle.y, 0))
-        INT_FIRST_OTHER_VEHICLE_X = int(round(self.first_other_vehicle.x, 0))
-        INT_FIRST_OTHER_VEHICLE_MAX_VERTEX_X = int(round(self.first_other_vehicle.max_vertex_x, 0))
-        INT_FIRST_OTHER_VEHICLE_MIN_VERTEX_X = int(round(self.first_other_vehicle.min_vertex_x, 0))
-        INT_FIRST_OTHER_VEHICLE_MAX_VERTEX_Y = int(round(self.first_other_vehicle.max_vertex_y, 0))
-        INT_FIRST_OTHER_VEHICLE_MIN_VERTEX_Y = int(round(self.first_other_vehicle.min_vertex_y, 0))
+        INT_FIRST_OTHER_VEHICLE_Y = int(round(self.remote_vehicles[0].y, 0))
+        INT_FIRST_OTHER_VEHICLE_X = int(round(self.remote_vehicles[0].x, 0))
+        INT_FIRST_OTHER_VEHICLE_MAX_VERTEX_X = int(round(self.remote_vehicles[0].max_vertex_x, 0))
+        INT_FIRST_OTHER_VEHICLE_MIN_VERTEX_X = int(round(self.remote_vehicles[0].min_vertex_x, 0))
+        INT_FIRST_OTHER_VEHICLE_MAX_VERTEX_Y = int(round(self.remote_vehicles[0].max_vertex_y, 0))
+        INT_FIRST_OTHER_VEHICLE_MIN_VERTEX_Y = int(round(self.remote_vehicles[0].min_vertex_y, 0))
 
-        INT_SECOND_OTHER_VEHICLE_Y = int(round(self.second_other_vehicle.y, 0))
-        INT_SECOND_OTHER_VEHICLE_X = int(round(self.second_other_vehicle.x, 0))
-        INT_SECOND_OTHER_VEHICLE_MAX_VERTEX_X = int(round(self.second_other_vehicle.max_vertex_x, 0))
-        INT_SECOND_OTHER_VEHICLE_MIN_VERTEX_X = int(round(self.second_other_vehicle.min_vertex_x, 0))
-        INT_SECOND_OTHER_VEHICLE_MAX_VERTEX_Y = int(round(self.second_other_vehicle.max_vertex_y, 0))
-        INT_SECOND_OTHER_VEHICLE_MIN_VERTEX_Y = int(round(self.second_other_vehicle.min_vertex_y, 0))
+        INT_SECOND_OTHER_VEHICLE_Y = int(round(self.remote_vehicles[1].y, 0))
+        INT_SECOND_OTHER_VEHICLE_X = int(round(self.remote_vehicles[1].x, 0))
+        INT_SECOND_OTHER_VEHICLE_MAX_VERTEX_X = int(round(self.remote_vehicles[1].max_vertex_x, 0))
+        INT_SECOND_OTHER_VEHICLE_MIN_VERTEX_X = int(round(self.remote_vehicles[1].min_vertex_x, 0))
+        INT_SECOND_OTHER_VEHICLE_MAX_VERTEX_Y = int(round(self.remote_vehicles[1].max_vertex_y, 0))
+        INT_SECOND_OTHER_VEHICLE_MIN_VERTEX_Y = int(round(self.remote_vehicles[1].min_vertex_y, 0))
 
         for x3 in range(INT_VEHICLE_MIN_VERTEX_X + INT_MAX_COORD, INT_VEHICLE_MAX_VERTEX_X + INT_MAX_COORD):
             for y3 in range(INT_VEHICLE_MIN_VERTEX_Y + INT_MAX_COORD, INT_VEHICLE_MAX_VERTEX_Y + INT_MAX_COORD):
@@ -1071,10 +1099,10 @@ class envCube(gym.Env):
 
         # img = Image.fromarray(env, 'RGB')
         # return img
-        self.image_map_observation.illustration()
-        env1 = self.image_map_observation.illustration_whole_map
-        self.image_map_observation.illustrationagent()
-        env2 = self.image_map_observation.illustration_separate_map
+        self.image_map_observation_show.illustration()
+        env1 = self.image_map_observation_show.illustration_whole_map
+        self.image_map_observation_show.illustrationagent()
+        env2 = self.image_map_observation_show.illustration_separate_map
 
         img = Image.fromarray(env, 'RGB')
         img1 = Image.fromarray(env1, 'L')
