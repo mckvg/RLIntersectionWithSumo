@@ -164,9 +164,7 @@ def run(step):
     Server.Remotes[0]['YawAngle'] = 180/math.pi*Server.Remotes[0]['YawAngle']
     if Server.Remotes[0]['YawAngle'] < 0:
         Server.Remotes[0]['YawAngle'] = Server.Remotes[0]['YawAngle'] + 360
-    # SUMO的主车的移动
-    traci.vehicle.moveToXY('0', '-E3', '1', x=Server.Remotes[0]['X'], y=Server.Remotes[0]['Y'],
-                           angle=Server.Remotes[0]['YawAngle'], keepRoute=2)
+
     # SUMO中远车的初始位置及状态的设置
     traci.vehicle.moveToXY('10', '-E3', 1, 2, -24, 0)  # 停止的车辆与主车同道
     if step == 0:
@@ -181,7 +179,7 @@ def run(step):
         # 运动车辆与主车方向相反
         traci.vehicle.moveToXY('7', '-E1', 1, -2, 30, 180)
         traci.vehicle.moveToXY('8', '-E1', 0, -6, 60, 180)
-        traci.vehicle.moveToXY('9', '-E1', 0, -6, 106, 180)
+        traci.vehicle.moveToXY('9', '-E1', 0, -6, 102, 180)
         # 设置速度：运动车辆与主车同方向
         traci.vehicle.setSpeed(vehicle_id1, 2)
         traci.vehicle.setSpeed(vehicle_id2, 8)
@@ -195,10 +193,15 @@ def run(step):
         traci.vehicle.setSpeed(vehicle_id8, 8)
         traci.vehicle.setSpeed(vehicle_id9, 4)
 
+
     # SUMO中模拟一步
     traci.simulationStep()
-    # SUMO中更新远车位置
 
+    # SUMO的主车的移动
+    traci.vehicle.moveToXY('0', '-E3', '1', x=Server.Remotes[0]['X'], y=Server.Remotes[0]['Y'],
+                           angle=Server.Remotes[0]['YawAngle'], keepRoute=2)
+
+    # SUMO中更新远车位置
     for vehicle_id in range(11):  # 假设车辆ID从0到10
         vehicle_id_str = str(vehicle_id)
 
