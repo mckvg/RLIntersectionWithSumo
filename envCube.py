@@ -42,6 +42,7 @@ from Signal_Light_Stop_Line import Signal_Light_Stop_Line
 from Track import Track
 import Rectangle
 from Rectangle import Rectangle, Rectangle_List_Off_Road, Rectangle_List_Reverse, Rectangle_List_Crash_Area
+from Rectangle_Show import Rectangle_Show, Rectangle_List_Off_Road_Show, Rectangle_List_Reverse_Show, Rectangle_List_Crash_Area_Show
 
 from CONSTANTS import SCALE
 from CONSTANTS import SIZE
@@ -64,6 +65,7 @@ from CONSTANTS import max_positionx
 from CONSTANTS import min_positiony
 from CONSTANTS import max_positiony
 from CONSTANTS import NUMBER_REMOTE_VEHICLES
+from CONSTANTS import PI
 from Image_Map_Observation import Image_Map_Observation
 from Image_Map_Observation_Show import Image_Map_Observation_Show
 # from readcsv import float_csv_data
@@ -237,7 +239,9 @@ class envCube(gym.Env):
             for i in range(NUMBER_REMOTE_VEHICLES):
                 self.remote_vehicles[i].x = self.TCPClient.Remotes[i]['X'] * SCALE
                 self.remote_vehicles[i].y = self.TCPClient.Remotes[i]['Y'] * SCALE
-                self.remote_vehicles[i].yaw_angle = self.TCPClient.Remotes[i]['YawAngle']
+                if self.TCPClient.Remotes[i]['YawAngle'] > 180:
+                    self.TCPClient.Remotes[i]['YawAngle'] = self.TCPClient.Remotes[i]['YawAngle'] - 360
+                self.remote_vehicles[i].yaw_angle = self.TCPClient.Remotes[i]['YawAngle']/180*PI
                 self.remote_vehicles[i].velocity = self.TCPClient.Remotes[i]['Speed'] * SCALE
         # if self.TCPClient.Remotes:
         #     # print(TCPClient.RV1['X'])
@@ -278,9 +282,11 @@ class envCube(gym.Env):
             self.vehicle.init_state = self.vehicle.state
 
         self.rectangle_list_reverse.judgement(self.vehicle.init_state)
+        self.rectangle_list_reverse_show.judgement(self.vehicle.init_state)
 
         # observation里画出逆行区域
         self.image_map_observation.reverse(self.rectangle_list_reverse.RectangleList)
+        self.image_map_observation_show.reverse(self.rectangle_list_reverse_show.RectangleList_Show)
 
         # observation里画出远车范围
 
@@ -307,8 +313,15 @@ class envCube(gym.Env):
                                          self.vehicle.pre_max_vertex_x, self.vehicle.pre_min_vertex_x,
                                          self.vehicle.pre_max_vertex_y, self.vehicle.pre_min_vertex_y)
 
+        self.image_map_observation_show.agent(self.vehicle.max_vertex_x, self.vehicle.min_vertex_x,
+                                         self.vehicle.max_vertex_y, self.vehicle.min_vertex_y,
+                                         self.vehicle.pre_max_vertex_x, self.vehicle.pre_min_vertex_x,
+                                         self.vehicle.pre_max_vertex_y, self.vehicle.pre_min_vertex_y)
+
         # observation画出以主车为中心的灰度图区域
         self.image_map_observation.Separate_Map(self.vehicle.max_vertex_x, self.vehicle.min_vertex_x,
+                                               self.vehicle.max_vertex_y, self.vehicle.min_vertex_y)
+        self.image_map_observation_show.Separate_Map(self.vehicle.max_vertex_x, self.vehicle.min_vertex_x,
                                                self.vehicle.max_vertex_y, self.vehicle.min_vertex_y)
 
         # 更新直道的之前动作的最大最小坐标值(intersection中之前动作不更新)
@@ -875,6 +888,9 @@ class envCube(gym.Env):
         self.rectangle_list_reverse = Rectangle_List_Reverse()
         self.rectangle_list_crash_area = Rectangle_List_Crash_Area()
         self.image_map_observation = Image_Map_Observation()
+        self.rectangle_list_off_road_show = Rectangle_List_Off_Road_Show()
+        self.rectangle_list_reverse_show = Rectangle_List_Reverse_Show()
+        self.rectangle_list_crash_area_show = Rectangle_List_Crash_Area_Show()
         self.image_map_observation_show = Image_Map_Observation_Show()
 
         print('reset')
@@ -913,7 +929,9 @@ class envCube(gym.Env):
             for i in range(NUMBER_REMOTE_VEHICLES):
                 self.remote_vehicles[i].x = self.TCPClient.Remotes[i]['X'] * SCALE
                 self.remote_vehicles[i].y = self.TCPClient.Remotes[i]['Y'] * SCALE
-                self.remote_vehicles[i].yaw_angle = self.TCPClient.Remotes[i]['YawAngle']
+                if self.TCPClient.Remotes[i]['YawAngle'] > 180:
+                    self.TCPClient.Remotes[i]['YawAngle'] = self.TCPClient.Remotes[i]['YawAngle'] - 360
+                self.remote_vehicles[i].yaw_angle = self.TCPClient.Remotes[i]['YawAngle']/180*PI
                 self.remote_vehicles[i].velocity = self.TCPClient.Remotes[i]['Speed'] * SCALE
 
 

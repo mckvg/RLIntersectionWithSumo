@@ -4,7 +4,7 @@ from Track import Track
 from CONSTANTS import SCALE
 from CONSTANTS import SIZE
 from CONSTANTS import MIN_COORD
-from CONSTANTS import MAX_COORD, SEPARATE_SIZE
+from CONSTANTS import MAX_COORD, SEPARATE_SHOW_SIZE
 from CONSTANTS import VEHICLE_LENGTH
 from CONSTANTS import VEHICLE_WIDTH
 from CONSTANTS import VEHICLE_ANGLE
@@ -22,8 +22,8 @@ from CONSTANTS import max_positionx
 from CONSTANTS import min_positiony
 from CONSTANTS import max_positiony
 import numpy as np
-from Rectangle import Rectangle_List_Reverse, Rectangle_List_Crash_Area, Rectangle_List_Off_Road, Rectangle, \
-    Rectangle_List_Expand_Area
+from Rectangle_Show import Rectangle_List_Reverse_Show, Rectangle_List_Crash_Area_Show, Rectangle_List_Off_Road_Show, Rectangle_Show, \
+    Rectangle_List_Expand_Area_Show
 import Cube
 
 d = {
@@ -50,32 +50,32 @@ class Image_Map_Observation_Show:
         self.illustration_whole_map = np.zeros((INT_EXPAND_SIZE, INT_EXPAND_SIZE), dtype=np.uint8)
         self.separate_map = np.zeros((self.INT_SEPARATE, self.INT_SEPARATE, 1), dtype=np.uint8)
         self.illustration_separate_map = np.zeros((self.INT_SEPARATE, self.INT_SEPARATE), dtype=np.uint8)
-        self.rectangle_list_off_road = Rectangle_List_Off_Road()
-        self.rectangle_list_crash_area = Rectangle_List_Crash_Area()
-        self.rectangle_list_expand_area = Rectangle_List_Expand_Area()
+        self.rectangle_list_off_road = Rectangle_List_Off_Road_Show()
+        self.rectangle_list_crash_area = Rectangle_List_Crash_Area_Show()
+        self.rectangle_list_expand_area = Rectangle_List_Expand_Area_Show()
 
         # 根据Rectangle_List_Off_Road类进行填图，填色为block
-        for rec in range(self.rectangle_list_off_road.RectangleList.size):
-            for x1 in range(int(self.rectangle_list_off_road.RectangleList[0][rec].min_x),
-                            int(self.rectangle_list_off_road.RectangleList[0][rec].max_x), 1):
-                for y1 in range(int(self.rectangle_list_off_road.RectangleList[0][rec].min_y),
-                                int(self.rectangle_list_off_road.RectangleList[0][rec].max_y), 1):
+        for rec in range(self.rectangle_list_off_road.RectangleList_Show.size):
+            for x1 in range(int(self.rectangle_list_off_road.RectangleList_Show[0][rec].min_x),
+                            int(self.rectangle_list_off_road.RectangleList_Show[0][rec].max_x), 1):
+                for y1 in range(int(self.rectangle_list_off_road.RectangleList_Show[0][rec].min_y),
+                                int(self.rectangle_list_off_road.RectangleList_Show[0][rec].max_y), 1):
                     self.whole_map[x1][y1] = d[block]
 
         # 根据Rectangle_List_Crash_Area类进行填图，填色为block
-        for rec in range(self.rectangle_list_crash_area.RectangleList.size):
-            for x2 in range(int(self.rectangle_list_crash_area.RectangleList[0][rec].min_x),
-                            int(self.rectangle_list_crash_area.RectangleList[0][rec].max_x), 1):
-                for y2 in range(int(self.rectangle_list_crash_area.RectangleList[0][rec].min_y),
-                                int(self.rectangle_list_crash_area.RectangleList[0][rec].max_y), 1):
+        for rec in range(self.rectangle_list_crash_area.RectangleList_Show.size):
+            for x2 in range(int(self.rectangle_list_crash_area.RectangleList_Show[0][rec].min_x),
+                            int(self.rectangle_list_crash_area.RectangleList_Show[0][rec].max_x), 1):
+                for y2 in range(int(self.rectangle_list_crash_area.RectangleList_Show[0][rec].min_y),
+                                int(self.rectangle_list_crash_area.RectangleList_Show[0][rec].max_y), 1):
                     self.whole_map[x2][y2] = d[block]
 
         # 根据Rectangle_List_Expand_Area类进行填图，填色为block
-        for rec in range(self.rectangle_list_expand_area.RectangleList.size):
-            for x22 in range(int(self.rectangle_list_expand_area.RectangleList[0][rec].min_x),
-                            int(self.rectangle_list_expand_area.RectangleList[0][rec].max_x), 1):
-                for y22 in range(int(self.rectangle_list_expand_area.RectangleList[0][rec].min_y),
-                                int(self.rectangle_list_expand_area.RectangleList[0][rec].max_y), 1):
+        for rec in range(self.rectangle_list_expand_area.RectangleList_Show.size):
+            for x22 in range(int(self.rectangle_list_expand_area.RectangleList_Show[0][rec].min_x),
+                            int(self.rectangle_list_expand_area.RectangleList_Show[0][rec].max_x), 1):
+                for y22 in range(int(self.rectangle_list_expand_area.RectangleList_Show[0][rec].min_y),
+                                int(self.rectangle_list_expand_area.RectangleList_Show[0][rec].max_y), 1):
                     self.whole_map[x22][y22] = d[block]
 
         # 将剩余区域填色为road
@@ -134,14 +134,14 @@ class Image_Map_Observation_Show:
                 self.whole_map[x6][y6] = d[remote_vehicle]
 
     def illustration(self):
-        for x7 in range(int(SIZE) + int(SEPARATE_SIZE)):
-            for y7 in range(int(SIZE) + int(SEPARATE_SIZE)):
-                self.illustration_whole_map[-y7][x7] = self.whole_map[x7-int(MAX_COORD+SEPARATE_SIZE/2)][y7-int(MAX_COORD+SEPARATE_SIZE/2)]
+        for x7 in range(int(SIZE) + int(SEPARATE_SHOW_SIZE)):
+            for y7 in range(int(SIZE) + int(SEPARATE_SHOW_SIZE)):
+                self.illustration_whole_map[-y7][x7] = self.whole_map[x7-int(MAX_COORD+SEPARATE_SHOW_SIZE/2)][y7-int(MAX_COORD+SEPARATE_SHOW_SIZE/2)]
 
     def illustrationagent(self):
-        for x7 in range(int(SEPARATE_SIZE)):
-            for y7 in range(int(SEPARATE_SIZE)):
-                self.illustration_separate_map[-y7][x7] = self.separate_map[x7-int(SEPARATE_SIZE/2)][y7-int(SEPARATE_SIZE/2)]
+        for x7 in range(int(SEPARATE_SHOW_SIZE)):
+            for y7 in range(int(SEPARATE_SHOW_SIZE)):
+                self.illustration_separate_map[-y7][x7] = self.separate_map[x7-int(SEPARATE_SHOW_SIZE/2)][y7-int(SEPARATE_SHOW_SIZE/2)]
 
     # focused area
     def SeparateMap(self, vehicle_x, vehicle_y) -> np.ndarray:
