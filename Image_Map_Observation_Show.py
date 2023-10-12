@@ -133,6 +133,12 @@ class Image_Map_Observation_Show:
         for x6 in range(int_remote_vehicle_min_vertex_x, int_remote_vehicle_max_vertex_x, 1):
             for y6 in range(int_remote_vehicle_min_vertex_y, int_remote_vehicle_max_vertex_y, 1):
                 self.whole_map[x6][y6] = d[remote_vehicle]
+                if x6 >= MAX_COORD - VEHICLE_LENGTH or y6 >= MAX_COORD - VEHICLE_LENGTH or \
+                    x6 <= MIN_COORD + VEHICLE_LENGTH :
+                    self.whole_map[x6][y6] = d[road]
+                if y6 <= MIN_COORD + VEHICLE_LENGTH:
+                    self.whole_map[x6][y6] = d[block]
+
 
     def illustration(self):
         for x7 in range(int(SIZE) + int(SEPARATE_SHOW_SIZE)):

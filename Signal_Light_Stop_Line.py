@@ -40,10 +40,10 @@ class Signal_Light_Stop_Line:
         self.danger_x = SINGLE_LANE_WIDTH/2
         self.danger_y = -INTERSECTION_HALF_SIZE + SINGLE_LANE_WIDTH/2
         self.signal = 0  # red: 0  green: 1  yellow: 2
-        # 红 20s 绿 15s 黄 5s 依次变化/
-        self.countdown_red = 20
-        self.countdown_green = 15
-        self.countdown_yellow = 5
+        # 红 9s 绿 26s 黄 2s 依次变化/
+        self.countdown_red = 9
+        self.countdown_green = 26
+        self.countdown_yellow = 2
         self.countdown_phase1 = self.countdown_red
         self.countdown_phase12 = self.countdown_red + self.countdown_green
         self.totalphasetime = self.countdown_red + self.countdown_yellow + self.countdown_green
@@ -54,7 +54,7 @@ class Signal_Light_Stop_Line:
     def __str__(self):
         return f'{(self.x, self.y)},{self.signal}{self.countdown}'
 
-    def signalphase(self, step: int):  # 红 20s 绿 15s 黄 5s 依次变化
+    def signalphase(self, step: int):  # 红 9s 绿 26s 黄 2s 依次变化
         if math.floor(step / self.totalphasetime) > 0 and step % self.totalphasetime == 0:
             self.loop_step = self.totalphasetime
         else:
