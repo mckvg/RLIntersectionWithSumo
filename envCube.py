@@ -68,6 +68,7 @@ from CONSTANTS import NUMBER_REMOTE_VEHICLES
 from CONSTANTS import PI
 from Image_Map_Observation import Image_Map_Observation
 from Image_Map_Observation_Show import Image_Map_Observation_Show
+from Signal_Light_Stop_Line import Signal_Light_Stop_Line
 # from readcsv import float_csv_data
 from client import *
 
@@ -312,6 +313,35 @@ class envCube(gym.Env):
                                                self.vehicle.max_vertex_y, self.vehicle.min_vertex_y)
         self.image_map_observation_show.Separate_Map(self.vehicle.max_vertex_x, self.vehicle.min_vertex_x,
                                                self.vehicle.max_vertex_y, self.vehicle.min_vertex_y)
+
+        # 信号灯信息在灰度图表示
+        if self.signal_light_stop_line.countdown_phase1 > self.episode_step:
+            self.image_map_observation_show.StopLineX(self.signal_light_stop_line.x1,
+                                                      self.signal_light_stop_line.y1, True)
+            # self.image_map_observation_show.StopLineX(self.signal_light_stop_line.x2,
+            #                                           self.signal_light_stop_line.y2, True)
+        elif self.episode_step == self.signal_light_stop_line.countdown_phase1:
+            self.image_map_observation_show.StopLineX(self.signal_light_stop_line.x1,
+                                                      self.signal_light_stop_line.y1, False)
+            # self.image_map_observation_show.StopLineX(self.signal_light_stop_line.x2,
+            #                                           self.signal_light_stop_line.y2, False)
+        # if self.signal_light_stop_line.countdown_phase1 <= self.episode_step < self.signal_light_stop_line.countdown_phase123:
+        #     self.image_map_observation_show.StopLineY(self.signal_light_stop_line.x3,
+        #                                               self.signal_light_stop_line.y3, True)
+        #     self.image_map_observation_show.StopLineY(self.signal_light_stop_line.x4,
+        #                                               self.signal_light_stop_line.y4, True)
+        # elif self.episode_step == self.signal_light_stop_line.countdown_phase123:
+        #     self.image_map_observation_show.StopLineY(self.signal_light_stop_line.x3,
+        #                                               self.signal_light_stop_line.y3, False)
+        #     self.image_map_observation_show.StopLineY(self.signal_light_stop_line.x4,
+        #                                               self.signal_light_stop_line.y4, False)
+        if self.signal_light_stop_line.countdown_phase123 <= self.episode_step < self.signal_light_stop_line.countdown_phase1231:
+            self.image_map_observation_show.StopLineX(self.signal_light_stop_line.x1,
+                                                      self.signal_light_stop_line.y1, True)
+            # self.image_map_observation_show.StopLineX(self.signal_light_stop_line.x2,
+            #                                           self.signal_light_stop_line.y2, True)
+
+
 
         # 更新直道的之前动作的最大最小坐标值(intersection中之前动作不更新)
         self.vehicle.UpdatePreExtremeValue()
@@ -871,7 +901,7 @@ class envCube(gym.Env):
         # self.first_other_vehicle = Remote_Cube(SIZE)
         # self.second_other_vehicle = Remote_Cube(SIZE)
         self.remote_vehicles = [Remote_Cube(SIZE) for _ in range(NUMBER_REMOTE_VEHICLES)]
-        self.signal_stop = Signal_Light_Stop_Line(SIZE)
+        self.signal_stop = Signal_Light_Stop_Line()
         self.vehicle_track = Track(SIZE)
         self.rectangle_list_off_road = Rectangle_List_Off_Road()
         self.rectangle_list_reverse = Rectangle_List_Reverse()
@@ -881,6 +911,7 @@ class envCube(gym.Env):
         self.rectangle_list_reverse_show = Rectangle_List_Reverse_Show()
         self.rectangle_list_crash_area_show = Rectangle_List_Crash_Area_Show()
         self.image_map_observation_show = Image_Map_Observation_Show()
+        self.signal_light_stop_line = Signal_Light_Stop_Line()
 
         print('reset')
 

@@ -139,7 +139,29 @@ class Image_Map_Observation_Show:
                 if y6 <= MIN_COORD + VEHICLE_LENGTH:
                     self.whole_map[x6][y6] = d[block]
 
+    def StopLineX(self, positionx, positiony, sign):
+        int_positionx = int(round(positionx,0))
+        int_positiony = int(round(positiony,0))
+        if sign == True:
+            for x8 in range(-int(3*SINGLE_LANE_WIDTH/2),int(3*SINGLE_LANE_WIDTH/2),1):
+                for y8 in range(-int(SINGLE_LANE_WIDTH/4), int(SINGLE_LANE_WIDTH/4),1):
+                    self.whole_map[int_positionx+x8][int_positiony+y8] = d[block]
+        elif sign == False:
+            for x8 in range(-int(3*SINGLE_LANE_WIDTH/2), int(3*SINGLE_LANE_WIDTH/2), 1):
+                for y8 in range(-int(SINGLE_LANE_WIDTH / 4), int(SINGLE_LANE_WIDTH / 4), 1):
+                    self.whole_map[int_positionx + x8][int_positiony + y8] = d[road]
 
+    def StopLineY(self, positionx, positiony, sign):
+        int_positionx = int(round(positionx,0))
+        int_positiony = int(round(positiony,0))
+        if sign == True:
+            for y9 in range(-int(3*SINGLE_LANE_WIDTH/2),int(3*SINGLE_LANE_WIDTH/2),1):
+                for x9 in range(-int(SINGLE_LANE_WIDTH/4), int(SINGLE_LANE_WIDTH/4),1):
+                    self.whole_map[int_positionx+x9][int_positiony+y9] = d[block]
+        elif sign == False:
+            for y9 in range(-int(3*SINGLE_LANE_WIDTH/2),int(3*SINGLE_LANE_WIDTH/2),1):
+                for x9 in range(-int(SINGLE_LANE_WIDTH/4), int(SINGLE_LANE_WIDTH/4),1):
+                    self.whole_map[int_positionx+x9][int_positiony+y9] = d[road]
     def illustration(self):
         for x7 in range(int(SIZE) + int(SEPARATE_SHOW_SIZE)):
             for y7 in range(int(SIZE) + int(SEPARATE_SHOW_SIZE)):
@@ -163,4 +185,3 @@ class Image_Map_Observation_Show:
         vehicle_y = (int(round(vehicle_max_vertex_y, 0)) + int(round(vehicle_min_vertex_y, 0))) / 2
         return self.SeparateMap(vehicle_x, vehicle_y)
                 
-        
