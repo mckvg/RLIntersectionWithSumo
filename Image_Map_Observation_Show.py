@@ -54,6 +54,7 @@ class Image_Map_Observation_Show:
         self.rectangle_list_crash_area = Rectangle_List_Crash_Area_Show()
         self.rectangle_list_expand_area = Rectangle_List_Expand_Area_Show()
 
+
         # 根据Rectangle_List_Off_Road类进行填图，填色为block
         for rec in range(self.rectangle_list_off_road.RectangleList_Show.size):
             for x1 in range(int(self.rectangle_list_off_road.RectangleList_Show[0][rec].min_x),
@@ -83,6 +84,22 @@ class Image_Map_Observation_Show:
             for y3 in range(int(MIN_COORD),int(MAX_COORD)+1,1 ):
                 if self.whole_map[x3][y3] != d[block]:
                     self.whole_map[x3][y3] = d[road]
+
+    def offroad(self):
+        # 根据Rectangle_List_Off_Road类进行填图，填色为block
+        for rec in range(self.rectangle_list_off_road.RectangleList_Show.size):
+            for x1 in range(int(self.rectangle_list_off_road.RectangleList_Show[0][rec].min_x),
+                            int(self.rectangle_list_off_road.RectangleList_Show[0][rec].max_x), 1):
+                for y1 in range(int(self.rectangle_list_off_road.RectangleList_Show[0][rec].min_y),
+                                int(self.rectangle_list_off_road.RectangleList_Show[0][rec].max_y), 1):
+                    self.whole_map[x1][y1] = d[block]
+        # 根据Rectangle_List_Expand_Area类进行填图，填色为block
+        for rec in range(self.rectangle_list_expand_area.RectangleList_Show.size):
+            for x22 in range(int(self.rectangle_list_expand_area.RectangleList_Show[0][rec].min_x),
+                            int(self.rectangle_list_expand_area.RectangleList_Show[0][rec].max_x), 1):
+                for y22 in range(int(self.rectangle_list_expand_area.RectangleList_Show[0][rec].min_y),
+                                int(self.rectangle_list_expand_area.RectangleList_Show[0][rec].max_y), 1):
+                    self.whole_map[x22][y22] = d[block]
 
     # 在主程序判定完reverse area:(self.rectangle_list_reverse.judgement(self.vehicle.init_state))之后，调用此函数，对reverse area进行填充
     def reverse(self, rectangle_list_reverse_rectanglelist):

@@ -43,6 +43,8 @@ from Track import Track
 import Rectangle
 from Rectangle import Rectangle, Rectangle_List_Off_Road, Rectangle_List_Reverse, Rectangle_List_Crash_Area
 from Rectangle_Show import Rectangle_Show, Rectangle_List_Off_Road_Show, Rectangle_List_Reverse_Show, Rectangle_List_Crash_Area_Show
+from filterpy.kalman import UnscentedKalmanFilter, MerweScaledSigmaPoints
+from UKF_Prediction import UKF_Prediction
 
 from CONSTANTS import SCALE
 from CONSTANTS import SIZE
@@ -340,6 +342,51 @@ class envCube(gym.Env):
                                                       self.signal_light_stop_line.y1, True)
             # self.image_map_observation_show.StopLineX(self.signal_light_stop_line.x2,
             #                                           self.signal_light_stop_line.y2, True)
+
+        # UKF prediction
+
+        if self.episode_step == 1:
+            for i in range(NUMBER_REMOTE_VEHICLES):
+                self.ukf[i].x_prior[0] = self.remote_vehicles[i].x
+                self.ukf[i].x_prior[1] = self.remote_vehicles[i].y
+                self.ukf[i].x_prior[2] = self.remote_vehicles[i].yaw_angle
+                self.ukf_prediction[i].initUKF(self.ukf[i], self.remote_vehicles[i].x, self.remote_vehicles[i].y,
+                                        self.remote_vehicles[i].yaw_angle)
+
+                self.predicted_remote_vehicles[i].x = self.ukf[i].x_prior[0]
+                self.predicted_remote_vehicles[i].y = self.ukf[i].x_prior[1]
+                self.predicted_remote_vehicles[i].yaw_angle = self.ukf[i].x_prior[2]
+                self.predicted_remote_vehicles[i].move()
+
+        # self.predicted_remote_vehicles[0].x = self.remote_vehicles[0].x
+        # self.predicted_remote_vehicles[0].y = self.remote_vehicles[0].y
+        # self.predicted_remote_vehicles[0].yaw_angle = self.remote_vehicles[0].yaw_angle
+        # self.predicted_remote_vehicles[0].velocity = self.remote_vehicles[0].velocity
+        #
+        # self.predicted_remote_vehicles[0].move()
+
+        if self.episode_step != 1:
+            for i in range(NUMBER_REMOTE_VEHICLES):
+                self.ukf[i].update(z=([self.remote_vehicles[i].x,self.remote_vehicles[i].y,
+                                    self.remote_vehicles[i].yaw_angle]))
+        for i in range(NUMBER_REMOTE_VEHICLES):
+            self.ukf[i].predict(v=self.remote_vehicles[i].velocity)
+
+        for i in range(NUMBER_REMOTE_VEHICLES):
+            self.predicted_remote_vehicles[i].x = self.ukf[i].x_prior[0]
+            self.predicted_remote_vehicles[i].y = self.ukf[i].x_prior[1]
+            self.predicted_remote_vehicles[i].yaw_angle = self.ukf[i].x_prior[2]
+            self.predicted_remote_vehicles[i].move()
+
+        #  prediction show
+        self.predicted_image_map_observation_show.reverse(self.rectangle_list_reverse_show.RectangleList_Show)
+        self.predicted_image_map_observation_show.offroad()
+        for i in range(NUMBER_REMOTE_VEHICLES):
+            self.predicted_image_map_observation_show.RemoteVehicle(
+                self.predicted_remote_vehicles[i].max_vertex_x, self.predicted_remote_vehicles[i].min_vertex_x,
+                self.predicted_remote_vehicles[i].max_vertex_y, self.predicted_remote_vehicles[i].min_vertex_y,
+                self.predicted_remote_vehicles[i].pre_max_vertex_x, self.predicted_remote_vehicles[i].pre_min_vertex_x,
+                self.predicted_remote_vehicles[i].pre_max_vertex_y, self.predicted_remote_vehicles[i].pre_min_vertex_y)
 
 
 
@@ -901,6 +948,7 @@ class envCube(gym.Env):
         # self.first_other_vehicle = Remote_Cube(SIZE)
         # self.second_other_vehicle = Remote_Cube(SIZE)
         self.remote_vehicles = [Remote_Cube(SIZE) for _ in range(NUMBER_REMOTE_VEHICLES)]
+        self.predicted_remote_vehicles = [Remote_Cube(SIZE) for _ in range(NUMBER_REMOTE_VEHICLES)]
         self.signal_stop = Signal_Light_Stop_Line()
         self.vehicle_track = Track(SIZE)
         self.rectangle_list_off_road = Rectangle_List_Off_Road()
@@ -912,6 +960,8 @@ class envCube(gym.Env):
         self.rectangle_list_crash_area_show = Rectangle_List_Crash_Area_Show()
         self.image_map_observation_show = Image_Map_Observation_Show()
         self.signal_light_stop_line = Signal_Light_Stop_Line()
+        self.predicted_image_map_observation_show = Image_Map_Observation_Show()
+
 
         print('reset')
 
@@ -986,6 +1036,40 @@ class envCube(gym.Env):
         self.CIRCLE_COUNT = 0
         self.ARRIVE_AT_MID_GOAL = np.zeros((self.mid_goal_front_space_y), dtype=np.int32)
 
+        for i in range(NUMBER_REMOTE_VEHICLES):
+            self.predicted_remote_vehicles[i].x = self.remote_vehicles[i].x
+            self.predicted_remote_vehicles[i].y = self.remote_vehicles[i].y
+            self.predicted_remote_vehicles[i].yaw_angle = self.remote_vehicles[i].yaw_angle
+            self.predicted_remote_vehicles[i].velocity = self.remote_vehicles[i].velocity
+
+        self.ukf_prediction = [UKF_Prediction() for _ in range(NUMBER_REMOTE_VEHICLES)]
+        self.points = MerweScaledSigmaPoints(n=3, alpha=.00001, beta=2, kappa=0)
+
+        # self.ukf = [[None] for _ in range(NUMBER_REMOTE_VEHICLES)]
+        #
+        # for i in range(NUMBER_REMOTE_VEHICLES):
+        #     self.ukf[i] = UnscentedKalmanFilter(dim_x=3, dim_z=3, dt=1, fx=self.ukf_prediction[i].fx,
+        #                                         hx=self.ukf_prediction[i].hx, points=self.points)
+
+        # for i in range(NUMBER_REMOTE_VEHICLES):
+        #     self.ukf[i].x_prior[0] = self.remote_vehicles[i].x
+        #     self.ukf[i].x_prior[1] = self.remote_vehicles[i].y
+        #     self.ukf[i].x_prior[2] = self.remote_vehicles[i].yaw_angle
+
+        self.ukf = []  # 创建一个空列表来存储 UnscentedKalmanFilter 对象
+
+        for i in range(NUMBER_REMOTE_VEHICLES):
+            ukf_instance = UnscentedKalmanFilter(dim_x=3, dim_z=3, dt=1, fx=self.ukf_prediction[i].fx,
+                                                 hx=self.ukf_prediction[i].hx, points=self.points)
+            ukf_instance.x_prior[0] = self.remote_vehicles[i].x
+            ukf_instance.x_prior[1] = self.remote_vehicles[i].y
+            ukf_instance.x_prior[2] = self.remote_vehicles[i].yaw_angle
+            self.ukf.append(ukf_instance)
+
+        for i in range(NUMBER_REMOTE_VEHICLES):
+            self.ukf_prediction[i].initUKF(self.ukf[i], self.remote_vehicles[i].x, self.remote_vehicles[i].y,
+                                    self.remote_vehicles[i].yaw_angle)
+
         # print(self.episode_step, ':', self.vehicle_position, self.vehicle_state, self.relative_distance_to_goal,
         #       self.JUDGEMENT_IN_ROAD, self.Time_to_off_road, self.vehicle.distance_to_off_road)
 
@@ -1018,10 +1102,11 @@ class envCube(gym.Env):
 
     # 多媒体演示
     def render(self, mode="human"):
-        img, img1, img2 = self.get_image()
+        img, img1, img2, img3 = self.get_image()
         # cv2.imshow('0', np.array(img))
         cv2.imshow('1', np.array(img1))
         cv2.imshow('2', np.array(img2))
+        cv2.imshow('3', np.array(img3))
         if self.goal or self.EXCEED_MAX_STEP:
             cv2.waitKey(1500)
         else:
@@ -1141,8 +1226,11 @@ class envCube(gym.Env):
         env1 = self.image_map_observation_show.illustration_whole_map
         self.image_map_observation_show.illustrationagent()
         env2 = self.image_map_observation_show.illustration_separate_map
+        self.predicted_image_map_observation_show.illustration()
+        env3 = self.predicted_image_map_observation_show.illustration_whole_map
 
         img = Image.fromarray(env, 'RGB')
         img1 = Image.fromarray(env1, 'L')
         img2 = Image.fromarray(env2, 'L')
-        return img, img1, img2,
+        img3 = Image.fromarray(env3, 'L')
+        return img, img1, img2, img3
