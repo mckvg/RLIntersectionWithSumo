@@ -405,7 +405,6 @@ class envCube(gym.Env):
         self.predicted_ego_vehicle.move()
 
         # UKF ego vehicle prediction show
-
         self.predicted_image_map_observation_show.agent(self.predicted_ego_vehicle.max_vertex_x,
                                                         self.predicted_ego_vehicle.min_vertex_x,
                                                         self.predicted_ego_vehicle.max_vertex_y,
@@ -414,6 +413,24 @@ class envCube(gym.Env):
                                                         self.predicted_ego_vehicle.pre_min_vertex_x,
                                                         self.predicted_ego_vehicle.pre_max_vertex_y,
                                                         self.predicted_ego_vehicle.pre_min_vertex_y)
+
+        # UKF ego vehicle center show
+        self.predicted_image_map_observation_show.Separate_Map(self.predicted_ego_vehicle.max_vertex_x,
+                                                               self.predicted_ego_vehicle.min_vertex_x,
+                                                               self.predicted_ego_vehicle.max_vertex_y,
+                                                               self.predicted_ego_vehicle.min_vertex_y)
+
+        # UKF 信号灯信息在灰度图表示
+        if self.signal_light_stop_line.countdown_phase1 - 1 > self.episode_step:
+            self.predicted_image_map_observation_show.StopLineX(self.signal_light_stop_line.x1,
+                                                      self.signal_light_stop_line.y1, True)
+        elif self.episode_step == self.signal_light_stop_line.countdown_phase1 - 1:
+            self.predicted_image_map_observation_show.StopLineX(self.signal_light_stop_line.x1,
+                                                      self.signal_light_stop_line.y1, False)
+        if self.signal_light_stop_line.countdown_phase123 - 1 <= self.episode_step < \
+                self.signal_light_stop_line.countdown_phase1231 - 1:
+            self.predicted_image_map_observation_show.StopLineX(self.signal_light_stop_line.x1,
+                                                      self.signal_light_stop_line.y1, True)
 
 
 
@@ -1135,11 +1152,12 @@ class envCube(gym.Env):
 
     # 多媒体演示
     def render(self, mode="human"):
-        img, img1, img2, img3 = self.get_image()
+        img, img1, img2, img3, img4 = self.get_image()
         # cv2.imshow('0', np.array(img))
         cv2.imshow('1', np.array(img1))
         cv2.imshow('2', np.array(img2))
         cv2.imshow('3', np.array(img3))
+        cv2.imshow('4', np.array(img4))
         if self.goal or self.EXCEED_MAX_STEP:
             cv2.waitKey(1500)
         else:
@@ -1261,9 +1279,12 @@ class envCube(gym.Env):
         env2 = self.image_map_observation_show.illustration_separate_map
         self.predicted_image_map_observation_show.illustration()
         env3 = self.predicted_image_map_observation_show.illustration_whole_map
+        self.predicted_image_map_observation_show.illustrationagent()
+        env4 = self.predicted_image_map_observation_show.illustration_separate_map
 
         img = Image.fromarray(env, 'RGB')
         img1 = Image.fromarray(env1, 'L')
         img2 = Image.fromarray(env2, 'L')
         img3 = Image.fromarray(env3, 'L')
-        return img, img1, img2, img3
+        img4 = Image.fromarray(env4, 'L')
+        return img, img1, img2, img3, img4
