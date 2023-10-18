@@ -155,6 +155,8 @@ class Image_Map_Observation_Show:
                     self.whole_map[x6][y6] = d[road]
                 if y6 <= MIN_COORD + VEHICLE_LENGTH:
                     self.whole_map[x6][y6] = d[block]
+                if x6 > MAX_COORD or x6 < MIN_COORD or y6 > MAX_COORD or y6 < MIN_COORD:
+                    self.whole_map[x6][y6] = d[block]
 
     def StopLineX(self, positionx, positiony, sign):
         int_positionx = int(round(positionx,0))
