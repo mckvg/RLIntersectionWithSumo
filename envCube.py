@@ -29,6 +29,7 @@ from stable_baselines3 import A2C, DDPG, HerReplayBuffer, DQN
 from stable_baselines3.common.noise import NormalActionNoise, OrnsteinUhlenbeckActionNoise
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.callbacks import EvalCallback
+from math import tan, sin, cos, sqrt, atan2
 
 import torch as th
 import math
@@ -45,6 +46,7 @@ from Rectangle import Rectangle, Rectangle_List_Off_Road, Rectangle_List_Reverse
 from Rectangle_Show import Rectangle_Show, Rectangle_List_Off_Road_Show, Rectangle_List_Reverse_Show, Rectangle_List_Crash_Area_Show
 from filterpy.kalman import UnscentedKalmanFilter, MerweScaledSigmaPoints
 from UKF_Prediction import UKF_Prediction
+from UKF_CA_Prediction import UKF_CA_Prediction
 
 from CONSTANTS import SCALE
 from CONSTANTS import SIZE
@@ -383,25 +385,39 @@ class envCube(gym.Env):
         # UKF ego vehicle prediction
         if self.episode_step == 1:
             self.ukf_ego.x_prior[0] = self.vehicle.x
-            self.ukf_ego.x_prior[1] = self.vehicle.y
-            self.ukf_ego.x_prior[2] = self.vehicle.yaw_angle
+            self.ukf_ego.x_prior[1] = self.vehicle.velocity * sin(self.vehicle.yaw_angle)
+            self.ukf_ego.x_prior[2] = self.vehicle.acceleration * sin(self.vehicle.yaw_angle)
+            self.ukf_ego.x_prior[3] = self.vehicle.y
+            self.ukf_ego.x_prior[4] = self.vehicle.velocity * cos(self.vehicle.yaw_angle)
+            self.ukf_ego.x_prior[5] = self.vehicle.acceleration * cos(self.vehicle.yaw_angle)
 
-            self.ukf_prediction_ego.initUKF(self.ukf_ego, self.vehicle.x, self.vehicle.y, self.vehicle.yaw_angle)
+            self.ukf_prediction_ego.initUKF(self.ukf_ego, self.ukf_ego.x_prior[0], self.ukf_ego.x_prior[1],
+                                            self.ukf_ego.x_prior[2], self.ukf_ego.x_prior[3],
+                                            self.ukf_ego.x_prior[4], self.ukf_ego.x_prior[5])
 
             self.predicted_ego_vehicle.x = self.vehicle.x
             self.predicted_ego_vehicle.y = self.vehicle.y
             self.predicted_ego_vehicle.yaw_angle = self.vehicle.yaw_angle
+            self.predicted_ego_vehicle.velocity = self.vehicle.velocity
+            self.predicted_ego_vehicle.acceleration = self.vehicle.acceleration
 
             self.predicted_ego_vehicle.move()
 
         if self.episode_step != 1:
-            self.ukf_ego.update(z=([self.vehicle.x, self.vehicle.y, self.vehicle.yaw_angle]))
+            self.ukf_ego.update(z=([self.vehicle.x, self.vehicle.velocity * sin(self.vehicle.yaw_angle),
+                                    self.vehicle.acceleration * sin(self.vehicle.yaw_angle),
+                                    self.vehicle.y, self.vehicle.velocity * cos(self.vehicle.yaw_angle),
+                                    self.vehicle.acceleration * cos(self.vehicle.yaw_angle)]))
 
-        self.ukf_ego.predict(v=self.vehicle.velocity)
+        self.ukf_ego.predict(ax=self.vehicle.acceleration * sin(self.vehicle.yaw_angle),
+                             ay=self.vehicle.acceleration * cos(self.vehicle.yaw_angle))
 
         self.predicted_ego_vehicle.x = self.ukf_ego.x_prior[0]
-        self.predicted_ego_vehicle.y = self.ukf_ego.x_prior[1]
-        self.predicted_ego_vehicle.yaw_angle = self.ukf_ego.x_prior[2]
+        self.predicted_ego_vehicle.y = self.ukf_ego.x_prior[3]
+        self.predicted_ego_vehicle.yaw_angle = atan2(self.ukf_ego.x_prior[1], self.ukf_ego.x_prior[4])
+        self.predicted_ego_vehicle.velocity = sqrt(self.ukf_ego.x_prior[1]**2 + self.ukf_ego.x_prior[4]**2)
+        self.predicted_ego_vehicle.acceleration = sqrt(self.ukf_ego.x_prior[2]**2 + self.ukf_ego.x_prior[5]**2)
+
         self.predicted_ego_vehicle.move()
 
         # UKF ego vehicle prediction show
@@ -1110,15 +1126,23 @@ class envCube(gym.Env):
         self.predicted_ego_vehicle.y = self.vehicle.y
         self.predicted_ego_vehicle.yaw_angle = self.vehicle.yaw_angle
         self.predicted_ego_vehicle.velocity = self.vehicle.velocity
+        self.predicted_ego_vehicle.acceleration = self.vehicle.acceleration
 
-        self.ukf_prediction_ego = UKF_Prediction()
-        self.ukf_ego = UnscentedKalmanFilter(dim_x=3, dim_z=3, dt=1, fx=self.ukf_prediction_ego.fx,
-                                                 hx=self.ukf_prediction_ego.hx, points=self.points)
+        self.ukf_prediction_ego = UKF_CA_Prediction()
+        self.points_ego = MerweScaledSigmaPoints(n=6, alpha=.00001, beta=2, kappa=0)
+        self.ukf_ego = UnscentedKalmanFilter(dim_x=6, dim_z=6, dt=1, fx=self.ukf_prediction_ego.fx,
+                                                 hx=self.ukf_prediction_ego.hx, points=self.points_ego)
         self.ukf_ego.x_prior[0] = self.vehicle.x
-        self.ukf_ego.x_prior[1] = self.vehicle.y
-        self.ukf_ego.x_prior[2] = self.vehicle.yaw_angle
+        self.ukf_ego.x_prior[1] = self.vehicle.velocity * sin(self.vehicle.yaw_angle)
+        self.ukf_ego.x_prior[2] = self.vehicle.acceleration * sin(self.vehicle.yaw_angle)
+        self.ukf_ego.x_prior[3] = self.vehicle.y
+        self.ukf_ego.x_prior[4] = self.vehicle.velocity * cos(self.vehicle.yaw_angle)
+        self.ukf_ego.x_prior[5] = self.vehicle.acceleration * cos(self.vehicle.yaw_angle)
 
-        self.ukf_prediction_ego.initUKF(self.ukf_ego, self.vehicle.x, self.vehicle.y, self.vehicle.yaw_angle)
+
+        self.ukf_prediction_ego.initUKF(self.ukf_ego, self.ukf_ego.x_prior[0], self.ukf_ego.x_prior[1],
+                                        self.ukf_ego.x_prior[2], self.ukf_ego.x_prior[3],
+                                        self.ukf_ego.x_prior[4], self.ukf_ego.x_prior[5])
 
         # print(self.episode_step, ':', self.vehicle_position, self.vehicle_state, self.relative_distance_to_goal,
         #       self.JUDGEMENT_IN_ROAD, self.Time_to_off_road, self.vehicle.distance_to_off_road)
