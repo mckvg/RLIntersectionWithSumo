@@ -2,7 +2,7 @@
 from math import tan, sin, cos, sqrt
 from filterpy.kalman import UnscentedKalmanFilter, MerweScaledSigmaPoints
 import numpy as np
-class UKF_Prediction:
+class UKF_CV_Prediction:
 
     def fx(self, x, dt, vx, vy):
         x[1] = vx
