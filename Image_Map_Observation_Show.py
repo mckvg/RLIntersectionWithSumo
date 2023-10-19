@@ -22,6 +22,8 @@ from CONSTANTS import max_positionx
 from CONSTANTS import min_positiony
 from CONSTANTS import max_positiony
 import numpy as np
+from numpy import round
+
 from Rectangle_Show import Rectangle_List_Reverse_Show, Rectangle_List_Crash_Area_Show, Rectangle_List_Off_Road_Show, Rectangle_Show, \
     Rectangle_List_Expand_Area_Show
 import Cube
@@ -124,7 +126,8 @@ class Image_Map_Observation_Show:
         int_vehicle_pre_min_vertex_y = int(round(vehicle_pre_min_vertex_y, 0))
         for x55 in range(int_vehicle_pre_min_vertex_x, int_vehicle_pre_max_vertex_x, 1):
             for y55 in range(int_vehicle_pre_min_vertex_y, int_vehicle_pre_max_vertex_y, 1):
-                self.whole_map[x55][y55] = d[road]
+                if self.whole_map[x55][y55] == d[agent]:
+                    self.whole_map[x55][y55] = d[road]
         for x5 in range(int_vehicle_min_vertex_x, int_vehicle_max_vertex_x, 1):
             for y5 in range(int_vehicle_min_vertex_y, int_vehicle_max_vertex_y, 1):
                 self.whole_map[x5][y5] = d[agent]

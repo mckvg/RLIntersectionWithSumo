@@ -44,7 +44,7 @@ from Track import Track
 import Rectangle
 from Rectangle import Rectangle, Rectangle_List_Off_Road, Rectangle_List_Reverse, Rectangle_List_Crash_Area
 from Rectangle_Show import Rectangle_Show, Rectangle_List_Off_Road_Show, Rectangle_List_Reverse_Show, Rectangle_List_Crash_Area_Show
-from filterpy.kalman import UnscentedKalmanFilter, MerweScaledSigmaPoints
+from filterpy.kalman import UnscentedKalmanFilter, MerweScaledSigmaPoints, CubatureKalmanFilter
 from UKF_Prediction import UKF_Prediction
 from UKF_CA_Prediction import UKF_CA_Prediction
 from UKF_CV_Prediction import UKF_CV_Prediction
@@ -1155,6 +1155,7 @@ class envCube(gym.Env):
         self.ukf_prediction_ego.initUKF(self.ukf_ego, self.ukf_ego.x_prior[0], self.ukf_ego.x_prior[1],
                                         self.ukf_ego.x_prior[2], self.ukf_ego.x_prior[3],
                                         self.ukf_ego.x_prior[4], self.ukf_ego.x_prior[5])
+
 
         # print(self.episode_step, ':', self.vehicle_position, self.vehicle_state, self.relative_distance_to_goal,
         #       self.JUDGEMENT_IN_ROAD, self.Time_to_off_road, self.vehicle.distance_to_off_road)
