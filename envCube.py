@@ -48,6 +48,8 @@ from filterpy.kalman import UnscentedKalmanFilter, MerweScaledSigmaPoints, Cubat
 from UKF_Prediction import UKF_Prediction
 from UKF_CA_Prediction import UKF_CA_Prediction
 from UKF_CV_Prediction import UKF_CV_Prediction
+from UKF_CL_Prediction import UKF_CL_Prediction
+from UKF_Turn_Prediction import UKF_Turn_Prediction
 
 from CONSTANTS import SCALE
 from CONSTANTS import SIZE
@@ -349,15 +351,25 @@ class envCube(gym.Env):
         # UKF remote vehicle prediction
         if self.episode_step == 1:
             for i in range(NUMBER_REMOTE_VEHICLES):
-                self.ukf[i].x_prior[0] = self.remote_vehicles[i].x
-                self.ukf[i].x_prior[1] = self.remote_vehicles[i].velocity * sin(self.remote_vehicles[i].yaw_angle)
-                self.ukf[i].x_prior[2] = self.remote_vehicles[i].y
-                self.ukf[i].x_prior[3] = self.remote_vehicles[i].velocity * cos(self.remote_vehicles[i].yaw_angle)
+                self.ukf_remote_cv[i].x_prior[0] = self.remote_vehicles[i].x
+                self.ukf_remote_cv[i].x_prior[1] = self.remote_vehicles[i].velocity * sin(self.remote_vehicles[i].yaw_angle)
+                self.ukf_remote_cv[i].x_prior[2] = self.remote_vehicles[i].y
+                self.ukf_remote_cv[i].x_prior[3] = self.remote_vehicles[i].velocity * cos(self.remote_vehicles[i].yaw_angle)
 
-                self.ukf_prediction[i].initUKF(self.ukf[i], self.remote_vehicles[i].x,
+                self.ukf_cv_prediction[i].initUKF(self.ukf_remote_cv[i], self.remote_vehicles[i].x,
                                                self.remote_vehicles[i].velocity * sin(self.remote_vehicles[i].yaw_angle),
                                                self.remote_vehicles[i].y,
                                                self.remote_vehicles[i].velocity * cos(self.remote_vehicles[i].yaw_angle))
+
+                self.ukf_remote_cl[i].x_prior[0] = self.remote_vehicles[i].x
+                self.ukf_remote_cl[i].x_prior[1] = self.remote_vehicles[i].velocity * sin(self.remote_vehicles[i].yaw_angle)
+                self.ukf_remote_cl[i].x_prior[2] = self.remote_vehicles[i].y
+                self.ukf_remote_cl[i].x_prior[3] = self.remote_vehicles[i].velocity * cos(self.remote_vehicles[i].yaw_angle)
+
+                self.ukf_cl_prediction[i].initUKF(self.ukf_remote_cl[i], self.remote_vehicles[i].x,
+                                                  self.remote_vehicles[i].velocity * sin(self.remote_vehicles[i].yaw_angle),
+                                                  self.remote_vehicles[i].y,
+                                                  self.remote_vehicles[i].velocity * cos(self.remote_vehicles[i].yaw_angle))
 
                 self.predicted_remote_vehicles[i].x = self.remote_vehicles[i].x
                 self.predicted_remote_vehicles[i].y = self.remote_vehicles[i].y
@@ -366,19 +378,27 @@ class envCube(gym.Env):
 
         if self.episode_step != 1:
             for i in range(NUMBER_REMOTE_VEHICLES):
-                self.ukf[i].update(z=([self.remote_vehicles[i].x,
+                self.imm_remote_cv_cl[i].update(z=([self.remote_vehicles[i].x,
                                        self.remote_vehicles[i].velocity * sin(self.remote_vehicles[i].yaw_angle),
                                        self.remote_vehicles[i].y,
                                        self.remote_vehicles[i].velocity * cos(self.remote_vehicles[i].yaw_angle)]))
         for i in range(NUMBER_REMOTE_VEHICLES):
-            self.ukf[i].predict(vx=self.remote_vehicles[i].velocity * sin(self.remote_vehicles[i].yaw_angle),
-                                vy=self.remote_vehicles[i].velocity * cos(self.remote_vehicles[i].yaw_angle))
+            self.ukf_cv_prediction[i].reset(self.remote_vehicles[i].velocity * sin(self.remote_vehicles[i].yaw_angle),
+                                  self.remote_vehicles[i].velocity * cos(self.remote_vehicles[i].yaw_angle))
+            self.ukf_cl_prediction[i].reset(self.remote_vehicles[i].velocity * sin(self.remote_vehicles[i].yaw_angle),
+                                            self.remote_vehicles[i].velocity * cos(self.remote_vehicles[i].yaw_angle))
+            # u_values = np.array([(self.remote_vehicles[i].velocity * sin(self.remote_vehicles[i].yaw_angle),
+            #                       self.remote_vehicles[i].velocity * cos(self.remote_vehicles[i].yaw_angle))],
+            #                     dtype=[('vx', 'f8'), ('vy', 'f8')])
+            self.imm_remote_cv_cl[i].predict()
 
         for i in range(NUMBER_REMOTE_VEHICLES):
-            self.predicted_remote_vehicles[i].x = self.ukf[i].x_prior[0]
-            self.predicted_remote_vehicles[i].y = self.ukf[i].x_prior[2]
-            self.predicted_remote_vehicles[i].yaw_angle = atan2(self.ukf[i].x_prior[1], self.ukf[i].x_prior[3])
-            self.predicted_remote_vehicles[i].velocity = sqrt(self.ukf[i].x_prior[1] ** 2 + self.ukf[i].x_prior[3] ** 2)
+            self.predicted_remote_vehicles[i].x = self.imm_remote_cv_cl[i].x_prior[0]
+            self.predicted_remote_vehicles[i].y = self.imm_remote_cv_cl[i].x_prior[2]
+            self.predicted_remote_vehicles[i].yaw_angle = atan2(self.imm_remote_cv_cl[i].x_prior[1],
+                                                                self.imm_remote_cv_cl[i].x_prior[3])
+            self.predicted_remote_vehicles[i].velocity = sqrt(self.imm_remote_cv_cl[i].x_prior[1] ** 2
+                                                              + self.imm_remote_cv_cl[i].x_prior[3] ** 2)
             self.predicted_remote_vehicles[i].move()
 
         # UKF remote vehicle prediction show
@@ -393,39 +413,65 @@ class envCube(gym.Env):
 
         # UKF ego vehicle prediction
         if self.episode_step == 1:
-            self.ukf_ego.x_prior[0] = self.vehicle.x
-            self.ukf_ego.x_prior[1] = self.vehicle.velocity * sin(self.vehicle.yaw_angle)
-            self.ukf_ego.x_prior[2] = self.vehicle.acceleration * sin(self.vehicle.yaw_angle)
-            self.ukf_ego.x_prior[3] = self.vehicle.y
-            self.ukf_ego.x_prior[4] = self.vehicle.velocity * cos(self.vehicle.yaw_angle)
-            self.ukf_ego.x_prior[5] = self.vehicle.acceleration * cos(self.vehicle.yaw_angle)
+            self.ukf_ego_ca.x_prior[0] = self.vehicle.x
+            self.ukf_ego_ca.x_prior[1] = self.vehicle.velocity * sin(self.vehicle.yaw_angle)
+            self.ukf_ego_ca.x_prior[2] = self.vehicle.acceleration * sin(self.vehicle.yaw_angle)
+            self.ukf_ego_ca.x_prior[3] = self.vehicle.y
+            self.ukf_ego_ca.x_prior[4] = self.vehicle.velocity * cos(self.vehicle.yaw_angle)
+            self.ukf_ego_ca.x_prior[5] = self.vehicle.acceleration * cos(self.vehicle.yaw_angle)
+            self.ukf_ego_ca.x_prior[6] = self.vehicle.yaw_angle - self.vehicle.pre_yaw_angle
 
-            self.ukf_prediction_ego.initUKF(self.ukf_ego, self.ukf_ego.x_prior[0], self.ukf_ego.x_prior[1],
-                                            self.ukf_ego.x_prior[2], self.ukf_ego.x_prior[3],
-                                            self.ukf_ego.x_prior[4], self.ukf_ego.x_prior[5])
+            self.ukf_ca_prediction_ego.initUKF(self.ukf_ego_ca, self.vehicle.x,
+                                           self.vehicle.velocity * sin(self.vehicle.yaw_angle),
+                                           self.vehicle.acceleration * sin(self.vehicle.yaw_angle),
+                                           self.vehicle.y, self.vehicle.velocity * cos(self.vehicle.yaw_angle),
+                                           self.vehicle.acceleration * cos(self.vehicle.yaw_angle),
+                                           self.vehicle.yaw_angle - self.vehicle.pre_yaw_angle)
+
+            self.ukf_ego_turn.x_prior[0] = self.vehicle.x
+            self.ukf_ego_turn.x_prior[1] = self.vehicle.velocity * sin(self.vehicle.yaw_angle)
+            self.ukf_ego_turn.x_prior[2] = self.vehicle.acceleration * sin(self.vehicle.yaw_angle)
+            self.ukf_ego_turn.x_prior[3] = self.vehicle.y
+            self.ukf_ego_turn.x_prior[4] = self.vehicle.velocity * cos(self.vehicle.yaw_angle)
+            self.ukf_ego_turn.x_prior[5] = self.vehicle.acceleration * cos(self.vehicle.yaw_angle)
+            self.ukf_ego_turn.x_prior[6] = self.vehicle.yaw_angle - self.vehicle.pre_yaw_angle
+
+            self.ukf_turn_prediction_ego.initUKF(self.ukf_ego_turn, self.vehicle.x,
+                                                 self.vehicle.velocity * sin(self.vehicle.yaw_angle),
+                                                 self.vehicle.acceleration * sin(self.vehicle.yaw_angle),
+                                                 self.vehicle.y, self.vehicle.velocity * cos(self.vehicle.yaw_angle),
+                                                 self.vehicle.acceleration * cos(self.vehicle.yaw_angle),
+                                                 self.vehicle.yaw_angle - self.vehicle.pre_yaw_angle)
 
             self.predicted_ego_vehicle.x = self.vehicle.x
             self.predicted_ego_vehicle.y = self.vehicle.y
             self.predicted_ego_vehicle.yaw_angle = self.vehicle.yaw_angle
             self.predicted_ego_vehicle.velocity = self.vehicle.velocity
             self.predicted_ego_vehicle.acceleration = self.vehicle.acceleration
-
             self.predicted_ego_vehicle.move()
 
         if self.episode_step != 1:
-            self.ukf_ego.update(z=([self.vehicle.x, self.vehicle.velocity * sin(self.vehicle.yaw_angle),
+            self.imm_ego_ca_turn.update(z=([self.vehicle.x, self.vehicle.velocity * sin(self.vehicle.yaw_angle),
                                     self.vehicle.acceleration * sin(self.vehicle.yaw_angle),
                                     self.vehicle.y, self.vehicle.velocity * cos(self.vehicle.yaw_angle),
-                                    self.vehicle.acceleration * cos(self.vehicle.yaw_angle)]))
+                                    self.vehicle.acceleration * cos(self.vehicle.yaw_angle),
+                                    self.vehicle.yaw_angle - self.vehicle.pre_yaw_angle]))
 
-        self.ukf_ego.predict(ax=self.vehicle.acceleration * sin(self.vehicle.yaw_angle),
-                             ay=self.vehicle.acceleration * cos(self.vehicle.yaw_angle))
+        self.ukf_ca_prediction_ego.reset(ax=self.vehicle.acceleration * sin(self.vehicle.yaw_angle),
+                             ay=self.vehicle.acceleration * cos(self.vehicle.yaw_angle),
+                             dangle=self.vehicle.yaw_angle - self.vehicle.pre_yaw_angle)
 
-        self.predicted_ego_vehicle.x = self.ukf_ego.x_prior[0]
-        self.predicted_ego_vehicle.y = self.ukf_ego.x_prior[3]
-        self.predicted_ego_vehicle.yaw_angle = atan2(self.ukf_ego.x_prior[1], self.ukf_ego.x_prior[4])
-        self.predicted_ego_vehicle.velocity = sqrt(self.ukf_ego.x_prior[1]**2 + self.ukf_ego.x_prior[4]**2)
-        self.predicted_ego_vehicle.acceleration = sqrt(self.ukf_ego.x_prior[2]**2 + self.ukf_ego.x_prior[5]**2)
+        self.ukf_turn_prediction_ego.reset(ax=self.vehicle.acceleration * sin(self.vehicle.yaw_angle),
+                             ay=self.vehicle.acceleration * cos(self.vehicle.yaw_angle),
+                             dangle=self.vehicle.yaw_angle - self.vehicle.pre_yaw_angle)
+
+        self.imm_ego_ca_turn.predict()
+
+        self.predicted_ego_vehicle.x = self.imm_ego_ca_turn.x_prior[0]
+        self.predicted_ego_vehicle.y = self.imm_ego_ca_turn.x_prior[3]
+        self.predicted_ego_vehicle.yaw_angle = atan2(self.imm_ego_ca_turn.x_prior[1], self.imm_ego_ca_turn.x_prior[4])
+        self.predicted_ego_vehicle.velocity = sqrt(self.imm_ego_ca_turn.x_prior[1]**2 + self.imm_ego_ca_turn.x_prior[4]**2)
+        self.predicted_ego_vehicle.acceleration = sqrt(self.imm_ego_ca_turn.x_prior[2]**2 + self.imm_ego_ca_turn.x_prior[5]**2)
 
         self.predicted_ego_vehicle.move()
 
@@ -1106,55 +1152,113 @@ class envCube(gym.Env):
         self.CIRCLE_COUNT = 0
         self.ARRIVE_AT_MID_GOAL = np.zeros((self.mid_goal_front_space_y), dtype=np.int32)
 
-        # 远车轨迹预测
+        # 远车cv轨迹预测
         for i in range(NUMBER_REMOTE_VEHICLES):
             self.predicted_remote_vehicles[i].x = self.remote_vehicles[i].x
             self.predicted_remote_vehicles[i].y = self.remote_vehicles[i].y
             self.predicted_remote_vehicles[i].yaw_angle = self.remote_vehicles[i].yaw_angle
             self.predicted_remote_vehicles[i].velocity = self.remote_vehicles[i].velocity
 
-        self.ukf_prediction = [UKF_CV_Prediction() for _ in range(NUMBER_REMOTE_VEHICLES)]
-        self.points = MerweScaledSigmaPoints(n=4, alpha=.00001, beta=2, kappa=0)
-
-        self.ukf = []  # 创建一个空列表来存储 UnscentedKalmanFilter 对象
-
+        self.ukf_cv_prediction = [UKF_CV_Prediction() for _ in range(NUMBER_REMOTE_VEHICLES)]
+        self.cv_points = MerweScaledSigmaPoints(n=4, alpha=.00001, beta=2, kappa=0)
+        self.ukf_remote_cv = []  # 创建一个空列表来存储 UnscentedKalmanFilter 对象
         for i in range(NUMBER_REMOTE_VEHICLES):
-            ukf_instance = UnscentedKalmanFilter(dim_x=4, dim_z=4, dt=1, fx=self.ukf_prediction[i].fx,
-                                                 hx=self.ukf_prediction[i].hx, points=self.points)
+            ukf_instance = UnscentedKalmanFilter(dim_x=4, dim_z=4, dt=1, fx=self.ukf_cv_prediction[i].fx,
+                                                 hx=self.ukf_cv_prediction[i].hx, points=self.cv_points)
             ukf_instance.x_prior[0] = self.remote_vehicles[i].x
             ukf_instance.x_prior[1] = self.remote_vehicles[i].velocity * sin(self.remote_vehicles[i].yaw_angle)
             ukf_instance.x_prior[2] = self.remote_vehicles[i].y
             ukf_instance.x_prior[3] = self.remote_vehicles[i].velocity * cos(self.remote_vehicles[i].yaw_angle)
-            self.ukf.append(ukf_instance)
+            self.ukf_remote_cv.append(ukf_instance)
 
         for i in range(NUMBER_REMOTE_VEHICLES):
-            self.ukf_prediction[i].initUKF(self.ukf[i], self.remote_vehicles[i].x,
+            self.ukf_cv_prediction[i].initUKF(self.ukf_remote_cv[i], self.remote_vehicles[i].x,
                                            self.remote_vehicles[i].velocity * sin(self.remote_vehicles[i].yaw_angle),
                                            self.remote_vehicles[i].y,
                                            self.remote_vehicles[i].velocity * cos(self.remote_vehicles[i].yaw_angle))
 
-        # 主车轨迹预测
+        # 远车cl轨迹预测
+        self.ukf_cl_prediction = [UKF_CL_Prediction() for _ in range(NUMBER_REMOTE_VEHICLES)]
+        self.cl_points = MerweScaledSigmaPoints(n=4, alpha=.00001, beta=2, kappa=0)
+        self.ukf_remote_cl = []
+        for i in range(NUMBER_REMOTE_VEHICLES):
+            ukf_instancecl = UnscentedKalmanFilter(dim_x=4, dim_z=4, dt=1, fx=self.ukf_cl_prediction[i].fx,
+                                                 hx=self.ukf_cl_prediction[i].hx, points=self.cl_points)
+            ukf_instancecl.x_prior[0] = self.remote_vehicles[i].x
+            ukf_instancecl.x_prior[1] = self.remote_vehicles[i].velocity * sin(self.remote_vehicles[i].yaw_angle)
+            ukf_instancecl.x_prior[2] = self.remote_vehicles[i].y
+            ukf_instancecl.x_prior[3] = self.remote_vehicles[i].velocity * cos(self.remote_vehicles[i].yaw_angle)
+            self.ukf_remote_cl.append(ukf_instancecl)
+        for i in range(NUMBER_REMOTE_VEHICLES):
+            self.ukf_cl_prediction[i].initUKF(self.ukf_remote_cl[i], self.remote_vehicles[i].x,
+                                           self.remote_vehicles[i].velocity * sin(self.remote_vehicles[i].yaw_angle),
+                                           self.remote_vehicles[i].y,
+                                           self.remote_vehicles[i].velocity * cos(self.remote_vehicles[i].yaw_angle))
+
+        # 远车cv和cl模型交互
+        self.imm_remote_filters = []
+        self.imm_mu = [0.5, 0.5]
+        self.trans = np.array([[0.97, 0.03], [0.03, 0.97]])
+        for i in range(NUMBER_REMOTE_VEHICLES):
+            rv_filters_instance = [self.ukf_remote_cv[i], self.ukf_remote_cl[i]]
+            self.imm_remote_filters.append(rv_filters_instance)
+
+        self.imm_remote_cv_cl = []
+        for i in range(NUMBER_REMOTE_VEHICLES):
+            rv_imm_instance = IMMEstimator(self.imm_remote_filters[i],
+                                           self.imm_mu, self.trans)
+            self.imm_remote_cv_cl.append(rv_imm_instance)
+
+
+        # 主车ca轨迹预测
         self.predicted_ego_vehicle.x = self.vehicle.x
         self.predicted_ego_vehicle.y = self.vehicle.y
         self.predicted_ego_vehicle.yaw_angle = self.vehicle.yaw_angle
         self.predicted_ego_vehicle.velocity = self.vehicle.velocity
         self.predicted_ego_vehicle.acceleration = self.vehicle.acceleration
 
-        self.ukf_prediction_ego = UKF_CA_Prediction()
-        self.points_ego = MerweScaledSigmaPoints(n=6, alpha=.00001, beta=2, kappa=0)
-        self.ukf_ego = UnscentedKalmanFilter(dim_x=6, dim_z=6, dt=1, fx=self.ukf_prediction_ego.fx,
-                                                 hx=self.ukf_prediction_ego.hx, points=self.points_ego)
-        self.ukf_ego.x_prior[0] = self.vehicle.x
-        self.ukf_ego.x_prior[1] = self.vehicle.velocity * sin(self.vehicle.yaw_angle)
-        self.ukf_ego.x_prior[2] = self.vehicle.acceleration * sin(self.vehicle.yaw_angle)
-        self.ukf_ego.x_prior[3] = self.vehicle.y
-        self.ukf_ego.x_prior[4] = self.vehicle.velocity * cos(self.vehicle.yaw_angle)
-        self.ukf_ego.x_prior[5] = self.vehicle.acceleration * cos(self.vehicle.yaw_angle)
+        self.ukf_ca_prediction_ego = UKF_CA_Prediction()
+        self.ca_points_ego = MerweScaledSigmaPoints(n=7, alpha=.00001, beta=2, kappa=0)
+        self.ukf_ego_ca = UnscentedKalmanFilter(dim_x=7, dim_z=7, dt=1, fx=self.ukf_ca_prediction_ego.fx,
+                                                 hx=self.ukf_ca_prediction_ego.hx, points=self.ca_points_ego)
+        self.ukf_ego_ca.x_prior[0] = self.vehicle.x
+        self.ukf_ego_ca.x_prior[1] = self.vehicle.velocity * sin(self.vehicle.yaw_angle)
+        self.ukf_ego_ca.x_prior[2] = self.vehicle.acceleration * sin(self.vehicle.yaw_angle)
+        self.ukf_ego_ca.x_prior[3] = self.vehicle.y
+        self.ukf_ego_ca.x_prior[4] = self.vehicle.velocity * cos(self.vehicle.yaw_angle)
+        self.ukf_ego_ca.x_prior[5] = self.vehicle.acceleration * cos(self.vehicle.yaw_angle)
+        self.ukf_ego_ca.x_prior[6] = self.vehicle.yaw_angle - self.vehicle.pre_yaw_angle
 
+        self.ukf_ca_prediction_ego.initUKF(self.ukf_ego_ca, self.vehicle.x,
+                                           self.vehicle.velocity * sin(self.vehicle.yaw_angle),
+                                           self.vehicle.acceleration * sin(self.vehicle.yaw_angle),
+                                           self.vehicle.y, self.vehicle.velocity * cos(self.vehicle.yaw_angle),
+                                           self.vehicle.acceleration * cos(self.vehicle.yaw_angle),
+                                           self.vehicle.yaw_angle - self.vehicle.pre_yaw_angle)
 
-        self.ukf_prediction_ego.initUKF(self.ukf_ego, self.ukf_ego.x_prior[0], self.ukf_ego.x_prior[1],
-                                        self.ukf_ego.x_prior[2], self.ukf_ego.x_prior[3],
-                                        self.ukf_ego.x_prior[4], self.ukf_ego.x_prior[5])
+        # 主车turn轨迹预测
+        self.ukf_turn_prediction_ego = UKF_Turn_Prediction()
+        self.turn_points_ego = MerweScaledSigmaPoints(n=7, alpha=.00001, beta=2, kappa=0)
+        self.ukf_ego_turn = UnscentedKalmanFilter(dim_x=7, dim_z=7, dt=1, fx=self.ukf_turn_prediction_ego.fx,
+                                                hx=self.ukf_turn_prediction_ego.hx, points=self.turn_points_ego)
+        self.ukf_ego_turn.x_prior[0] = self.vehicle.x
+        self.ukf_ego_turn.x_prior[1] = self.vehicle.velocity * sin(self.vehicle.yaw_angle)
+        self.ukf_ego_turn.x_prior[2] = self.vehicle.acceleration * sin(self.vehicle.yaw_angle)
+        self.ukf_ego_turn.x_prior[3] = self.vehicle.y
+        self.ukf_ego_turn.x_prior[4] = self.vehicle.velocity * cos(self.vehicle.yaw_angle)
+        self.ukf_ego_turn.x_prior[5] = self.vehicle.acceleration * cos(self.vehicle.yaw_angle)
+        self.ukf_ego_turn.x_prior[6] = self.vehicle.yaw_angle - self.vehicle.pre_yaw_angle
+
+        self.ukf_turn_prediction_ego.initUKF(self.ukf_ego_turn, self.vehicle.x,
+                                           self.vehicle.velocity * sin(self.vehicle.yaw_angle),
+                                           self.vehicle.acceleration * sin(self.vehicle.yaw_angle),
+                                           self.vehicle.y, self.vehicle.velocity * cos(self.vehicle.yaw_angle),
+                                           self.vehicle.acceleration * cos(self.vehicle.yaw_angle),
+                                           self.vehicle.yaw_angle - self.vehicle.pre_yaw_angle)
+
+        # 主车cv和cl模型交互
+        self.imm_ego_filters = [self.ukf_ego_ca, self.ukf_ego_turn]
+        self.imm_ego_ca_turn = IMMEstimator(self.imm_ego_filters, self.imm_mu, self.trans)
 
 
         # print(self.episode_step, ':', self.vehicle_position, self.vehicle_state, self.relative_distance_to_goal,

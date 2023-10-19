@@ -4,10 +4,14 @@ from filterpy.kalman import UnscentedKalmanFilter, MerweScaledSigmaPoints
 import numpy as np
 class UKF_CV_Prediction:
 
-    def fx(self, x, dt, vx, vy):
-        x[1] = vx
+    def reset(self, vx, vy):
+        self.vx = vx
+        self.vy = vy
+
+    def fx(self, x, dt):
+        x[1] = self.vx
         x[0] += x[1] * dt
-        x[3] = vy
+        x[3] = self.vy
         x[2] += x[3] * dt
         return x
 
