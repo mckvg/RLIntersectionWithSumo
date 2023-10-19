@@ -13,12 +13,6 @@ class UKF_CA_Prediction:
         x[3] += x[4] * dt
         return x
 
-    # def fx(self):
-    #     self.predicted_yaw_angle = 2 * self.vehicle_yaw_angle - self.vehicle_pre_yaw_angle
-    #     self.predicted_x += sin(self.predicted_yaw_angle) * self.vehicle_velocity
-    #     self.predicted_y += cos(self.predicted_yaw_angle) * self.vehicle_velocity
-    #     return self.predicted_x, self.predicted_y, self.predicted_yaw_angle
-
     def hx(self, x):
         return x
 
