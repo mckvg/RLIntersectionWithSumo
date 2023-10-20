@@ -5,7 +5,7 @@ import numpy as np
 class UKF_CJD_Prediction:
 
     def __init__(self):
-        self.jerk = -4
+        self.jerk = -8
 
     def reset(self, vx, vy):
         self.vx = vx
