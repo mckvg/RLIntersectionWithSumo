@@ -28,7 +28,8 @@
 -->
 
 <routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
-    <vType id="CAR" guiShape="passenger" accel="8" decel="8" sigma="0" length="4" minGap="0" maxSpeed="30" speedFactor="1.0"/>
+    <vType id="CAR" guiShape="passenger" accel="8.0" decel="8.0" sigma="0" length="4" minGap="0.0" maxSpeed="30" speedFactor="1.0"/>
+    <vType id="RCAR" guiShape="passenger" accel="2.0" decel="2.0" sigma="0" length="4" minGap="2.0" maxSpeed="30" speedFactor="1.0"/>
     
     <vehicle id="0" type="CAR" depart="0" color="0,1,0">
         <route edges="-E3"/>

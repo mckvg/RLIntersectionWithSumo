@@ -47,6 +47,7 @@ def RVData(id):
 class Server:
 
     Remotes = []
+    Prediction = []
     server_socket = None
     client_sockets = []
     Step = 0
@@ -95,7 +96,9 @@ class Server:
                     print("Server Received Payload dict:", payload_dict)
                     # print(int(payload_dict['TickId']))
                     Server.Remotes = [payload_dict['Action']]
+                    Server.Prediction = [payload_dict['5_Prediction']]
                     print('Remotes:', Server.Remotes)
+                    print('Prediction:', Server.Prediction)
 
                 recv_buf_data_len -= (ctypes.sizeof(Server.FordRLModelHeader) + payload_size)
                 temp_buf = bytearray(1024)
@@ -170,7 +173,11 @@ def run(step):
                            angle=Server.Remotes[0]['YawAngle'], keepRoute=2)
 
     # 设置waypoints的点
-    traci.poi.setPosition(poiID="po_1", x=Server.Remotes[0]['X'], y=Server.Remotes[0]['Y'])
+    traci.poi.setPosition(poiID="po_1", x=Server.Prediction[0][0][0], y=Server.Prediction[0][0][1])
+    traci.poi.setPosition(poiID="po_2", x=Server.Prediction[0][1][0], y=Server.Prediction[0][1][1])
+    traci.poi.setPosition(poiID="po_3", x=Server.Prediction[0][2][0], y=Server.Prediction[0][2][1])
+    traci.poi.setPosition(poiID="po_4", x=Server.Prediction[0][3][0], y=Server.Prediction[0][3][1])
+    traci.poi.setPosition(poiID="po_5", x=Server.Prediction[0][4][0], y=Server.Prediction[0][4][1])
 
     # SUMO中远车的初始位置及状态的设置
     traci.vehicle.moveToXY('10', '-E3', 1, 2, -24, 0)  # 停止的车辆与主车同道
@@ -181,10 +188,10 @@ def run(step):
         # 运动车辆与主车方向垂直
         traci.vehicle.moveToXY('3', '-E0', 1, 40, 2, -90)
         traci.vehicle.moveToXY('4', '-E2', 1, -54, -2, 90)
-        traci.vehicle.moveToXY('5', '-E0', 0, 80, 6, -90)
-        traci.vehicle.moveToXY('6', '-E2', 0, -100, -6, 90)
+        traci.vehicle.moveToXY('5', '-E0', 0, 80, 6, -90)  # red_light
+        traci.vehicle.moveToXY('6', '-E2', 0, -70, -6, 90)  # red_light
         # 运动车辆与主车方向相反
-        traci.vehicle.moveToXY('7', '-E1', 1, -2, 30, 180)
+        traci.vehicle.moveToXY('7', '-E1', 1, -2, 30, 180)  # red_light
         traci.vehicle.moveToXY('8', '-E1', 0, -6, 60, 180)
         traci.vehicle.moveToXY('9', '-E1', 0, -6, 102, 180)
         # 设置速度：运动车辆与主车同方向
@@ -193,10 +200,10 @@ def run(step):
         # 设置速度：运动车辆与主车方向垂直
         traci.vehicle.setSpeed(vehicle_id3, 6)
         traci.vehicle.setSpeed(vehicle_id4, 8)
-        traci.vehicle.setSpeed(vehicle_id5, 6)
-        traci.vehicle.setSpeed(vehicle_id6, 8)
+        traci.vehicle.setSpeed(vehicle_id5, 4)
+        traci.vehicle.setSpeed(vehicle_id6, 4)
         # 设置速度：运动车辆与主车方向相反
-        traci.vehicle.setSpeed(vehicle_id7, 8)
+        traci.vehicle.setSpeed(vehicle_id7, 4)
         traci.vehicle.setSpeed(vehicle_id8, 8)
         traci.vehicle.setSpeed(vehicle_id9, 4)
 
