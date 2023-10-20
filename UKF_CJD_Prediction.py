@@ -2,10 +2,11 @@
 from math import tan, sin, cos, sqrt, atan2
 from filterpy.kalman import UnscentedKalmanFilter, MerweScaledSigmaPoints
 import numpy as np
+from CONSTANTS import SCALE
 class UKF_CJD_Prediction:
 
     def __init__(self):
-        self.jerk = -8
+        self.jerk = -8 * SCALE
 
     def reset(self, vx, vy):
         self.vx = vx
