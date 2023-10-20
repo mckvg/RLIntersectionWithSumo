@@ -496,10 +496,18 @@ class envCube(gym.Env):
                              ay=self.vehicle.acceleration * cos(self.vehicle.yaw_angle),
                              dangle=self.vehicle.yaw_angle - self.vehicle.pre_yaw_angle)
 
+        # ego 5 sec predict
         imm_ego_5 = copy.deepcopy(self.imm_ego_ca_turn)
+        # imm_ego_vehicle = Remote_Cube(SIZE)
         for i in range(5):
             imm_ego_5.predict()
-            self.ego_5_prediction[i] = [imm_ego_5.x_prior[0]/SCALE, imm_ego_5.x_prior[3]/SCALE]
+            self.ego_5_prediction[i] = [imm_ego_5.x_prior[0] / SCALE, imm_ego_5.x_prior[3] / SCALE]
+
+            # imm_ego_vehicle.x = imm_ego_5.x_prior[0]
+            # imm_ego_vehicle.y = imm_ego_5.x_prior[3]
+            # imm_ego_vehicle.yaw_angle = atan2(imm_ego_5.x_prior[1], imm_ego_5.x_prior[4])
+            # imm_ego_vehicle.velocity = sqrt(imm_ego_5.x_prior[1]**2 + imm_ego_5.x_prior[4]**2)
+            # imm_ego_vehicle.acceleration = sqrt(imm_ego_5.x_prior[2]**2 + imm_ego_5.x_prior[5]**2)
 
         self.imm_ego_ca_turn.predict()
 
@@ -1336,7 +1344,7 @@ class envCube(gym.Env):
                                            self.vehicle.acceleration * cos(self.vehicle.yaw_angle),
                                            self.vehicle.yaw_angle - self.vehicle.pre_yaw_angle)
 
-        # 主车cv和cl模型交互
+        # 主车ca和turn模型交互
         self.imm_mu_ego = [0.5, 0.5]
         self.trans_ego = np.array([[0.97, 0.03], [0.03, 0.97]])
         self.imm_ego_filters = [self.ukf_ego_ca, self.ukf_ego_turn]
