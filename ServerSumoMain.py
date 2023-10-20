@@ -169,6 +169,9 @@ def run(step):
     traci.vehicle.moveToXY('0', '-E3', '1', x=Server.Remotes[0]['X'], y=Server.Remotes[0]['Y'],
                            angle=Server.Remotes[0]['YawAngle'], keepRoute=2)
 
+    # 设置waypoints的点
+    traci.poi.setPosition(poiID="po_1", x=Server.Remotes[0]['X'], y=Server.Remotes[0]['Y'])
+
     # SUMO中远车的初始位置及状态的设置
     traci.vehicle.moveToXY('10', '-E3', 1, 2, -24, 0)  # 停止的车辆与主车同道
     if step == 0:
