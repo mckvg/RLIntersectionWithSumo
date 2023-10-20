@@ -84,7 +84,8 @@ class client():
                 "X": data['X'],
                 "Y": data['Y'],
                 "YawAngle": data['YawAngle']
-            }
+            },
+            "5_Prediction": data['5_Prediction']
         }
         payload_json = json.dumps(payload)
 

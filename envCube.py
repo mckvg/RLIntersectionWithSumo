@@ -1,4 +1,4 @@
-
+import copy
 ###########################
 #
 #   @author mckvg
@@ -229,7 +229,8 @@ class envCube(gym.Env):
             'TickId': self.episode_step,
             'X': self.vehicle.x / SCALE,
             'Y': self.vehicle.y / SCALE,
-            'YawAngle': self.vehicle.yaw_angle
+            'YawAngle': self.vehicle.yaw_angle,
+            '5_Prediction': self.ego_5_prediction
         }
         # while True:
         #     step = 0
@@ -443,6 +444,9 @@ class envCube(gym.Env):
                                                  self.vehicle.acceleration * cos(self.vehicle.yaw_angle),
                                                  self.vehicle.yaw_angle - self.vehicle.pre_yaw_angle)
 
+            for i in range(5):
+                self.ego_5_prediction[i] = [self.vehicle.x/SCALE, self.vehicle.y/SCALE]
+
             self.predicted_ego_vehicle.x = self.vehicle.x
             self.predicted_ego_vehicle.y = self.vehicle.y
             self.predicted_ego_vehicle.yaw_angle = self.vehicle.yaw_angle
@@ -464,6 +468,11 @@ class envCube(gym.Env):
         self.ukf_turn_prediction_ego.reset(ax=self.vehicle.acceleration * sin(self.vehicle.yaw_angle),
                              ay=self.vehicle.acceleration * cos(self.vehicle.yaw_angle),
                              dangle=self.vehicle.yaw_angle - self.vehicle.pre_yaw_angle)
+
+        imm_ego_5 = copy.deepcopy(self.imm_ego_ca_turn)
+        for i in range(5):
+            imm_ego_5.predict()
+            self.ego_5_prediction[i] = [imm_ego_5.x_prior[0]/SCALE, imm_ego_5.x_prior[3]/SCALE]
 
         self.imm_ego_ca_turn.predict()
 
@@ -1078,6 +1087,11 @@ class envCube(gym.Env):
         self.signal_light_stop_line = Signal_Light_Stop_Line()
         self.predicted_image_map_observation_show = Image_Map_Observation_Show()
 
+        # 主车位置5步预测
+        self.ego_5_prediction = []
+        for i in range(5):
+            ego_5_predict = [self.vehicle.x/SCALE, self.vehicle.y/SCALE]
+            self.ego_5_prediction.append(ego_5_predict)
 
         print('reset')
 
@@ -1085,7 +1099,8 @@ class envCube(gym.Env):
             'TickId': 0,
             'X': self.vehicle.x/SCALE,
             'Y': self.vehicle.y/SCALE,
-            'YawAngle': self.vehicle.yaw_angle
+            'YawAngle': self.vehicle.yaw_angle,
+            '5_Prediction': self.ego_5_prediction
         }
         # while True:
         #     step = 0
