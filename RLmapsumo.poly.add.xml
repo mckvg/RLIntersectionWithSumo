@@ -6,9 +6,9 @@
 <additional xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/additional_file.xsd">
     <!-- Shapes -->
     <poly id="po_0" color="red" fill="1" lineWidth="0.10" layer="100.00" shape="0.079534,-12.052184 3.949274,-12.052184 3.949274,-19.894857 0.096733,-19.894857 0.096733,-12.034985"/>
-    <poi id="po_1" type="waypoint" color="0,1,0" layer="110.00" x="100" y="-100"/>
-    <poi id="po_2" type="waypoint" color="1,0,0" layer="120.00" x="100" y="-110"/>
-    <poi id="po_3" type="waypoint" color="1,0,0" layer="130.00" x="100" y="-120"/>
-    <poi id="po_4" type="waypoint" color="1,0,0" layer="140.00" x="100" y="-130"/>
-    <poi id="po_5" type="waypoint" color="1,0,0" layer="150.00" x="100" y="-140"/>
+<!--    <poi id="po_1" type="waypoint" color="0,1,0" layer="110.00" x="100" y="-100"/>-->
+<!--    <poi id="po_2" type="waypoint" color="1,0,0" layer="120.00" x="100" y="-110"/>-->
+<!--    <poi id="po_3" type="waypoint" color="1,0,0" layer="130.00" x="100" y="-120"/>-->
+<!--    <poi id="po_4" type="waypoint" color="1,0,0" layer="140.00" x="100" y="-130"/>-->
+<!--    <poi id="po_5" type="waypoint" color="1,0,0" layer="150.00" x="100" y="-140"/>-->
 </additional>

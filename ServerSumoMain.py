@@ -173,11 +173,11 @@ def run(step):
                            angle=Server.Remotes[0]['YawAngle'], keepRoute=2)
 
     # 设置waypoints的点
-    traci.poi.setPosition(poiID="po_1", x=Server.Prediction[0][0][0], y=Server.Prediction[0][0][1])
-    traci.poi.setPosition(poiID="po_2", x=Server.Prediction[0][1][0], y=Server.Prediction[0][1][1])
-    traci.poi.setPosition(poiID="po_3", x=Server.Prediction[0][2][0], y=Server.Prediction[0][2][1])
-    traci.poi.setPosition(poiID="po_4", x=Server.Prediction[0][3][0], y=Server.Prediction[0][3][1])
-    traci.poi.setPosition(poiID="po_5", x=Server.Prediction[0][4][0], y=Server.Prediction[0][4][1])
+    # traci.poi.setPosition(poiID="po_1", x=Server.Prediction[0][0][0], y=Server.Prediction[0][0][1])
+    # traci.poi.setPosition(poiID="po_2", x=Server.Prediction[0][1][0], y=Server.Prediction[0][1][1])
+    # traci.poi.setPosition(poiID="po_3", x=Server.Prediction[0][2][0], y=Server.Prediction[0][2][1])
+    # traci.poi.setPosition(poiID="po_4", x=Server.Prediction[0][3][0], y=Server.Prediction[0][3][1])
+    # traci.poi.setPosition(poiID="po_5", x=Server.Prediction[0][4][0], y=Server.Prediction[0][4][1])
 
     # SUMO中远车的初始位置及状态的设置
     traci.vehicle.moveToXY('10', '-E3', 1, 2, -24, 0)  # 停止的车辆与主车同道
