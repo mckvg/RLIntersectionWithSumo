@@ -205,16 +205,39 @@ class envCube(gym.Env):
                 'first_other_vehicle_speed': Box(self.min_speed, self.max_speed, shape=(1,), dtype=np.float32),
                 'second_other_vehicle_relative_position': Box(2*MIN_COORD-1, 2*MAX_COORD+1, shape=(2,), dtype=np.float32),
                 'second_other_vehicle_speed': Box(self.min_speed, self.max_speed, shape=(1,), dtype=np.float32),
+                'third_other_vehicle_relative_position': Box(2 * MIN_COORD - 1.0, 2 * MAX_COORD + 1.0, shape=(2,),
+                                                             dtype=np.float32),
+                'third_other_vehicle_speed': Box(self.min_speed, self.max_speed, shape=(1,), dtype=np.float32),
+                'fourth_other_vehicle_relative_position': Box(2 * MIN_COORD - 1, 2 * MAX_COORD + 1, shape=(2,),
+                                                              dtype=np.float32),
+                'fourth_other_vehicle_speed': Box(self.min_speed, self.max_speed, shape=(1,), dtype=np.float32),
+                'fifth_other_vehicle_relative_position': Box(2 * MIN_COORD - 1, 2 * MAX_COORD + 1, shape=(2,),
+                                                              dtype=np.float32),
+                'fifth_other_vehicle_speed': Box(self.min_speed, self.max_speed, shape=(1,), dtype=np.float32),
+                'sixth_other_vehicle_relative_position': Box(2 * MIN_COORD - 1, 2 * MAX_COORD + 1, shape=(2,),
+                                                             dtype=np.float32),
+                'sixth_other_vehicle_speed': Box(self.min_speed, self.max_speed, shape=(1,), dtype=np.float32),
+                'seventh_other_vehicle_relative_position': Box(2 * MIN_COORD - 1, 2 * MAX_COORD + 1, shape=(2,),
+                                                             dtype=np.float32),
+                'seventh_other_vehicle_speed': Box(self.min_speed, self.max_speed, shape=(1,), dtype=np.float32),
+                'eighth_other_vehicle_relative_position': Box(2 * MIN_COORD - 1, 2 * MAX_COORD + 1, shape=(2,),
+                                                               dtype=np.float32),
+                'eighth_other_vehicle_speed': Box(self.min_speed, self.max_speed, shape=(1,), dtype=np.float32),
+                'ninth_other_vehicle_relative_position': Box(2 * MIN_COORD - 1, 2 * MAX_COORD + 1, shape=(2,),
+                                                               dtype=np.float32),
+                'ninth_other_vehicle_speed': Box(self.min_speed, self.max_speed, shape=(1,), dtype=np.float32),
+                'tenth_other_vehicle_relative_position': Box(2 * MIN_COORD - 1, 2 * MAX_COORD + 1, shape=(2,),
+                                                               dtype=np.float32),
+                'tenth_other_vehicle_speed': Box(self.min_speed, self.max_speed, shape=(1,), dtype=np.float32),
                 'relative_distance_2_goal': Box(2*MIN_COORD-1.0, 2*MAX_COORD+1.0, shape=(1,), dtype=np.float32),
                 'judgement_in_road': Discrete(self.judgement_space),
                 'distance_2_mid_lane_line': Box(2*MIN_COORD-1.0, 2*MAX_COORD+1.0, shape=(1,), dtype=np.float32),
                 'distance_2_nearest_off_road': Box(2*MIN_COORD-1.0, 2*MAX_COORD+1.0, shape=(2,), dtype=np.float32),
                 'bird_eye_view_gray_image': Box(low=0, high=GRAY_SPACE, shape=(int(SEPARATE_SIZE), int(SEPARATE_SIZE), 1), dtype=np.uint8),
+                'stop_line_position': Box(MIN_COORD, MAX_COORD, shape=(2,), dtype=np.int32),
+                'signal_light_phase_countdown': MultiDiscrete(
+                            [self.signal_light_phase_space_values, self.signal_light_count_down_space_values])
 
-                # 'distance_2_center_line': Discrete(MAX_COORD),
-                # 'stop_line_position': Box(MIN_COORD, MAX_COORD, shape=(2,), dtype=np.int32),
-                # 'signal_light_phase_countdown': MultiDiscrete(
-                #             [self.signal_light_phase_space_values, self.signal_light_count_down_space_values])
             }
         )
 
