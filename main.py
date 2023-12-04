@@ -116,7 +116,7 @@ for ep in range(eposides):
         action, _states = model.predict(obs, deterministic=True)
         # action = env.action_space.sample()
         # if 60 <= env.episode_step <= 65:
-        #     action = 3
+        #     action = 3dwd
         # else:
         #     action = 0
         obs, reward, done, info = env.step(action)
