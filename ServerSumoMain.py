@@ -204,7 +204,7 @@ def run(step):
         traci.vehicle.setSpeed(vehicle_id6, 4)
         # 设置速度：运动车辆与主车方向相反
         traci.vehicle.setSpeed(vehicle_id7, 4)
-        traci.vehicle.setSpeed(vehicle_id8, 8)
+        traci.vehicle.setSpeed(vehicle_id8, 5)
         traci.vehicle.setSpeed(vehicle_id9, 4)
 
 
