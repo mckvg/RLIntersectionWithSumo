@@ -1,6 +1,7 @@
 import datetime
 
 
+
 def datatime_to_moy_timestamp(vehicle_posterior_data):
     # 转换每个时间戳的前5个元素为分钟数
     minutes_passed_list = [
