@@ -25,8 +25,8 @@ print("截距:", intercept)
 vehicle_posterior_list = datatime_to_moy_timestamp(inference_final)
 cloud_SPAT = cloud_SPAT_verified_data
 
-print("Vehicle Posterior:", inference_final)
-print("Cloud        SPAT:", cloud_SPAT)
+print("Vehicle   Posterior:", inference_final)
+print("Cloud verified SPAT:", cloud_SPAT)
 
 # 逻辑有问题处*
 for i in range(1, len(vehicle_posterior_list)):
@@ -42,4 +42,4 @@ for i in range(1, len(vehicle_posterior_list)):
         vehicle_posterior_list[i][1] = vehicle_current % (60*1000)
 
 final_vehicle_data = moy_timestamp_to_datetime(vehicle_posterior_list, cloud_SPAT[0][0])
-print("Vehicle   Revised:", final_vehicle_data)
+print("Vehicle     Revised:", final_vehicle_data)
