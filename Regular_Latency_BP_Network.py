@@ -33,22 +33,6 @@ tensor_raw_label = torch.tensor(raw_label, dtype=torch.float64)
 normalized_data, data_mean, data_std = z_score_normalize(tensor_raw_data)
 normalized_label, label_mean, label_std = z_score_normalize(tensor_raw_label)
 
-# print("data:")
-# for row in tensor_raw_data:
-#     print(["{:.7f}".format(item) for item in row])
-#
-# print("\nlabel:")
-# for row in tensor_raw_label:
-#     print(["{:.7f}".format(item) for item in row])
-#
-# print("Normalized data:")
-# for row in normalized_data:
-#     print(["{:.7f}".format(item) for item in row])
-#
-# print("\nNormalized label:")
-# for row in normalized_label:
-#     print(["{:.7f}".format(item) for item in row])
-
 bp = nn.Sequential(nn.Linear(4, 10), nn.Tanh(), nn.Linear(10, 6), nn.Tanh(), nn.Linear(6, 4), nn.Tanh()).double()
 Loss = nn.MSELoss()
 optim = torch.optim.SGD(params=bp.parameters(), lr=0.1,
@@ -87,3 +71,19 @@ inference_final = time_decoding_matrix(original_data, cloud_data[0][0])
 
 # 打印推断结果
 print("Inference Result:", inference_final)
+
+# print("data:")
+# for row in tensor_raw_data:
+#     print(["{:.7f}".format(item) for item in row])
+#
+# print("\nlabel:")
+# for row in tensor_raw_label:
+#     print(["{:.7f}".format(item) for item in row])
+#
+# print("Normalized data:")
+# for row in normalized_data:
+#     print(["{:.7f}".format(item) for item in row])
+#
+# print("\nNormalized label:")
+# for row in normalized_label:
+#     print(["{:.7f}".format(item) for item in row])
