@@ -23,3 +23,25 @@ def datatime_to_moy_timestamp(vehicle_posterior_data):
 
     return vehicle_posterior_list
 
+import datetime
+
+def moy_timestamp_to_datetime(vehicle_posterior_list, year):
+    output_matrix = []
+
+    for timestamp in vehicle_posterior_list:
+        # 解析分钟数和毫秒数
+        minutes = timestamp[0]
+        total_ms = timestamp[1]
+
+        # 计算日期时间部分
+        datetime_obj = datetime.datetime(1, 1, 1) + datetime.timedelta(minutes=minutes)
+
+        # 提取年、月、日、小时、分钟、秒和毫秒
+        decoded_time_list = [year, datetime_obj.month, datetime_obj.day,
+                             datetime_obj.hour, datetime_obj.minute, total_ms // 1000, total_ms % 1000]
+
+        # 添加到输出矩阵中
+        output_matrix.append(decoded_time_list)
+
+    return output_matrix
+
