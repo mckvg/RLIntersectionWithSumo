@@ -36,6 +36,7 @@ for i in range(1, len(vehicle_posterior_list)):
            abs((cloud_SPAT[i][1]-cloud_SPAT[i-1][1])))
     if  abs(interval_vehicle-interval_cloud) > 200:
         interval_revised_vehicle = (interval_cloud - intercept) / slope
+        # print(interval_revised_vehicle) 有问题
         vehicle_pre = vehicle_posterior_list[i-1][0]*60*1000+vehicle_posterior_list[i-1][1]
         vehicle_current = vehicle_pre + interval_revised_vehicle
         vehicle_posterior_list[i][0] = vehicle_current // (60*1000)
