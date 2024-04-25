@@ -9,6 +9,15 @@ def time_encoding(data):
     sin_ms, cos_ms = current_ms_encoding(data[5], data[6])
     return sin_minutes, cos_minutes, sin_ms, cos_ms
 
+def time_encoding_matrix(data_matrix):
+    output_matrix = []
+    for data_row in data_matrix:
+        sin_minutes, cos_minutes = year_minutes_encoding(data_row[0], data_row[1], data_row[2], data_row[3], data_row[4])
+        sin_ms, cos_ms = current_ms_encoding(data_row[5], data_row[6])
+        output_matrix.append([sin_minutes, cos_minutes, sin_ms, cos_ms])
+    return output_matrix
+
+
 def year_minutes_encoding(year, month, day, hour, minute):
     # 获取当前时间
     current_time = datetime.datetime(year, month, day, hour, minute)
@@ -40,11 +49,26 @@ def time_decoding(data, year):
     decoded_second, decoded_millisecond = current_ms_decoding(data[2], data[3])
     return decoded_time, decoded_second, decoded_millisecond
 
+def time_decoding_matrix(data_matrix, year):
+    output_matrix = []
+    for data_row in data_matrix:
+        decoded_time = year_minutes_decoding(data_row[0], data_row[1], year)
+        decoded_second, decoded_millisecond = current_ms_decoding(data_row[2], data_row[3])
+        # 提取年、月、日、小时、分钟、秒和毫秒
+        decoded_time_list = [decoded_time.year, decoded_time.month, decoded_time.day,
+                             decoded_time.hour, decoded_time.minute]
+
+        # 添加到输出矩阵中
+        output_matrix.append(decoded_time_list + [decoded_second, decoded_millisecond])
+
+    return output_matrix
+
+
 def year_minutes_decoding(sin_minutes, cos_minutes, year):
     # 使用反三角函数解码分钟数
     normalized_minutes = np.arctan2(sin_minutes, cos_minutes) / (2 * np.pi)
-    if normalized_minutes < 0:
-        normalized_minutes += 1
+    normalized_minutes = normalized_minutes % 1  # 将角度转换为 [0, 1) 区间内的值
+
     # 计算对应的分钟数
     if is_leap_year(year):
         days_in_year = 366
