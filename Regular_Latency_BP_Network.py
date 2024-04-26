@@ -2,6 +2,8 @@ import numpy as np
 import torch
 from torch import nn
 from Time_Encoding_Decoding import time_encoding, time_decoding, time_encoding_matrix, time_decoding_matrix
+from Exchange_Data import datatime_to_moy_timestamp, moy_timestamp_to_timestamp,\
+    timestamp_to_moy_timestamp, moy_timestamp_to_datetime
 from Time_Data import vehicle_data, cloud_data, vehicle_inference_data
 
 def z_score_normalize(data):
@@ -49,6 +51,8 @@ for i in range(100):
 # 准备推断数据
 inference_data = time_encoding_matrix(vehicle_inference_data)  # 假设inference_vehicle_data为待推断的车辆数据
 tensor_inference_data = torch.tensor(inference_data, dtype=torch.float64)
+
+print("vehicle_inference_data:", vehicle_inference_data)
 # z_score_标准化
 normalized_inference_data, inference_data_mean, inference_data_std = z_score_normalize(tensor_inference_data)
 # nn.functional.normalize标准化
@@ -71,6 +75,26 @@ inference_final = time_decoding_matrix(original_data, cloud_data[0][0])
 
 # 打印推断结果
 print("Inference Result:", inference_final)
+
+vehicle_inference_data_moy_timestamp = datatime_to_moy_timestamp(vehicle_inference_data)
+inference_final_moy_timestamp = datatime_to_moy_timestamp(inference_final)
+
+vehicle_inference_data_timestamp = moy_timestamp_to_timestamp(vehicle_inference_data_moy_timestamp)
+inference_final_timestamp = moy_timestamp_to_timestamp(inference_final_moy_timestamp)
+
+# 将车辆时间后验与车辆先验时间进行对比，若差值（延迟）大于1s（通信时间延迟），则后验不可信，返回先验数据
+inference_end_timestamp = []
+for i in range(len(vehicle_inference_data_timestamp)):
+    if abs(vehicle_inference_data_timestamp[i]-inference_final_timestamp[i])>1000:
+        inference_end_timestamp.append(vehicle_inference_data_timestamp[i])
+    else:
+        inference_end_timestamp.append(inference_final_timestamp[i])
+
+inference_end_moy_timestamp = timestamp_to_moy_timestamp(inference_end_timestamp)
+
+inference_end_datetime = moy_timestamp_to_datetime(inference_end_moy_timestamp, vehicle_inference_data[0][0])
+
+print("inference_end_datetime:", inference_end_datetime)
 
 # print("data:")
 # for row in tensor_raw_data:

@@ -26,11 +26,11 @@ cloud_data = [[2024, 1, 31, 23, 59, 59, 12],
               ]
 
 # 模拟结合 regular BP network 的后验预测值后的Irregular latency数据集，
-# 第一项为regular BP network 的输入先验，第二项为Irregular latency的云端验证数据
+# 第一项为 regular BP network 的输入先验，第二项为Irregular latency的云端验证数据
 vehicle_inference_data = [[2024, 2, 1, 0, 0, 5, 937],
                           [2024, 2, 1, 0, 0, 6, 423],
                           [2024, 2, 1, 0, 0, 7, 337],
-                          [2024, 2, 1, 0, 0, 7, 862],
+                          [2024, 2, 1, 0, 0, 8, 862],
                           ]
 
 cloud_SPAT_verified_data = [[2024, 2, 1, 0, 0, 5, 664],

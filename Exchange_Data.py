@@ -45,3 +45,23 @@ def moy_timestamp_to_datetime(vehicle_posterior_list, year):
 
     return output_matrix
 
+def moy_timestamp_to_timestamp(vehicle_moy_timestamp):
+    output_matrix=[]
+
+    for moy_timestamp in vehicle_moy_timestamp:
+        minutes_ms = moy_timestamp[0]*60*1000
+        total_ms = minutes_ms+moy_timestamp[1]
+        output_matrix.append(total_ms)
+
+    return output_matrix
+
+def timestamp_to_moy_timestamp(vehicle_timestamp):
+    output_matrix=[]
+
+    for timestamp in vehicle_timestamp:
+        minutes = timestamp // (60*1000)
+        ms = timestamp % (60*1000)
+        total = [minutes, ms]
+        output_matrix.append(total)
+
+    return output_matrix
