@@ -18,7 +18,7 @@ intercept = coefficients[1]
 print("斜率:", slope)
 print("截距:", intercept)
 
-# irregular latency数据集
+# irregular latency单独测试数据集
 # vehicle_posterior_list = datatime_to_moy_timestamp(vehicle_posterior_data)
 # could_SPAT = cloud_SPAT_data
 

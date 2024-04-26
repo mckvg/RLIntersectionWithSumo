@@ -1,6 +1,6 @@
 import numpy as np
 
-# regular latency的训练数据
+# regular latency BP network的训练数据
 vehicle_data = [[2024, 1, 31, 23, 59, 59, 345],
                 [2024, 2, 1, 0, 0, 0, 305],
                 [2024, 2, 1, 0, 0, 0, 834],
@@ -25,7 +25,7 @@ cloud_data = [[2024, 1, 31, 23, 59, 59, 12],
               [2024, 2, 1, 0, 0, 5, 97]
               ]
 
-# 模拟结合 regular BP network 的后验预测值后的Irregular latency数据集，
+# 模拟结合 regular BP network 的后验预测值后的 Irregular latency 联合测试数据集，
 # 第一项为 regular BP network 的输入先验，第二项为Irregular latency的云端验证数据
 vehicle_inference_data = [[2024, 2, 1, 0, 0, 5, 937],
                           [2024, 2, 1, 0, 0, 6, 423],
@@ -39,10 +39,15 @@ cloud_SPAT_verified_data = [[2024, 2, 1, 0, 0, 5, 664],
                             [2024, 2, 1, 0, 0, 7, 543]
                             ]
 
-# 模拟Irregular latency数据集
-vehicle_posterior_data = [[2023, 12, 14, 9, 42, 10, 161], [2023, 12, 14, 9, 42, 11, 166],
-                            [2023, 12, 14, 9, 42, 12, 684], [2023, 12, 14, 9, 42, 15, 640]]
-cloud_SPAT_data = [[500262, 12541], [500262, 13541], [500262, 15057], [500262, 16073]]  #  last term is Irregular item
+# 模拟Irregular latency单独测试数据集
+vehicle_posterior_data = [[2023, 12, 14, 9, 42, 10, 161],
+                          [2023, 12, 14, 9, 42, 11, 166],
+                          [2023, 12, 14, 9, 42, 12, 684],
+                          [2023, 12, 14, 9, 42, 15, 640]]
+cloud_SPAT_data = [[500262, 12541],
+                   [500262, 13541],
+                   [500262, 15057],
+                   [500262, 16073]]  #  last term is Irregular item
 
 
 # 为拟合最小二乘法提供数据
