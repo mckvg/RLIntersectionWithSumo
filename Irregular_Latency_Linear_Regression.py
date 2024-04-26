@@ -32,11 +32,11 @@ print("Cloud verified SPAT:", cloud_SPAT_verified_data)
 vehicle_posterior_list_timestamp = moy_timestamp_to_timestamp(vehicle_posterior_list)
 cloud_SPAT_timestamp = moy_timestamp_to_timestamp(cloud_SPAT)
 
-# 利用车辆时间与云端时间的时间间隔对车辆时间的后验进行检验
+# 利用车辆时间与云端时间的时间间隔对车辆时间的后验进行检验，当前检验标准为两者间隔大于500ms后，认定为网络阻塞延迟接收消息
 for i in range(1, len(vehicle_posterior_list_timestamp)):
     interval_vehicle = abs(vehicle_posterior_list_timestamp[i]-vehicle_posterior_list_timestamp[i-1])
     interval_cloud = abs(cloud_SPAT_timestamp[i]-cloud_SPAT_timestamp[i-1])
-    if  abs(interval_vehicle-interval_cloud) > 300:
+    if  abs(interval_vehicle-interval_cloud) > 500:
         interval_revised_vehicle = (interval_cloud - intercept) / slope
         vehicle_pre = vehicle_posterior_list_timestamp[i-1]
         vehicle_current = vehicle_pre + interval_revised_vehicle
